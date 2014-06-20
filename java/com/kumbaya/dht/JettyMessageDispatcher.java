@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -93,14 +94,17 @@ class JettyMessageDispatcher implements Dispatcher {
 			if (!"/".equals(path) && !"/favicon.ico".equals(path)) {
 				writer.write("<pre>");
 				try {
-				  List<DHTValueEntity> result = dht.get(EntityKey.createEntityKey(
-							Keys.of(path.substring(1)), DHTValueType.TEXT));
+				  EntityKey key = EntityKey.createEntityKey(
+                      Keys.of(path.substring(1)), DHTValueType.TEXT);
+				  List<DHTValueEntity> result = dht.get(key, 200);
 					writer.write(result.toString());
 				} catch (InterruptedException e) {
 					writer.write(e.toString());
 				} catch (ExecutionException e) {
 					writer.write(e.toString());
-				}
+				} catch (TimeoutException e) {
+				    writer.write(e.toString());
+                }
 				writer.write("</pre>");
 			}
 			writer.write("<pre>");

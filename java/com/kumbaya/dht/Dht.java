@@ -45,6 +45,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class Dht {
 	@Inject private Context dht;
@@ -55,15 +57,16 @@ public class Dht {
 		return put(DHTValueEntity.createFromValue(dht, key, value));
 	}
 
-	public List<DHTValueEntity> get(KUID key, DHTValueType keyType)
-			throws InterruptedException, ExecutionException {
-		return get(Keys.as(key, keyType));
+	public List<DHTValueEntity> get(KUID key, DHTValueType keyType, int timeoutMs)
+			throws InterruptedException, ExecutionException, TimeoutException {
+		return get(Keys.as(key, keyType), timeoutMs);
 	}
 
-	public List<DHTValueEntity> get(EntityKey entityKey)
-			throws InterruptedException, ExecutionException {
+	public List<DHTValueEntity> get(EntityKey entityKey, int timeoutMs)
+			throws InterruptedException, ExecutionException, TimeoutException {
 		List<DHTValueEntity> all = new ArrayList<DHTValueEntity>();
-		FindValueResult result = dht.get(entityKey).get();
+		FindValueResult result = dht.get(entityKey).get(
+		    timeoutMs, TimeUnit.MILLISECONDS);
 
 		for (DHTValueEntity entry : result.getEntities()) {
 			all.add(entry);
