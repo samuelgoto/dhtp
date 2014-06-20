@@ -68,6 +68,10 @@ import org.limewire.security.SecureMessage;
 import org.limewire.security.SecureMessageCallback;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Provider;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expect;
@@ -305,14 +309,27 @@ public class MessageDispatcherTest {
 	@Test
 	public void testDHTWithHttpDispatchers() throws Exception {
 		control.replay();
-
-		Context dht = (Context) MojitoFactory.createDHT("bootstrap");
-		Context node = (Context) MojitoFactory.createDHT("node");
-		dht.setMessageDispatcher(new MessageDispatcherFactoryImpl());
+		final Context dht = (Context) MojitoFactory.createDHT("bootstrap");
+		final Context node = (Context) MojitoFactory.createDHT("node");
+		dht.setMessageDispatcher(Guice.createInjector(
+				new DhtModule(),
+				new AbstractModule() {
+					@Override
+					protected void configure() {
+						bind(Context.class).toInstance(dht);
+					}
+				}).getInstance(MessageDispatcherFactoryImpl.class));
 		dht.bind(new InetSocketAddress("localhost", 8080));
 		dht.start();
 
-		node.setMessageDispatcher(new MessageDispatcherFactoryImpl());
+		node.setMessageDispatcher(Guice.createInjector(
+				new DhtModule(),
+				new AbstractModule() {
+					@Override
+					protected void configure() {
+						bind(Context.class).toInstance(node);
+					}
+				}).getInstance(MessageDispatcherFactoryImpl.class));
 		node.bind(new InetSocketAddress("localhost", 8081));
 		node.start();
 		node.bootstrap(new InetSocketAddress("localhost", 8080)).get();
@@ -333,7 +350,5 @@ public class MessageDispatcherTest {
 
 		node.close();
 		dht.close();
-		
-		System.out.println(new InetSocketAddress("sgoto-dht.herokuapp.com", 80));
 	}
 }

@@ -8,7 +8,12 @@ import org.limewire.mojito.io.MessageDispatcher;
 import org.limewire.mojito.io.MessageDispatcherFactory;
 
 class MessageDispatcherFactoryImpl implements MessageDispatcherFactory {
-    @Inject Provider<HttpMessageDispatcher> result;
+    private final Provider<HttpMessageDispatcher> result;
+    
+    @Inject
+    MessageDispatcherFactoryImpl(Provider<HttpMessageDispatcher> result) {
+    	this.result = result;
+    }
     
     @Override
     public MessageDispatcher create(Context context) {

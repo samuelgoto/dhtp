@@ -21,6 +21,8 @@ package org.limewire.mojito.io;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.CancelledKeyException;
@@ -527,7 +529,10 @@ public class MessageDispatcherImpl extends MessageDispatcher implements Runnable
     // behavior but there's maybe an use-case like Kademlia over TCP
     // where it makes sense to send the data piece-by-piece...
     private boolean send(SocketAddress dst, ByteBuffer data) throws IOException {
-        return channel.send(data, dst) > 0;
+    	InetSocketAddress ip = (InetSocketAddress) dst;
+    	InetSocketAddress resolved = new InetSocketAddress(
+    			ip.getHostName(), ip.getPort());
+        return channel.send(data, resolved) > 0;
     }
     
     private void processAll() {

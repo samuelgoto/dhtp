@@ -25,7 +25,7 @@ import org.limewire.mojito.io.MessageDispatcher;
 public class Standalone {
 	public static void main(String[] args) throws Exception {
 		BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
-		    "[%-5p] %d %c - %m%n")));
+				"[%-5p] %d %c - %m%n")));
 
 		Options options = new Options();
 		options.addOption("port", true, "The external port");
@@ -45,7 +45,7 @@ public class Standalone {
 		} else {
 			port = 8080;
 		}
-		
+
 		final int proxy;
 		final String hostname;
 		if (line.hasOption("hostname")) {
@@ -56,25 +56,19 @@ public class Standalone {
 			proxy = port;
 			hostname = "localhost";
 		}
-		
-		Injector injector = Guice.createInjector(new AbstractModule() {
-		  @Override
-          protected void configure() {
-		      bind(Context.class).toInstance(
-		          (Context) MojitoFactory.createDHT(hostname));
-		      bind(MessageDispatcher.class).to(HttpMessageDispatcher.class);
-		      bind(Dispatcher.class).to(JettyMessageDispatcher.class);
-		      
-		      MapBinder<String, HttpServlet> mapbinder
-		         = MapBinder.newMapBinder(binder(), String.class, HttpServlet.class);
-		      
-		      mapbinder.addBinding("/.well-known/dht").to(DhtHandler.class);
-              mapbinder.addBinding("/").to(IndexHandler.class);
-		  }
-		});
-		
+
+		Injector injector = Guice.createInjector(
+				new DhtModule(),
+				new AbstractModule() {
+					@Override
+					protected void configure() {
+						bind(Context.class).toInstance(
+								(Context) MojitoFactory.createDHT(hostname));
+					}
+				});
+
 		Dht dht = injector.getInstance(Dht.class);
-		
+
 		dht.start(hostname, port, proxy);
 
 		if (line.hasOption("bootstrap")) {

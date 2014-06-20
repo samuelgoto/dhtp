@@ -165,9 +165,9 @@ public class DhtTest {
     assertTrue(result.isSuccess());
     assertEquals(1, result.getEntities().size());
     DHTValueEntity entity = result.getEntities().iterator().next();
-    assertEquals(new InetSocketAddress("localhost", 8080),
+    assertEquals(InetSocketAddress.createUnresolved("localhost", 8080),
         entity.getCreator().getContactAddress());
-    assertEquals(new InetSocketAddress("localhost", 8081),
+    assertEquals(InetSocketAddress.createUnresolved("localhost", 8081),
         entity.getSender().getContactAddress());
 
     dht.close();
