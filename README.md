@@ -1,13 +1,7 @@
-Pushing to multiple environments:
+Kumbaya!
 
+1) Adding kumbaya to your http server:
 
-1) This command tells git that you want to push from your local development 
-branch to the master branch of your staging remote.
-  It might look a little disorderly, but there’s a lot more going on - take a
-look at the git book for a very in-depth exploration of refspecs.
+  - git submodule add https://github.com/samuelgoto/kumbaya.git
+  - java $JAVA_OPTS -jar kumbaya/bin/httpdht.jar --hostname=example.com:80 --bootstrap=kumbaya-node0.herokuapp.com:80
 
-git push staging development:master
-
-For example:
-
-git push kumbaya-node0 kumbaya-node0:master
