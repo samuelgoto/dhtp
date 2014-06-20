@@ -74,7 +74,8 @@ public class Dht {
 		}
 
 		for (EntityKey entry : result.getEntityKeys()) {
-			FindValueResult entries = dht.get(entry).get();
+			FindValueResult entries = dht.get(entry).get(
+			    timeoutMs, TimeUnit.MILLISECONDS);
 			for (DHTValueEntity entity : entries.getEntities()) {
 				all.add(entity);
 			}
