@@ -16,6 +16,7 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -54,7 +55,7 @@ class JettyMessageDispatcher implements Dispatcher {
     this.servlets = servlets;
     client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
   }
-
+  
   static class IndexHandler extends HttpServlet {
     private static final Log log = LogFactory.getLog(IndexHandler.class);
 
@@ -144,6 +145,37 @@ class JettyMessageDispatcher implements Dispatcher {
     }
   }
 
+  static class ThreadZHandler extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws IOException, ServletException {
+
+      PrintWriter writer = response.getWriter();
+      writer.write("<html>");
+      writer.write("<head>");
+      writer.write("<title>Threads</title>");
+      writer.write("</head>");
+      writer.write("<body>");
+      writer.write("<h1>Threads</h1>");
+      
+      Set<Thread> threads = Thread.getAllStackTraces().keySet();
+      for (Thread thread : threads) {
+        writer.write("<div style='margin-top: 30px;'>");
+        writer.write("<p><b>" + thread.getName() + ": " + thread.getState() + "</b></p>");        
+        for (StackTraceElement stackTrace : thread.getStackTrace()) {
+          writer.write("<p style='margin-left: 50px;'>" + stackTrace.toString() + "</p>");
+        }
+        writer.write("</div>");
+      }
+
+      writer.write("</body>");
+      writer.write("</html>");
+
+      response.flushBuffer();
+    }
+  }
+
+  
   static class DhtHandler extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final Context context;
@@ -213,14 +245,21 @@ class JettyMessageDispatcher implements Dispatcher {
   }
 
   @Override
-  public boolean submit(Tag tag) {
+  public boolean submit(final Tag tag) {
     HttpExchange request = new HttpExchange() {
       @Override
-      protected void onResponseComplete() throws IOException {
-        int status = getStatus();
-        if (status == 200) {
+      protected void onConnectionFailed(Throwable x) {
+        tag.handleError(new IOException(x));
+      }
 
-        }
+      @Override
+      protected void onException(Throwable x) {
+        tag.handleError(new IOException(x));
+      }
+
+      @Override
+      protected void onExpire() {
+        tag.handleError(new IOException("Request expired"));
       }
     };
 

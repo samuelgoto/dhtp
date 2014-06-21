@@ -65,6 +65,7 @@ public class Dht {
 
 	public List<DHTValueEntity> get(EntityKey entityKey, int timeoutMs)
 			throws InterruptedException, ExecutionException, TimeoutException {
+      // TODO(goto): decrement the timeout between calls.
 		List<DHTValueEntity> all = new ArrayList<DHTValueEntity>();
 		FindValueResult result = dht.get(entityKey).get(
 		    timeoutMs, TimeUnit.MILLISECONDS);

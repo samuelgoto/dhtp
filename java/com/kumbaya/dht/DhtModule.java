@@ -8,8 +8,10 @@ import org.limewire.mojito.io.MessageDispatcher;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
+
 import com.kumbaya.dht.JettyMessageDispatcher.DhtHandler;
 import com.kumbaya.dht.JettyMessageDispatcher.IndexHandler;
+import com.kumbaya.dht.JettyMessageDispatcher.ThreadZHandler;
 
 public class DhtModule extends AbstractModule {
 	  @Override
@@ -22,5 +24,6 @@ public class DhtModule extends AbstractModule {
 	      
 	      mapbinder.addBinding("/.well-known/dht").to(DhtHandler.class);
           mapbinder.addBinding("/").to(IndexHandler.class);
+          mapbinder.addBinding("/threadz").to(ThreadZHandler.class);
 	  }
 }
