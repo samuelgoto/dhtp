@@ -27,8 +27,8 @@ class HttpMessageDispatcher extends MessageDispatcher {
 	public HttpMessageDispatcher(Context context, Dispatcher dispatcher) {
 		super(context);
 		this.dispatcher = dispatcher;
-        thread = context.getDHTExecutorService().getThreadFactory().newThread(
-        		new Runnable() {
+		thread = context.getDHTExecutorService().getThreadFactory().newThread(
+				new Runnable() {
 					@Override
 					public void run() {
 						do {
@@ -40,9 +40,9 @@ class HttpMessageDispatcher extends MessageDispatcher {
 							}
 						} while (true);
 					}
-        		});
-        thread.setName(context.getName() + "-MessageDispatcherThread");
-        thread.setDaemon(Boolean.getBoolean("com.limegroup.mojito.io.MessageDispatcherIsDaemon"));
+				});
+		thread.setName(context.getName() + "-MessageDispatcherThread");
+		thread.setDaemon(Boolean.getBoolean("com.limegroup.mojito.io.MessageDispatcherIsDaemon"));
 	}
 
 	@Override
@@ -83,7 +83,7 @@ class HttpMessageDispatcher extends MessageDispatcher {
 	@Override
 	public void start() {
 		super.start();
-        thread.start();
+		thread.start();
 		started = true;
 	}
 
