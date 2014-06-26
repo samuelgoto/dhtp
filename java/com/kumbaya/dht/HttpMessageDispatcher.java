@@ -5,6 +5,8 @@ import com.google.inject.Singleton;
 
 import java.io.IOException;
 import java.net.SocketAddress;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import org.limewire.mojito.Context;
 import org.limewire.mojito.io.MessageDispatcher;
@@ -18,15 +20,33 @@ class HttpMessageDispatcher extends MessageDispatcher {
 	private boolean isBound = false;
 	private boolean started = false;
 	private final Dispatcher dispatcher;
+	private final Thread thread;
+	private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(10);
 
 	@Inject
 	public HttpMessageDispatcher(Context context, Dispatcher dispatcher) {
 		super(context);
 		this.dispatcher = dispatcher;
+        thread = context.getDHTExecutorService().getThreadFactory().newThread(
+        		new Runnable() {
+					@Override
+					public void run() {
+						do {
+							try {
+								Runnable task = queue.take();
+								task.run();
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						} while (true);
+					}
+        		});
+        thread.setName(context.getName() + "-MessageDispatcherThread");
+        thread.setDaemon(Boolean.getBoolean("com.limegroup.mojito.io.MessageDispatcherIsDaemon"));
 	}
 
 	@Override
-	public void handleMessage(DHTMessage message) {
+	public void handleMessage(final DHTMessage message) {
 		super.handleMessage(message);
 	}
 
@@ -47,20 +67,29 @@ class HttpMessageDispatcher extends MessageDispatcher {
 	}
 
 	@Override
-	protected boolean submit(Tag tag) {
-		register(tag);
-		return dispatcher.submit(tag);
+	protected boolean submit(final Tag tag) {
+		queue.add(new Runnable() {
+			@Override
+			public void run() {
+				boolean result = dispatcher.submit(tag);
+				if (result) {
+					register(tag);
+				}
+			}
+		});
+		return true;
 	}
 
 	@Override
 	public void start() {
 		super.start();
+        thread.start();
 		started = true;
 	}
 
 	@Override
 	protected void process(Runnable runnable) {
-		runnable.run();
+		queue.add(runnable);
 	}
 
 	@Override
