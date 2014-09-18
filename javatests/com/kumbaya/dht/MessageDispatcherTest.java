@@ -280,6 +280,9 @@ public class MessageDispatcherTest {
 			}
 		}).anyTimes();
 
+		messageDispatcher.close();
+		messageDispatcher2.close();
+		
 		control.replay();
 
 		dht.setMessageDispatcher(messageFactory);
@@ -305,6 +308,8 @@ public class MessageDispatcherTest {
 		assertEquals("hello world",
 				new String(result.getEntities().iterator().next().getValue().getValue()));
 
+		
+		
 		node.close();
 		dht.close();
 	}

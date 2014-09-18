@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
+import org.eclipse.jetty.util.log.Log;
 import org.limewire.mojito.Context;
 import org.limewire.mojito.io.MessageDispatcher;
 import org.limewire.mojito.io.Tag;
@@ -21,7 +23,7 @@ class HttpMessageDispatcher extends MessageDispatcher {
 	private boolean started = false;
 	private final JettyMessageDispatcher dispatcher;
 	private final Thread thread;
-	private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(10);
+	private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
 
 	@Inject
 	public HttpMessageDispatcher(Context context, JettyMessageDispatcher dispatcher) {
@@ -97,4 +99,11 @@ class HttpMessageDispatcher extends MessageDispatcher {
 			SecureMessageCallback smc) {
 		dispatcher.verify(secureMessage, smc);
 	}
+	
+
+    @Override
+    public void close() {
+        super.close();
+        dispatcher.close();
+    }
 }

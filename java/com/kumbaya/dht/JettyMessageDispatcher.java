@@ -300,4 +300,13 @@ class JettyMessageDispatcher {
     throw new UnsupportedOperationException(
         "Dispatcher doesn't support verifying secure messages");
   }
+  
+  void close() {
+	  try {
+		server.stop();
+		server.destroy();
+	} catch (Exception e) {
+		throw new RuntimeException("Error stopping http server", e);
+	}
+  }
 }

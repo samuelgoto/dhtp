@@ -26,12 +26,14 @@ import org.limewire.io.SimpleNetworkInstanceUtils;
 import org.limewire.mojito.Context;
 import org.limewire.mojito.EntityKey;
 import org.limewire.mojito.KUID;
+import org.limewire.mojito.concurrent.DHTFuture;
 import org.limewire.mojito.db.DHTValue;
 import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.db.DHTValueType;
 import org.limewire.mojito.db.Storable;
 import org.limewire.mojito.db.StorableModel;
 import org.limewire.mojito.db.StorablePublisher;
+import org.limewire.mojito.result.BootstrapResult;
 import org.limewire.mojito.result.FindValueResult;
 import org.limewire.mojito.result.StoreResult;
 import org.limewire.mojito.settings.NetworkSettings;
@@ -96,6 +98,11 @@ public class Dht {
 		return result;
 	}
 
+	public Dht start(String hostname, int port) throws IOException, NumberFormatException {
+		// Starts the dht when the public port is equal to the internal port.
+		return start(hostname, port, port);
+	}
+
 	public Dht start(String hostname, int port, int proxy) throws IOException, NumberFormatException {
 		// The following lines allows the DHT to connect to local ip addresses
 		// which is sometimes useful for debugging purposes. Production binaries
@@ -120,12 +127,13 @@ public class Dht {
 		return this;
 	}
 
-	public Dht bootstrap(String hostname, int port) {
-		dht.bootstrap(InetSocketAddress.createUnresolved(hostname,port));
-		return this;
+	public DHTFuture<BootstrapResult> bootstrap(String hostname, int port) {
+		DHTFuture<BootstrapResult> result = dht.bootstrap(
+				InetSocketAddress.createUnresolved(hostname,port));
+		return result;
 	}
 
-	public boolean bootstraped() {
+	public boolean isBootstraped() {
 		return dht.isBootstrapped();
 	}
 
