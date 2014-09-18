@@ -5,6 +5,9 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import com.kumbaya.dht.Dht.Model;
+import com.kumbaya.monitor.Sampler;
+import com.kumbaya.monitor.Sampler.Sample;
+import com.kumbaya.monitor.VarZ;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -14,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -97,7 +101,6 @@ class JettyMessageDispatcher {
 		protected void doGet(HttpServletRequest request, HttpServletResponse response)
 				throws IOException, ServletException {
 
-
 			PrintWriter writer = response.getWriter();
 			writer.write("<html>");
 			writer.write("<body>");
@@ -176,6 +179,99 @@ class JettyMessageDispatcher {
 		}
 	}
 
+	static class VarZHandler extends HttpServlet {
+		@Inject Provider<Sampler> sampler;
+		
+		@Override
+		protected void doGet(HttpServletRequest request, HttpServletResponse response)
+				throws IOException, ServletException {
+
+			Map<String, List<Sample>> samples = sampler.get().samples();
+			
+			PrintWriter writer = response.getWriter();
+			writer.write("<html>");
+			writer.write("<head>");
+			writer.write("<title>VarZ</title>");
+			writer.write("</head>");
+			writer.write("<body>");
+			writer.write("<h1>VarZ</h1>");
+
+			writer.write("<table border=1>");
+			writer.write("<tr><td>VarZ</td><td>Values</td></tr>");
+			
+			for (Map.Entry<String, List<Sample>> sample : samples.entrySet()) {
+				writer.write("<tr>");
+				writer.write("<td>");
+				writer.write("<a href='/varz" + sample.getKey()  + "'>");
+				writer.write(sample.getKey());
+				writer.write("<a>");
+				writer.write("</td>");
+				writer.write("<td>" + sample.getValue().toString() + "</td>");
+				writer.write("</tr>");
+			}
+			writer.write("</table>");
+
+			writer.write("</body>");
+			writer.write("</html>");
+
+			response.flushBuffer();
+		}
+	}
+
+	static class VarZGraphHandler extends HttpServlet {
+		@Inject Provider<Sampler> sampler;
+		
+		@Override
+		protected void doGet(HttpServletRequest request, HttpServletResponse response)
+				throws IOException, ServletException {
+
+			String varZ = request.getPathInfo();
+
+			List<Sample> samples = sampler.get().samples().get(varZ);
+			
+			PrintWriter writer = response.getWriter();
+
+			String array = "";
+			for (Sample sample : samples) {
+				String sec = new SimpleDateFormat("h:m:s").format(sample.date());
+				array += "['" + sec + "',  " + sample.value() + "],";
+			}
+			
+			String html = ""+
+			"<html>" +
+			"  <head>" +
+			"    <script type='text/javascript' src='https://www.google.com/jsapi'></script>" +
+			"    <script type='text/javascript'>" +
+			"      google.load('visualization', '1', {packages:['corechart']});" +
+			"      google.setOnLoadCallback(drawChart);" +
+			"      function drawChart() {" +
+			"        var data = google.visualization.arrayToDataTable([" +
+			"          ['Time', 'QPS']," +
+			            array +
+			"        ]);" +
+            "" +
+			"        var options = {" +
+			"          title: '" + varZ + "'," +
+			"          hAxis: {title: 'Time',  titleTextStyle: {color: '#333'}}," +
+			"          vAxis: {title: 'QPS', minValue: 0}" +
+			"        };" +
+            "" +
+			"        var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));" +
+			"        chart.draw(data, options);" +
+			"      }" +
+			"    </script>" +
+			"  </head>" +
+			"  <body>" +
+			"    <div id='chart_div' style='width: 100%; height: 100%;'></div>" +
+			"  </body>" +
+			"</html>" +
+			"";
+
+			writer.write(html);
+			
+			response.flushBuffer();
+		}
+	}
 
 	static class DhtHandler extends HttpServlet {
 		private static final long serialVersionUID = 1L;
@@ -196,6 +292,7 @@ class JettyMessageDispatcher {
 		}
 
 		@Override
+		@VarZ("/dht/messages/incoming")
 		protected void doPost(HttpServletRequest request, HttpServletResponse response)
 				throws IOException, ServletException {
 			int length = request.getContentLength();
@@ -245,6 +342,7 @@ class JettyMessageDispatcher {
 		}
 	}
 
+	@VarZ("/dht/messages/outgoing")
 	public boolean send(final Tag tag) {
 		HttpExchange request = new HttpExchange() {
 			@Override

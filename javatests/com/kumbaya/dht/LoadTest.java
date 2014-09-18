@@ -27,9 +27,12 @@ import com.google.inject.Injector;
 
 public class LoadTest {
     private static final Log log = LogFactory.getLog(LoadTest.class);
-    
+
+    // There will be O(NETWORK_SIZE) threads hanging around, so
+    // this test will fail depending on how many threads your
+    // computer can take.
     private static final int NETWORK_SIZE = 100;
-    private static final int NUMBER_OF_VALUES_PER_NODE = 100;
+    private static final int NUMBER_OF_VALUES_PER_NODE = 1;
 
 	@Before
 	public void setUp() {
@@ -61,7 +64,6 @@ public class LoadTest {
 				assertTrue(nodes.get(i).isBootstraped());
 			}		
 			
-			
 			// This test will execute NETWORK_SIZE puts and NETWORK_SIZE ^ 2 gets.
 			
 			// If we skip the bootstrap node, we can run this test a lot faster.
@@ -76,7 +78,7 @@ public class LoadTest {
 						// and for every other node, retrieve that key/value pair ...
 						try {
 							List<DHTValueEntity> result = nodes.get(receiverId).get(
-									"keys/" + senderId + "/" + msgId, 3000);
+									"keys/" + senderId + "/" + msgId, 1000);
 							assertEquals(1, result.size());
 							// ... and assert that its value is correct.
 							assertEquals(Values.of(result.get(0)), 
