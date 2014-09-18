@@ -9,9 +9,11 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.eclipse.jetty.util.log.Log;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.limewire.mojito.Context;
 import org.limewire.mojito.io.MessageDispatcher;
+import org.limewire.mojito.io.MessageDispatcherImpl;
 import org.limewire.mojito.io.Tag;
 import org.limewire.mojito.messages.DHTMessage;
 import org.limewire.security.SecureMessage;
@@ -19,6 +21,8 @@ import org.limewire.security.SecureMessageCallback;
 
 @Singleton
 class HttpMessageDispatcher extends MessageDispatcher {
+    private static final Log logger = LogFactory.getLog(HttpMessageDispatcher.class);
+
 	private boolean isBound = false;
 	private boolean started = false;
 	private final JettyMessageDispatcher dispatcher;
@@ -38,7 +42,7 @@ class HttpMessageDispatcher extends MessageDispatcher {
 								Runnable task = queue.take();
 								task.run();
 							} catch (InterruptedException e) {
-								e.printStackTrace();
+								logger.error(e);
 							}
 						} while (true);
 					}

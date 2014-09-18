@@ -16,9 +16,12 @@
 package com.kumbaya.dht;
 
 import org.limewire.mojito.db.DHTValue;
+import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.db.DHTValueType;
 import org.limewire.mojito.db.impl.DHTValueImpl;
 import org.limewire.mojito.routing.Version;
+
+import com.google.common.base.Preconditions;
 
 public class Values {
   public static DHTValue of(String value) {
@@ -27,5 +30,10 @@ public class Values {
 
   public static DHTValue of(String value, DHTValueType type) {
     return new DHTValueImpl(type, Version.ZERO, value.getBytes());
+  }
+  
+  public static String of(DHTValueEntity entity) {
+	  Preconditions.checkArgument(entity.getValue().getValueType() == DHTValueType.TEXT);
+	  return new String(entity.getValue().getValue());
   }
 }

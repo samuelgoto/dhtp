@@ -56,8 +56,17 @@ public class Dht {
 	@Inject private Model model;
 	@Inject private Provider<MessageDispatcherFactoryImpl> dispatcher;
 
+	public StoreResult put(String key, String value) throws InterruptedException, ExecutionException {
+		return put(DHTValueEntity.createFromValue(dht, Keys.of(key), Values.of(value)));
+	}
+
 	public StoreResult put(KUID key, DHTValue value) throws InterruptedException, ExecutionException {
 		return put(DHTValueEntity.createFromValue(dht, key, value));
+	}
+
+	public List<DHTValueEntity> get(String key, int timeoutMs)
+			throws InterruptedException, ExecutionException, TimeoutException {
+		return get(Keys.as(Keys.of(key)), timeoutMs);
 	}
 
 	public List<DHTValueEntity> get(KUID key, DHTValueType keyType, int timeoutMs)
