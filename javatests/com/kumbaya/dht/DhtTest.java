@@ -170,6 +170,7 @@ public class DhtTest {
     assertEquals(InetSocketAddress.createUnresolved("localhost", 8081),
         entity.getSender().getContactAddress());
 
+    root.close();
     dht.close();
   }
 }

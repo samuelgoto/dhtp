@@ -43,7 +43,7 @@ import org.limewire.security.SecureMessage;
 import org.limewire.security.SecureMessageCallback;
 
 @Singleton
-class JettyMessageDispatcher implements Dispatcher {
+class JettyMessageDispatcher {
   private final HttpClient client = new HttpClient();
   private Server server;
   private final Context context;
@@ -220,7 +220,6 @@ class JettyMessageDispatcher implements Dispatcher {
     }
   }
 
-  @Override
   public void bind(SocketAddress address) throws IOException {
     server = new Server(((InetSocketAddress) address)
         .getPort());
@@ -244,8 +243,7 @@ class JettyMessageDispatcher implements Dispatcher {
     }
   }
 
-  @Override
-  public boolean submit(final Tag tag) {
+  public boolean send(final Tag tag) {
     HttpExchange request = new HttpExchange() {
       @Override
       protected void onConnectionFailed(Throwable x) {
@@ -297,7 +295,6 @@ class JettyMessageDispatcher implements Dispatcher {
     }
   }
 
-  @Override
   public void verify(SecureMessage secureMessage,
       SecureMessageCallback smc) {
     throw new UnsupportedOperationException(

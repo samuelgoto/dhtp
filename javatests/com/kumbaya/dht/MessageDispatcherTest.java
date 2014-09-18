@@ -83,8 +83,8 @@ public class MessageDispatcherTest {
 	private IMocksControl control = EasyMock.createControl();
 	MessageDispatcherFactory messageFactory = control.createMock(
 			MessageDispatcherFactory.class);
-	Dispatcher messageDispatcher = control.createMock(
-			Dispatcher.class);
+	JettyMessageDispatcher messageDispatcher = control.createMock(
+			JettyMessageDispatcher.class);
 
 	@Before
 	public void setUp() {
@@ -114,18 +114,18 @@ public class MessageDispatcherTest {
 		// While bootstraping, the node pings and sends a find node request
 		// to the bootstrap node.
 		Capture<Tag> pingRequestTag = new Capture<Tag>();
-		expect(messageDispatcher.submit(capture(pingRequestTag))).andReturn(true);
+		expect(messageDispatcher.send(capture(pingRequestTag))).andReturn(true);
 
 		Capture<Tag> findNodeRequestTag = new Capture<Tag>();
-		expect(messageDispatcher.submit(capture(findNodeRequestTag))).andReturn(true);
+		expect(messageDispatcher.send(capture(findNodeRequestTag))).andReturn(true);
 
 		// While storing a result, the node sends a find node request,
 		// to which the bootstrap node replies.
 		Capture<Tag> findNodeRequestTag2 = new Capture<Tag>();
-		expect(messageDispatcher.submit(capture(findNodeRequestTag2))).andReturn(true);
+		expect(messageDispatcher.send(capture(findNodeRequestTag2))).andReturn(true);
 
 		Capture<Tag> storeRequestTag = new Capture<Tag>();
-		expect(messageDispatcher.submit(capture(storeRequestTag))).andReturn(true);
+		expect(messageDispatcher.send(capture(storeRequestTag))).andReturn(true);
 
 		control.replay();
 
@@ -186,6 +186,9 @@ public class MessageDispatcherTest {
 
 		httpMessageDispatcher.handleMessage(findNodeResponse2);
 
+		// Allows the FindNodeRequestHandler to be handled asynchronously. 
+		Thread.sleep(200);
+
 		StoreRequest storeRequest = (StoreRequest) storeRequestTag.getValue().getMessage();
 
 		StoreResponse storeResponse = new StoreResponseImpl(
@@ -214,8 +217,8 @@ public class MessageDispatcherTest {
 
 		MessageDispatcherFactory messageFactory2 = control.createMock(
 				MessageDispatcherFactory.class);
-		Dispatcher messageDispatcher2 = control.createMock(
-				Dispatcher.class);
+		JettyMessageDispatcher messageDispatcher2 = control.createMock(
+				JettyMessageDispatcher.class);
 
 		final HttpMessageDispatcher httpMessageDispatcher2 = new HttpMessageDispatcher(
 				(Context) node, messageDispatcher2);
@@ -228,7 +231,7 @@ public class MessageDispatcherTest {
 		// All messages that gets submitted to the first dispatcher
 		// get directly pushed to the second dispatcher, and vice versa.
 		final Capture<Tag> tag = new Capture<Tag>();
-		expect(messageDispatcher.submit(capture(tag))).andAnswer(new IAnswer<Boolean>() {
+		expect(messageDispatcher.send(capture(tag))).andAnswer(new IAnswer<Boolean>() {
 			@Override
 			public Boolean answer() throws Throwable {
 				DHTMessage source = tag.getValue().getMessage();
@@ -253,7 +256,7 @@ public class MessageDispatcherTest {
 		}).anyTimes();
 
 		final Capture<Tag> tag2 = new Capture<Tag>();
-		expect(messageDispatcher2.submit(capture(tag2))).andAnswer(new IAnswer<Boolean>() {
+		expect(messageDispatcher2.send(capture(tag2))).andAnswer(new IAnswer<Boolean>() {
 			@Override
 			public Boolean answer() throws Throwable {
 				DHTMessage source = tag2.getValue().getMessage();

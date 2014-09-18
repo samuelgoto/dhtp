@@ -17,7 +17,6 @@ public class DhtModule extends AbstractModule {
 	  @Override
       protected void configure() {
 	      bind(MessageDispatcher.class).to(HttpMessageDispatcher.class);
-	      bind(Dispatcher.class).to(JettyMessageDispatcher.class);
 	      
 	      MapBinder<String, HttpServlet> mapbinder
 	         = MapBinder.newMapBinder(binder(), String.class, HttpServlet.class);

@@ -19,12 +19,12 @@ import org.limewire.security.SecureMessageCallback;
 class HttpMessageDispatcher extends MessageDispatcher {
 	private boolean isBound = false;
 	private boolean started = false;
-	private final Dispatcher dispatcher;
+	private final JettyMessageDispatcher dispatcher;
 	private final Thread thread;
 	private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(10);
 
 	@Inject
-	public HttpMessageDispatcher(Context context, Dispatcher dispatcher) {
+	public HttpMessageDispatcher(Context context, JettyMessageDispatcher dispatcher) {
 		super(context);
 		this.dispatcher = dispatcher;
 		thread = context.getDHTExecutorService().getThreadFactory().newThread(
@@ -71,7 +71,7 @@ class HttpMessageDispatcher extends MessageDispatcher {
 		queue.add(new Runnable() {
 			@Override
 			public void run() {
-				boolean result = dispatcher.submit(tag);
+				boolean result = dispatcher.send(tag);
 				if (result) {
 					register(tag);
 				}
