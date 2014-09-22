@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -99,7 +100,11 @@ public class Sampler {
 	}
 
 	public synchronized List<Sample> get(String key) {
-		return qps.get(key);
+		if (qps.containsKey(key)) {
+			return qps.get(key);
+		} else {
+			return ImmutableList.<Sample>of();
+		}
 	}
 
 	@VisibleForTesting

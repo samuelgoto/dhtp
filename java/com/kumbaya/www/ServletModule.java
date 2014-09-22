@@ -14,6 +14,7 @@ public class ServletModule extends AbstractModule {
         mapbinder.addBinding("/varz/*").to(VarZGraphServlet.class);
 		mapbinder.addBinding("/varz").to(VarZServlet.class);
         mapbinder.addBinding("/threadz").to(ThreadZServlet.class);
+        mapbinder.addBinding("/healthz").to(HealthZServlet.class);
         mapbinder.addBinding("/").to(IndexServlet.class);
 	}
 }
