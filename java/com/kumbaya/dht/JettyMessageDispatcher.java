@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import com.kumbaya.monitor.VarZ;
+import com.kumbaya.monitor.VarZLogger;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -40,12 +41,17 @@ class JettyMessageDispatcher {
 	private final HttpClient client = new HttpClient();
 	private Server server;
 	private final Context context;
+	private final VarZLogger varZ;
 	private final Map<String, HttpServlet> servlets;
 
 	@Inject
-	JettyMessageDispatcher(Context context, Map<String, HttpServlet> servlets) {
+	JettyMessageDispatcher(
+			Context context,
+			Map<String, HttpServlet> servlets,
+			VarZLogger varZ) {
 		this.context = context;
 		this.servlets = servlets;
+		this.varZ = varZ;
 		client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
 	}
 
@@ -53,11 +59,16 @@ class JettyMessageDispatcher {
 		private static final long serialVersionUID = 1L;
 		private final Context context;
 		private Provider<HttpMessageDispatcher> dispatcher;
+		private final VarZLogger varZ;
 
 		@Inject
-		DhtHandler(Context context, Provider<HttpMessageDispatcher> dispatcher) {
+		DhtHandler(
+				Context context,
+				Provider<HttpMessageDispatcher> dispatcher,
+				VarZLogger varZ) {
 			this.context = context;
 			this.dispatcher = dispatcher;
+			this.varZ = varZ;
 		}
 
 		@Override
@@ -87,6 +98,10 @@ class JettyMessageDispatcher {
 			try {
 				DHTMessage destination = context.getMessageFactory()
 						.createMessage(src, ByteBuffer.wrap(data));				
+
+				varZ.log("/dht/messages/incoming/" +
+				    destination.getOpCode().name().toLowerCase());
+
 				dispatcher.get().handleMessage(destination);
 			} catch (Exception e) {
 				logger.error(e);
@@ -120,6 +135,9 @@ class JettyMessageDispatcher {
 
 	@VarZ("/dht/messages/outgoing")
 	public boolean send(final Tag tag) {
+		varZ.log("/dht/messages/outgoing/" + tag.getMessage().getOpCode()
+				.name().toLowerCase());
+		
 		HttpExchange request = new HttpExchange() {
 			@Override
 			protected void onConnectionFailed(Throwable x) {
