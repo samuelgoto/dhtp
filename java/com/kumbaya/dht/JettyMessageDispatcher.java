@@ -186,7 +186,7 @@ class JettyMessageDispatcher {
 		protected void doGet(HttpServletRequest request, HttpServletResponse response)
 				throws IOException, ServletException {
 
-			Map<String, List<Sample>> samples = sampler.get().samples();
+			Set<String> keys = sampler.get().keys();
 			
 			PrintWriter writer = response.getWriter();
 			writer.write("<html>");
@@ -199,14 +199,14 @@ class JettyMessageDispatcher {
 			writer.write("<table border=1>");
 			writer.write("<tr><td>VarZ</td><td>Values</td></tr>");
 			
-			for (Map.Entry<String, List<Sample>> sample : samples.entrySet()) {
+			for (String key : keys) {
 				writer.write("<tr>");
 				writer.write("<td>");
-				writer.write("<a href='/varz" + sample.getKey()  + "'>");
-				writer.write(sample.getKey());
+				writer.write("<a href='/varz" + key  + "'>");
+				writer.write(key);
 				writer.write("<a>");
 				writer.write("</td>");
-				writer.write("<td>" + sample.getValue().toString() + "</td>");
+				writer.write("<td> ... </td>");
 				writer.write("</tr>");
 			}
 			writer.write("</table>");
@@ -227,42 +227,40 @@ class JettyMessageDispatcher {
 
 			String varZ = request.getPathInfo();
 
-			List<Sample> samples = sampler.get().samples().get(varZ);
+			List<Sample> samples = sampler.get().get(varZ);
 			
 			PrintWriter writer = response.getWriter();
 
 			String array = "";
 			for (Sample sample : samples) {
-				String sec = new SimpleDateFormat("h:m:s").format(sample.date());
-				array += "['" + sec + "',  " + sample.value() + "],";
+				array += "data.push([new Date(" + sample.date().getTime() + "), " + sample.value() + "]);";
 			}
 			
 			String html = ""+
 			"<html>" +
 			"  <head>" +
-			"    <script type='text/javascript' src='https://www.google.com/jsapi'></script>" +
-			"    <script type='text/javascript'>" +
-			"      google.load('visualization', '1', {packages:['corechart']});" +
-			"      google.setOnLoadCallback(drawChart);" +
-			"      function drawChart() {" +
-			"        var data = google.visualization.arrayToDataTable([" +
-			"          ['Time', 'QPS']," +
-			            array +
-			"        ]);" +
-            "" +
-			"        var options = {" +
-			"          title: '" + varZ + "'," +
-			"          hAxis: {title: 'Time',  titleTextStyle: {color: '#333'}}," +
-			"          vAxis: {title: 'QPS', minValue: 0}" +
-			"        };" +
-            "" +
-			"        var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));" +
-			"        chart.draw(data, options);" +
-			"      }" +
-			"    </script>" +
+			"    <script type='text/javascript' src='http://dygraphs.com/1.0.1/dygraph-combined.js'></script>" +
 			"  </head>" +
 			"  <body>" +
-			"    <div id='chart_div' style='width: 100%; height: 100%;'></div>" +
+			"    <div id='dygraph' style='width: 100%; height: 100%;'></div>" +
+			"    <script type='text/javascript'>" +
+			"      var data = [];" +
+			array +
+			"      g = new Dygraph(" +
+			"          document.getElementById('dygraph')," +
+			"          data, {" +
+            "            title: '" + varZ + " '," +
+            "            ylabel: 'QPS'," +
+            "            legend: 'always'," +
+            "            drawGrid: false," +
+            "            fillGraph: true," +
+            "            drawPoints: true," +
+            "            animatedZooms: true," +
+            "            pointSize: 4," +
+            "            labelsDivStyles: { 'textAlign': 'right' }," +
+            "            showRangeSelector: true" +
+			"        });" +
+			"    </script>" +
 			"  </body>" +
 			"</html>" +
 			"";

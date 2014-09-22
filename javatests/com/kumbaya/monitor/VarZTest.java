@@ -40,45 +40,8 @@ public class VarZTest {
 	}
 	
 	static class Foo {
-		private int a = 0;
-		@VarZ(value = "a", type = {VarZ.Type.COUNTER}) int increment() {
-			a++;
-			return a;
-		}
-
 		@VarZ("b") void doStuff() {
 		}
-	}
-
-	@Test
-	public void testCounter() {
-		Injector injector = create();
-		Foo foo = injector.getInstance(Foo.class);
-		Sampler sampler = injector.getInstance(Sampler.class);
-
-		// first value logged.
-		EasyMock.expect(clock.now()).andReturn(new Date(0));
-		// second value ignored because it happened to close to the first value.
-		EasyMock.expect(clock.now()).andReturn(new Date(1));
-		// third value captured.
-		EasyMock.expect(clock.now()).andReturn(new Date(1001));
-		
-		control.replay();
-		
-		// first value captured.
-		assertEquals(1, foo.increment());
-		assertEquals(1, sampler.get("a").size());
-		assertEquals("0: 1", sampler.get("a").get(0).toString());
-		
-		// second value ignored, happened to close to first value.
-		assertEquals(2, foo.increment());
-		assertEquals(1, sampler.get("a").size());
-		
-		// third value captured.
-		assertEquals(3, foo.increment());
-		assertEquals(2, sampler.get("a").size());
-		assertEquals("0: 1", sampler.get("a").get(0).toString());
-		assertEquals("1001: 3", sampler.get("a").get(1).toString());
 	}
 
 	@Test

@@ -8,10 +8,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface VarZ {
-	enum Type {
-		COUNTER,
-		QPS
-	}
 	public String value() default "/default";
-	public Type[] type() default {Type.QPS};
 }

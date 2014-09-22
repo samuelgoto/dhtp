@@ -16,13 +16,7 @@ class VarZInterceptor implements MethodInterceptor {
 		VarZ varZ = invocation.getMethod().getAnnotation(VarZ.class);
 		String key = varZ.value();
 		Object result = invocation.proceed();
-		for (VarZ.Type type : varZ.type()) {
-			if (type == VarZ.Type.COUNTER) {
-				sampler.get().sample(key, (Integer) result);
-			} else {
-				sampler.get().qps(key);
-			}
-		}
+		sampler.get().log(key);
 		return result;
 	}
 }
