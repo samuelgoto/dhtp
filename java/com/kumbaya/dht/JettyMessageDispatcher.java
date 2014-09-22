@@ -4,25 +4,16 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
-import com.kumbaya.dht.Dht.Model;
-import com.kumbaya.monitor.Sampler;
-import com.kumbaya.monitor.Sampler.Sample;
 import com.kumbaya.monitor.VarZ;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.SocketAddress;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -38,9 +29,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.limewire.mojito.Context;
-import org.limewire.mojito.EntityKey;
-import org.limewire.mojito.db.DHTValueEntity;
-import org.limewire.mojito.db.DHTValueType;
 import org.limewire.mojito.io.Tag;
 import org.limewire.mojito.messages.DHTMessage;
 import org.limewire.security.SecureMessage;
@@ -59,216 +47,6 @@ class JettyMessageDispatcher {
 		this.context = context;
 		this.servlets = servlets;
 		client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
-	}
-
-	static class IndexHandler extends HttpServlet {
-		private static final Log log = LogFactory.getLog(IndexHandler.class);
-
-		private static final long serialVersionUID = 1L;
-		private final Context context;
-		private final Dht dht;
-
-		@Inject
-		IndexHandler(Context context, Dht dht) {
-			this.context = context;
-			this.dht = dht;
-		}
-
-		@Override
-		protected void doPost(HttpServletRequest request, HttpServletResponse response)
-				throws IOException, ServletException {
-
-			log.info("Storing a value");
-
-			PrintWriter writer = response.getWriter();
-
-			String key = request.getParameter("key");
-			String value = request.getParameter("value");
-
-			try {
-				dht.put(Keys.of(key), Values.of(value));
-				response.sendRedirect("/" + key);
-			} catch (InterruptedException e) {
-				writer.write(e.getMessage());
-				return;
-			} catch (ExecutionException e) {
-				writer.write(e.getMessage());
-				return;
-			}
-		}
-
-		@Override
-		protected void doGet(HttpServletRequest request, HttpServletResponse response)
-				throws IOException, ServletException {
-
-			PrintWriter writer = response.getWriter();
-			writer.write("<html>");
-			writer.write("<body>");
-			String path = request.getRequestURI();
-			if (!"/".equals(path) && !"/favicon.ico".equals(path)) {
-				writer.write("<pre>");
-				try {
-					log.info("Getting a value");
-					EntityKey key = EntityKey.createEntityKey(
-							Keys.of(path.substring(1)), DHTValueType.TEXT);
-					List<DHTValueEntity> result = dht.get(key, 200);
-					writer.write(result.toString());
-					log.info("Done");
-				} catch (InterruptedException e) {
-					writer.write(e.toString());
-					log.error(e);
-				} catch (ExecutionException e) {
-					writer.write(e.toString());
-					log.error(e);
-				} catch (TimeoutException e) {
-					writer.write(e.toString());
-					log.error(e);
-				}
-				writer.write("</pre>");
-			}
-			writer.write("<pre>");
-			writer.write("Local node:\n\n");
-			writer.write(context.toString());
-			writer.write("\n");
-			writer.write("Routing table:\n\n");
-			writer.write(context.getRouteTable().toString());
-			writer.write("\n");
-			writer.write("Database:\n\n");
-			writer.write(context.getDatabase().toString());
-			writer.write("</pre>");
-			writer.write("<br>");
-			writer.write("<form method='post'>");
-			writer.write("  key: <input type='text' name='key'>");
-			writer.write("  value: <input type='text' name='value'>");
-			writer.write("  <input type='submit' value='create'>");
-			writer.write("</form>");
-			writer.write("</body>");
-			writer.write("</html>");
-
-			response.flushBuffer();
-		}
-	}
-
-	static class ThreadZHandler extends HttpServlet {
-		@Override
-		protected void doGet(HttpServletRequest request, HttpServletResponse response)
-				throws IOException, ServletException {
-
-			PrintWriter writer = response.getWriter();
-			writer.write("<html>");
-			writer.write("<head>");
-			writer.write("<title>Threads</title>");
-			writer.write("</head>");
-			writer.write("<body>");
-			writer.write("<h1>Threads</h1>");
-
-			Set<Thread> threads = Thread.getAllStackTraces().keySet();
-			for (Thread thread : threads) {
-				writer.write("<div style='margin-top: 30px;'>");
-				writer.write("<p><b>" + thread.getName() + ": " + thread.getState() + "</b></p>");        
-				for (StackTraceElement stackTrace : thread.getStackTrace()) {
-					writer.write("<p style='margin-left: 50px;'>" + stackTrace.toString() + "</p>");
-				}
-				writer.write("</div>");
-			}
-
-			writer.write("</body>");
-			writer.write("</html>");
-
-			response.flushBuffer();
-		}
-	}
-
-	static class VarZHandler extends HttpServlet {
-		@Inject Provider<Sampler> sampler;
-		
-		@Override
-		protected void doGet(HttpServletRequest request, HttpServletResponse response)
-				throws IOException, ServletException {
-
-			Set<String> keys = sampler.get().keys();
-			
-			PrintWriter writer = response.getWriter();
-			writer.write("<html>");
-			writer.write("<head>");
-			writer.write("<title>VarZ</title>");
-			writer.write("</head>");
-			writer.write("<body>");
-			writer.write("<h1>VarZ</h1>");
-
-			writer.write("<table border=1>");
-			writer.write("<tr><td>VarZ</td><td>Values</td></tr>");
-			
-			for (String key : keys) {
-				writer.write("<tr>");
-				writer.write("<td>");
-				writer.write("<a href='/varz" + key  + "'>");
-				writer.write(key);
-				writer.write("<a>");
-				writer.write("</td>");
-				writer.write("<td> ... </td>");
-				writer.write("</tr>");
-			}
-			writer.write("</table>");
-
-			writer.write("</body>");
-			writer.write("</html>");
-
-			response.flushBuffer();
-		}
-	}
-
-	static class VarZGraphHandler extends HttpServlet {
-		@Inject Provider<Sampler> sampler;
-		
-		@Override
-		protected void doGet(HttpServletRequest request, HttpServletResponse response)
-				throws IOException, ServletException {
-
-			String varZ = request.getPathInfo();
-
-			List<Sample> samples = sampler.get().get(varZ);
-			
-			PrintWriter writer = response.getWriter();
-
-			String array = "";
-			for (Sample sample : samples) {
-				array += "data.push([new Date(" + sample.date().getTime() + "), " + sample.value() + "]);";
-			}
-			
-			String html = ""+
-			"<html>" +
-			"  <head>" +
-			"    <script type='text/javascript' src='http://dygraphs.com/1.0.1/dygraph-combined.js'></script>" +
-			"  </head>" +
-			"  <body>" +
-			"    <div id='dygraph' style='width: 100%; height: 100%;'></div>" +
-			"    <script type='text/javascript'>" +
-			"      var data = [];" +
-			array +
-			"      g = new Dygraph(" +
-			"          document.getElementById('dygraph')," +
-			"          data, {" +
-            "            title: '" + varZ + " '," +
-            "            ylabel: 'QPS'," +
-            "            legend: 'always'," +
-            "            drawGrid: false," +
-            "            fillGraph: true," +
-            "            drawPoints: true," +
-            "            animatedZooms: true," +
-            "            pointSize: 4," +
-            "            labelsDivStyles: { 'textAlign': 'right' }," +
-            "            showRangeSelector: true" +
-			"        });" +
-			"    </script>" +
-			"  </body>" +
-			"</html>" +
-			"";
-
-			writer.write(html);
-			
-			response.flushBuffer();
-		}
 	}
 
 	static class DhtHandler extends HttpServlet {

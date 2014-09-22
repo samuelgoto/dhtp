@@ -3,12 +3,6 @@ package com.kumbaya.dht;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.multibindings.MapBinder;
-
-import com.kumbaya.dht.JettyMessageDispatcher.DhtHandler;
-import com.kumbaya.dht.JettyMessageDispatcher.IndexHandler;
-
-import javax.servlet.http.HttpServlet;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;

@@ -10,16 +10,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
 import com.kumbaya.dht.JettyMessageDispatcher.DhtHandler;
-import com.kumbaya.dht.JettyMessageDispatcher.IndexHandler;
-import com.kumbaya.dht.JettyMessageDispatcher.ThreadZHandler;
-import com.kumbaya.dht.JettyMessageDispatcher.VarZHandler;
-import com.kumbaya.dht.JettyMessageDispatcher.VarZGraphHandler;
 import com.kumbaya.monitor.VarZModule;
+import com.kumbaya.www.ServletModule;
 
 public class DhtModule extends AbstractModule {
 	  @Override
       protected void configure() {
           install(new VarZModule());
+          install(new ServletModule());
 
           bind(MessageDispatcher.class).to(HttpMessageDispatcher.class);
 	      
@@ -27,9 +25,5 @@ public class DhtModule extends AbstractModule {
 	         = MapBinder.newMapBinder(binder(), String.class, HttpServlet.class);
 	      
 	      mapbinder.addBinding("/.well-known/dht").to(DhtHandler.class);
-          mapbinder.addBinding("/threadz").to(ThreadZHandler.class);
-          mapbinder.addBinding("/varz/*").to(VarZGraphHandler.class);
-          mapbinder.addBinding("/varz").to(VarZHandler.class);
-          mapbinder.addBinding("/").to(IndexHandler.class);
 	  }
 }

@@ -61,22 +61,30 @@ public class VarZTest {
 		control.replay();
 		
 		foo.doStuff();
-		assertEquals(1, sampler.get("b").size());
+		assertEquals(2, sampler.get("b").size());
 		assertEquals("0: 1", sampler.get("b").get(0).toString());
+		assertEquals("1000: 0", sampler.get("b").get(1).toString());
 
 		foo.doStuff();
-		assertEquals(1, sampler.get("b").size());
+		assertEquals(2, sampler.get("b").size());
 		assertEquals("0: 2", sampler.get("b").get(0).toString());
+		assertEquals("1000: 0", sampler.get("b").get(1).toString());
 
 		foo.doStuff();
-		assertEquals(2, sampler.get("b").size());
-		assertEquals("1000: 1", sampler.get("b").get(1).toString());
+		assertEquals(4, sampler.get("b").size());
+		assertEquals("0: 2", sampler.get("b").get(0).toString());
+		assertEquals("1000: 0", sampler.get("b").get(1).toString());
+		assertEquals("1000: 1", sampler.get("b").get(2).toString());
+		assertEquals("2000: 0", sampler.get("b").get(3).toString());
 
 		foo.doStuff();
 		foo.doStuff();
 		foo.doStuff();
-		assertEquals(2, sampler.get("b").size());
-		assertEquals("1000: 4", sampler.get("b").get(1).toString());
+		assertEquals(4, sampler.get("b").size());
+		assertEquals("0: 2", sampler.get("b").get(0).toString());
+		assertEquals("1000: 0", sampler.get("b").get(1).toString());
+		assertEquals("1000: 4", sampler.get("b").get(2).toString());
+		assertEquals("2000: 0", sampler.get("b").get(3).toString());
 	}
 
 	private Injector create() {
