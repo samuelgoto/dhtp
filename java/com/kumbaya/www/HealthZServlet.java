@@ -47,9 +47,8 @@ class HealthZServlet extends HttpServlet {
 		writer.write("<body>");
 		writer.write("<h1>HealthZ</h1>");
 
-
 		for (String key : keys) {
-			writer.write("<iframe src='/varz" + key  + "' width='100%' height='400px'></iframe>");
+			writer.write("<iframe src='/varz" + key  + "' width='100%' height='300px'></iframe>");
 		}
 
 		writer.write("</body>");
