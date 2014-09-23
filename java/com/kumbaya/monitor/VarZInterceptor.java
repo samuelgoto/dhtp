@@ -6,10 +6,12 @@ import org.aopalliance.intercept.MethodInvocation;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.kumbaya.monitor.Sampler.Clock;
 
 @Singleton
 class VarZInterceptor implements MethodInterceptor {
 	@Inject Provider<Sampler> sampler;
+	@Inject Provider<Clock> clock;
 	
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable {

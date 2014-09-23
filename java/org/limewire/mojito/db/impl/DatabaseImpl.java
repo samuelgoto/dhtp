@@ -155,7 +155,7 @@ public class DatabaseImpl implements Database {
      * Adds the given <code>DHTValue</code> to the Database succeeded.
      * @return true if adding the <code>DHTValueEntity</code> succeeded
      */
-    public synchronized boolean add(DHTValueEntity entity) {
+    private synchronized boolean add(DHTValueEntity entity) {
         KUID primaryKey = entity.getPrimaryKey();
         DHTValueEntityBag bag = database.get(primaryKey);
         
@@ -201,7 +201,7 @@ public class DatabaseImpl implements Database {
      * Returns the number of values that are currently stored under
      * the same Class C Network.
      */
-    public synchronized int getValuesPerNetwork(DHTValueEntity entity) {
+    private synchronized int getValuesPerNetwork(DHTValueEntity entity) {
         return getValueCount(entity, valuesPerNetwork, NetworkUtils.CLASS_C_NETMASK);
     }
     
@@ -209,7 +209,7 @@ public class DatabaseImpl implements Database {
      * Returns the number of values that are currently stored under
      * the same IP Address.
      */
-    public synchronized int getValuesPerAddress(DHTValueEntity entity) {
+    private synchronized int getValuesPerAddress(DHTValueEntity entity) {
         return getValueCount(entity, valuesPerAddress, IPV4_ADDRESS_NETMASK);
     }
     
@@ -386,7 +386,7 @@ public class DatabaseImpl implements Database {
     /**
      * For internal use only.
      */
-    public synchronized DHTValueEntityBag getBag(KUID valueId) {
+    private synchronized DHTValueEntityBag getBag(KUID valueId) {
         return database.get(valueId);
     }
     
