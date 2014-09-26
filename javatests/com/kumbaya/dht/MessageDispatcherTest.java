@@ -72,6 +72,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
+import com.google.inject.util.Providers;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expect;
@@ -97,7 +98,7 @@ public class MessageDispatcherTest {
 
 	private AsyncMessageDispatcher messageFactory(MojitoDHT node) {
 		AsyncMessageDispatcher httpMessageDispatcher = new AsyncMessageDispatcher(
-				(Context) node, messageDispatcher, sender);
+				(Context) node, messageDispatcher, Providers.of(sender));
 		expect(messageFactory.create(isA(Context.class))).andReturn(
 				httpMessageDispatcher);
 		return httpMessageDispatcher;
@@ -224,7 +225,7 @@ public class MessageDispatcherTest {
 				HttpMessageDispatcher.class);
 
 		final AsyncMessageDispatcher httpMessageDispatcher2 = new AsyncMessageDispatcher(
-				(Context) node, messageDispatcher2, sender2);
+				(Context) node, messageDispatcher2, Providers.of(sender2));
 		expect(messageFactory2.create(isA(Context.class))).andReturn(
 				httpMessageDispatcher2);
 

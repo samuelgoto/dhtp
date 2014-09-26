@@ -28,9 +28,9 @@ public class HttpMessageDispatcher {
 	HttpMessageDispatcher(Context context, VarZLogger varZ, HttpClient client) throws Exception {
 		this.context = context;
 		this.client = client;
+		this.varZ = varZ;
 		this.client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
 		this.client.start();
-		this.varZ = varZ;
 	}
 
 	@VarZ("/dht/messages/outgoing")

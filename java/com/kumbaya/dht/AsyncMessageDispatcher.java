@@ -1,6 +1,7 @@
 package com.kumbaya.dht;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import java.io.IOException;
@@ -26,7 +27,7 @@ public class AsyncMessageDispatcher extends MessageDispatcher {
 	private boolean isBound = false;
 	private boolean started = false;
 	private final Server dispatcher;
-	private final HttpMessageDispatcher sender;
+	private final Provider<HttpMessageDispatcher> sender;
 	private final Thread thread;
 	private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
 
@@ -34,7 +35,7 @@ public class AsyncMessageDispatcher extends MessageDispatcher {
 	public AsyncMessageDispatcher(
 			Context context,
 			Server dispatcher,
-			HttpMessageDispatcher sender) {
+			Provider<HttpMessageDispatcher> sender) {
 		super(context);
 		this.dispatcher = dispatcher;
 		this.sender = sender;
@@ -82,7 +83,7 @@ public class AsyncMessageDispatcher extends MessageDispatcher {
 		queue.add(new Runnable() {
 			@Override
 			public void run() {
-				boolean result = sender.send(tag);
+				boolean result = sender.get().send(tag);
 				if (result) {
 					register(tag);
 				}
