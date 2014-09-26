@@ -123,16 +123,6 @@ public class BackgroundService extends Service {
 					}
 				}
 			}
-			
-			long endTime = System.currentTimeMillis() + 5*1000;
-			while (System.currentTimeMillis() < endTime) {
-				synchronized (this) {
-					try {
-						wait(endTime - System.currentTimeMillis());
-					} catch (Exception e) {
-					}
-				}
-			}
 
 			// Stop the service using the startId, so that we don't stop
 			// the service in the middle of handling another job

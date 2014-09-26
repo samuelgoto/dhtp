@@ -25,10 +25,10 @@
            where PACKAGE is the application's package name.
     -->
     <permission
-        android:name="com.kumbaya.android.permission.C2D_MESSAGE"
+        android:name="com.kumbaya.android.client.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
     <uses-permission
-        android:name="com.kumbaya.android.permission.C2D_MESSAGE" />
+        android:name="com.kumbaya.android.client.permission.C2D_MESSAGE" />
 
     <!-- This app has permission to register and receive data message. -->
     <uses-permission

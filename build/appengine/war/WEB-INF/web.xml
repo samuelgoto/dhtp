@@ -16,14 +16,14 @@
 
   <listener>
     <listener-class>
-      com.google.android.gcm.demo.server.ApiKeyInitializer
+      com.kumbaya.android.gcm.demo.server.ApiKeyInitializer
     </listener-class>
   </listener>
 
   <servlet>
     <servlet-name>RegisterServlet</servlet-name>
     <servlet-class>
-      com.google.android.gcm.demo.server.RegisterServlet
+      com.kumbaya.android.gcm.demo.server.RegisterServlet
     </servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
@@ -36,7 +36,7 @@
   <servlet>
     <servlet-name>UnregisterServlet</servlet-name>
     <servlet-class>
-      com.google.android.gcm.demo.server.UnregisterServlet
+      com.kumbaya.android.gcm.demo.server.UnregisterServlet
     </servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
@@ -49,7 +49,7 @@
   <servlet>
     <servlet-name>SendAllMessagesServlet</servlet-name>
     <servlet-class>
-      com.google.android.gcm.demo.server.SendAllMessagesServlet
+      com.kumbaya.android.gcm.demo.server.SendAllMessagesServlet
     </servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
@@ -62,7 +62,7 @@
   <servlet>
     <servlet-name>SendMessageServlet</servlet-name>
     <servlet-class>
-      com.google.android.gcm.demo.server.SendMessageServlet
+      com.kumbaya.android.gcm.demo.server.SendMessageServlet
     </servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
@@ -75,7 +75,7 @@
   <servlet>
     <servlet-name>HomeServlet</servlet-name>
     <servlet-class>
-      com.google.android.gcm.demo.server.HomeServlet
+      com.kumbaya.android.gcm.demo.server.HomeServlet
     </servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
@@ -83,7 +83,7 @@
   <servlet>
     <servlet-name>DhtServlet</servlet-name>
     <servlet-class>
-      com.google.android.gcm.demo.server.DhtServlet
+      com.kumbaya.android.gcm.demo.server.DhtServlet
     </servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
