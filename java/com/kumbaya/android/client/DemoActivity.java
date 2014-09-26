@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kumbaya.android;
+package com.kumbaya.android.client;
 
-import static com.kumbaya.android.CommonUtilities.DISPLAY_MESSAGE_ACTION;
-import static com.kumbaya.android.CommonUtilities.EXTRA_MESSAGE;
-import static com.kumbaya.android.CommonUtilities.SENDER_ID;
-import static com.kumbaya.android.CommonUtilities.SERVER_URL;
+import static com.kumbaya.android.client.CommonUtilities.DISPLAY_MESSAGE_ACTION;
+import static com.kumbaya.android.client.CommonUtilities.EXTRA_MESSAGE;
+import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
+import static com.kumbaya.android.client.CommonUtilities.SERVER_URL;
 
 import java.io.IOException;
 import java.net.SocketAddress;

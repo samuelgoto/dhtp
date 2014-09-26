@@ -1,8 +1,8 @@
-package com.kumbaya.android;
+package com.kumbaya.android.client;
 
-import static com.kumbaya.android.CommonUtilities.DISPLAY_MESSAGE_ACTION;
-import static com.kumbaya.android.CommonUtilities.EXTRA_MESSAGE;
-import static com.kumbaya.android.CommonUtilities.SENDER_ID;
+import static com.kumbaya.android.client.CommonUtilities.DISPLAY_MESSAGE_ACTION;
+import static com.kumbaya.android.client.CommonUtilities.EXTRA_MESSAGE;
+import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kumbaya.android;
+package com.kumbaya.android.client;
 
-import static com.kumbaya.android.CommonUtilities.SERVER_URL;
-import static com.kumbaya.android.CommonUtilities.TAG;
-import static com.kumbaya.android.CommonUtilities.displayMessage;
+import static com.kumbaya.android.client.CommonUtilities.SERVER_URL;
+import static com.kumbaya.android.client.CommonUtilities.TAG;
+import static com.kumbaya.android.client.CommonUtilities.displayMessage;
 
 import com.google.android.gcm.GCMRegistrar;
 import com.google.common.base.Optional;
