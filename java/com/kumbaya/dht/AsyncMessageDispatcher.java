@@ -27,7 +27,7 @@ public class AsyncMessageDispatcher extends MessageDispatcher {
 	private boolean isBound = false;
 	private boolean started = false;
 	private final Server dispatcher;
-	private final Provider<HttpMessageDispatcher> sender;
+	private final HttpMessageDispatcher sender;
 	private final Thread thread;
 	private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
 
@@ -35,7 +35,7 @@ public class AsyncMessageDispatcher extends MessageDispatcher {
 	public AsyncMessageDispatcher(
 			Context context,
 			Server dispatcher,
-			Provider<HttpMessageDispatcher> sender) {
+			HttpMessageDispatcher sender) {
 		super(context);
 		this.dispatcher = dispatcher;
 		this.sender = sender;
@@ -83,7 +83,7 @@ public class AsyncMessageDispatcher extends MessageDispatcher {
 		queue.add(new Runnable() {
 			@Override
 			public void run() {
-				boolean result = sender.get().send(tag);
+				boolean result = sender.send(tag);
 				if (result) {
 					register(tag);
 				}

@@ -98,7 +98,7 @@ public class MessageDispatcherTest {
 
 	private AsyncMessageDispatcher messageFactory(MojitoDHT node) {
 		AsyncMessageDispatcher httpMessageDispatcher = new AsyncMessageDispatcher(
-				(Context) node, messageDispatcher, Providers.of(sender));
+				(Context) node, messageDispatcher, sender);
 		expect(messageFactory.create(isA(Context.class))).andReturn(
 				httpMessageDispatcher);
 		return httpMessageDispatcher;
@@ -225,7 +225,7 @@ public class MessageDispatcherTest {
 				HttpMessageDispatcher.class);
 
 		final AsyncMessageDispatcher httpMessageDispatcher2 = new AsyncMessageDispatcher(
-				(Context) node, messageDispatcher2, Providers.of(sender2));
+				(Context) node, messageDispatcher2, sender2);
 		expect(messageFactory2.create(isA(Context.class))).andReturn(
 				httpMessageDispatcher2);
 
