@@ -15,6 +15,9 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
+import java.security.AccessControlException;
+
+import com.google.common.base.Optional;
 
 /**
  * Provides convenience functionality ranging from getting user information,
@@ -509,8 +512,12 @@ public class CommonUtils {
                 throw new IOException("could not create preferences directory: " + dir);
         }
 
-        if (!FileUtils.canWrite(dir))
-            throw new IOException("settings dir not writable: " + dir);
+        try {
+            if (!FileUtils.canWrite(dir))
+                throw new IOException("settings dir not writable: " + dir);
+        } catch (AccessControlException e) {
+            throw new IOException("settings dir not writable: " + dir, e);
+        }
 
         if (!dir.canRead())
             throw new IOException("settings dir not readable: " + dir);

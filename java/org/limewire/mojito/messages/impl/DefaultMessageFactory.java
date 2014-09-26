@@ -73,7 +73,9 @@ public class DefaultMessageFactory implements MessageFactory {
         MessageInputStream in = null;
         
         try {
-            in = new MessageInputStream(new ByteBufferInputStream(data), context.getMACCalculatorRepositoryManager());
+            in = new MessageInputStream(new ByteBufferInputStream(data),
+            		context == null ? null :
+            		context.getMACCalculatorRepositoryManager());
             
             // --- GNUTELLA HEADER ---
             MessageID messageId = in.readMessageID();

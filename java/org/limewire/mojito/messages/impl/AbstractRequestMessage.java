@@ -54,7 +54,13 @@ abstract class AbstractRequestMessage extends AbstractDHTMessage
     @Override
     protected final Contact createContact(SocketAddress src, Vendor vendor, Version version,
             KUID nodeId, SocketAddress contactAddress, int instanceId, int flags) {
-        if (RouteTableSettings.INCOMING_REQUESTS_UNKNOWN.getValue())
+    	// TODO(goto): un-hardcode this.
+    	// NOTE(goto): this is being hardcoded because it reads from the local
+    	// filesystem, which is not applicable to distributed servers, which
+    	// often don't have access to the local file system.
+    	// boolean setting = RouteTableSettings.INCOMING_REQUESTS_UNKNOWN.getValue();
+    	boolean setting = true;
+        if (setting)
             return ContactFactory.createUnknownContact(src, vendor, version, nodeId, contactAddress, instanceId, flags);
         else
             return ContactFactory.createLiveContact(src, vendor, version, nodeId, contactAddress, instanceId, flags);

@@ -9,7 +9,7 @@ import org.limewire.mojito.io.MessageDispatcher;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 
-import com.kumbaya.dht.JettyMessageDispatcher.DhtHandler;
+import com.kumbaya.dht.JettyServer.DhtHandler;
 import com.kumbaya.monitor.VarZModule;
 import com.kumbaya.www.ServletModule;
 
@@ -19,7 +19,8 @@ public class DhtModule extends AbstractModule {
           install(new VarZModule());
           install(new ServletModule());
 
-          bind(MessageDispatcher.class).to(HttpMessageDispatcher.class);
+          bind(MessageDispatcher.class).to(AsyncMessageDispatcher.class);
+          bind(Server.class).to(JettyServer.class);
 	      
 	      MapBinder<String, HttpServlet> mapbinder
 	         = MapBinder.newMapBinder(binder(), String.class, HttpServlet.class);

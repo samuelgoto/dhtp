@@ -73,7 +73,7 @@ class IndexServlet extends HttpServlet {
 				log.info("Getting a value");
 				EntityKey key = EntityKey.createEntityKey(
 						Keys.of(path.substring(1)), DHTValueType.TEXT);
-				List<DHTValueEntity> result = dht.get(key, 200);
+				List<DHTValueEntity> result = dht.get(key, 1000);
 				writer.write(result.toString());
 				log.info("Done");
 			} catch (InterruptedException e) {

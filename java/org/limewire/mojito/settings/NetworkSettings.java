@@ -86,9 +86,14 @@ public final class NetworkSettings extends MojitoProps {
     
     /**
      * Whether or not we're accepting forced addresses.
+     * 
+     * NOTE(goto): this was originally set to false, but I'm setting this to
+     * true because assuming all addresses are public AND the NetworkSettings
+     * private address checkings don't work well with hostnames (as opposed
+     * to IPs).
      */
     public static final BooleanSetting ACCEPT_FORCED_ADDRESS
-        = FACTORY.createBooleanSetting("ACCEPT_FORCED_ADDRESS", false);
+        = FACTORY.createBooleanSetting("ACCEPT_FORCED_ADDRESS", true);
     
     /**
      * Whether or not a new ByteBuffer should be allocated for

@@ -17,6 +17,7 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.security.AccessControlException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -1037,7 +1038,11 @@ public class FileUtils {
      */
     public static boolean canWrite(File file) {
         if (!OSUtils.isWindows() || !file.isDirectory()) {
-            return file.canWrite();
+        	try {
+                return file.canWrite();
+        	} catch (AccessControlException e) {
+        		return false;
+        	}
         } else {
             if (file.canWrite()) {
                 return true;

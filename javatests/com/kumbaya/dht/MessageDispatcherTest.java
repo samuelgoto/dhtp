@@ -83,8 +83,9 @@ public class MessageDispatcherTest {
 	private IMocksControl control = EasyMock.createControl();
 	MessageDispatcherFactory messageFactory = control.createMock(
 			MessageDispatcherFactory.class);
-	JettyMessageDispatcher messageDispatcher = control.createMock(
-			JettyMessageDispatcher.class);
+	JettyServer messageDispatcher = control.createMock(
+			JettyServer.class);
+	HttpMessageDispatcher sender = control.createMock(HttpMessageDispatcher.class);
 
 	@Before
 	public void setUp() {
@@ -94,9 +95,9 @@ public class MessageDispatcherTest {
 		ContactUtils.setNetworkInstanceUtils(new SimpleNetworkInstanceUtils(false));
 	}
 
-	private HttpMessageDispatcher messageFactory(MojitoDHT node) {
-		HttpMessageDispatcher httpMessageDispatcher = new HttpMessageDispatcher(
-				(Context) node, messageDispatcher);
+	private AsyncMessageDispatcher messageFactory(MojitoDHT node) {
+		AsyncMessageDispatcher httpMessageDispatcher = new AsyncMessageDispatcher(
+				(Context) node, messageDispatcher, sender);
 		expect(messageFactory.create(isA(Context.class))).andReturn(
 				httpMessageDispatcher);
 		return httpMessageDispatcher;
@@ -106,7 +107,7 @@ public class MessageDispatcherTest {
 	public void testBootstrapingANodeAndStoringAValueWithMockBootstrap() throws Exception {
 		MojitoDHT node = MojitoFactory.createDHT("local test node");
 
-		HttpMessageDispatcher httpMessageDispatcher = messageFactory(
+		AsyncMessageDispatcher httpMessageDispatcher = messageFactory(
 				node);
 
 		messageDispatcher.bind(isA(SocketAddress.class));
@@ -114,18 +115,18 @@ public class MessageDispatcherTest {
 		// While bootstraping, the node pings and sends a find node request
 		// to the bootstrap node.
 		Capture<Tag> pingRequestTag = new Capture<Tag>();
-		expect(messageDispatcher.send(capture(pingRequestTag))).andReturn(true);
+		expect(sender.send(capture(pingRequestTag))).andReturn(true);
 
 		Capture<Tag> findNodeRequestTag = new Capture<Tag>();
-		expect(messageDispatcher.send(capture(findNodeRequestTag))).andReturn(true);
+		expect(sender.send(capture(findNodeRequestTag))).andReturn(true);
 
 		// While storing a result, the node sends a find node request,
 		// to which the bootstrap node replies.
 		Capture<Tag> findNodeRequestTag2 = new Capture<Tag>();
-		expect(messageDispatcher.send(capture(findNodeRequestTag2))).andReturn(true);
+		expect(sender.send(capture(findNodeRequestTag2))).andReturn(true);
 
 		Capture<Tag> storeRequestTag = new Capture<Tag>();
-		expect(messageDispatcher.send(capture(storeRequestTag))).andReturn(true);
+		expect(sender.send(capture(storeRequestTag))).andReturn(true);
 
 		control.replay();
 
@@ -212,16 +213,18 @@ public class MessageDispatcherTest {
 		final InetSocketAddress dhtIp = new InetSocketAddress("localhost", 8080);
 		final InetSocketAddress nodeIp = new InetSocketAddress("localhost", 8081);
 
-		final HttpMessageDispatcher httpMessageDispatcher = messageFactory(
+		final AsyncMessageDispatcher httpMessageDispatcher = messageFactory(
 				dht);
 
 		MessageDispatcherFactory messageFactory2 = control.createMock(
 				MessageDispatcherFactory.class);
-		JettyMessageDispatcher messageDispatcher2 = control.createMock(
-				JettyMessageDispatcher.class);
+		JettyServer messageDispatcher2 = control.createMock(
+				JettyServer.class);
+		HttpMessageDispatcher sender2 = control.createMock(
+				HttpMessageDispatcher.class);
 
-		final HttpMessageDispatcher httpMessageDispatcher2 = new HttpMessageDispatcher(
-				(Context) node, messageDispatcher2);
+		final AsyncMessageDispatcher httpMessageDispatcher2 = new AsyncMessageDispatcher(
+				(Context) node, messageDispatcher2, sender2);
 		expect(messageFactory2.create(isA(Context.class))).andReturn(
 				httpMessageDispatcher2);
 
@@ -231,7 +234,7 @@ public class MessageDispatcherTest {
 		// All messages that gets submitted to the first dispatcher
 		// get directly pushed to the second dispatcher, and vice versa.
 		final Capture<Tag> tag = new Capture<Tag>();
-		expect(messageDispatcher.send(capture(tag))).andAnswer(new IAnswer<Boolean>() {
+		expect(sender.send(capture(tag))).andAnswer(new IAnswer<Boolean>() {
 			@Override
 			public Boolean answer() throws Throwable {
 				DHTMessage source = tag.getValue().getMessage();
@@ -256,7 +259,7 @@ public class MessageDispatcherTest {
 		}).anyTimes();
 
 		final Capture<Tag> tag2 = new Capture<Tag>();
-		expect(messageDispatcher2.send(capture(tag2))).andAnswer(new IAnswer<Boolean>() {
+		expect(sender2.send(capture(tag2))).andAnswer(new IAnswer<Boolean>() {
 			@Override
 			public Boolean answer() throws Throwable {
 				DHTMessage source = tag2.getValue().getMessage();

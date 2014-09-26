@@ -8,10 +8,10 @@ import org.limewire.mojito.io.MessageDispatcher;
 import org.limewire.mojito.io.MessageDispatcherFactory;
 
 class MessageDispatcherFactoryImpl implements MessageDispatcherFactory {
-    private final Provider<HttpMessageDispatcher> result;
+    private final Provider<MessageDispatcher> result;
     
     @Inject
-    MessageDispatcherFactoryImpl(Provider<HttpMessageDispatcher> result) {
+    MessageDispatcherFactoryImpl(Provider<MessageDispatcher> result) {
     	this.result = result;
     }
     

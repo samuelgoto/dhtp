@@ -1,113 +1,96 @@
 package com.kumbaya.dht;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import java.io.IOException;
-import java.net.SocketAddress;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.ByteBuffer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpExchange;
+import org.eclipse.jetty.io.ByteArrayBuffer;
 import org.limewire.mojito.Context;
-import org.limewire.mojito.io.MessageDispatcher;
-import org.limewire.mojito.io.MessageDispatcherImpl;
 import org.limewire.mojito.io.Tag;
 import org.limewire.mojito.messages.DHTMessage;
-import org.limewire.security.SecureMessage;
-import org.limewire.security.SecureMessageCallback;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.kumbaya.monitor.VarZ;
+import com.kumbaya.monitor.VarZLogger;
 
 @Singleton
-class HttpMessageDispatcher extends MessageDispatcher {
-    private static final Log logger = LogFactory.getLog(HttpMessageDispatcher.class);
-
-	private boolean isBound = false;
-	private boolean started = false;
-	private final JettyMessageDispatcher dispatcher;
-	private final Thread thread;
-	private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
+public class HttpMessageDispatcher {
+	private final HttpClient client;
+	private final Context context;
+	private final VarZLogger varZ;
 
 	@Inject
-	public HttpMessageDispatcher(Context context, JettyMessageDispatcher dispatcher) {
-		super(context);
-		this.dispatcher = dispatcher;
-		thread = context.getDHTExecutorService().getThreadFactory().newThread(
-				new Runnable() {
-					@Override
-					public void run() {
-						do {
-							try {
-								Runnable task = queue.take();
-								task.run();
-							} catch (InterruptedException e) {
-								logger.error(e);
-							}
-						} while (true);
-					}
-				});
-		thread.setName(context.getName() + "-MessageDispatcherThread");
-		thread.setDaemon(Boolean.getBoolean("com.limegroup.mojito.io.MessageDispatcherIsDaemon"));
+	HttpMessageDispatcher(Context context, VarZLogger varZ, HttpClient client) throws Exception {
+		this.context = context;
+		this.client = client;
+		this.client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+		this.client.start();
+		this.varZ = varZ;
 	}
 
-	@Override
-	public void handleMessage(final DHTMessage message) {
-		super.handleMessage(message);
-	}
-
-	@Override
-	public void bind(SocketAddress address) throws IOException {
-		dispatcher.bind(address);
-		isBound = true;
-	}
-
-	@Override
-	public boolean isBound() {
-		return isBound;
-	}
-
-	@Override
-	public boolean isRunning() {
-		return started;
-	}
-
-	@Override
-	protected boolean submit(final Tag tag) {
-		queue.add(new Runnable() {
+	@VarZ("/dht/messages/outgoing")
+	public boolean send(final Tag tag) {
+		varZ.log("/dht/messages/outgoing/" + tag.getMessage().getOpCode()
+				.name().toLowerCase());
+		
+		HttpExchange request = new HttpExchange() {
 			@Override
-			public void run() {
-				boolean result = dispatcher.send(tag);
-				if (result) {
-					register(tag);
-				}
+			protected void onConnectionFailed(Throwable x) {
+				tag.handleError(new IOException(x));
 			}
-		});
-		return true;
-	}
 
-	@Override
-	public void start() {
-		super.start();
-		thread.start();
-		started = true;
-	}
+			@Override
+			protected void onException(Throwable x) {
+				tag.handleError(new IOException(x));
+			}
 
-	@Override
-	protected void process(Runnable runnable) {
-		queue.add(runnable);
-	}
+			@Override
+			protected void onExpire() {
+				tag.handleError(new IOException("Request expired"));
+			}
+		};
 
-	@Override
-	protected void verify(SecureMessage secureMessage,
-			SecureMessageCallback smc) {
-		dispatcher.verify(secureMessage, smc);
-	}
-	
+		// Optionally set the HTTP method
+		request.setMethod("POST");
 
-    @Override
-    public void close() {
-        super.close();
-        dispatcher.close();
-    }
+		InetSocketAddress ip = (InetSocketAddress) tag.getSocketAddress();
+
+		// tag.getNodeID()
+		
+		try {
+			URL url = new URL("http", ip.getHostName(), ip.getPort(),
+					"/.well-known/dht");
+			request.setURL(url.toString());
+		} catch (MalformedURLException e1) {
+			throw new RuntimeException("Invalid external address.", e1);
+		}
+
+		// TODO(goto): figure out what's the best way to do this.
+		request.addRequestHeader("X-Node-Debug", tag.getMessage().getOpCode().toString());
+		request.addRequestHeader("X-Node-Host",
+				((InetSocketAddress) context.getContactAddress()).getHostName());
+		request.addRequestHeader("X-Node-Port",
+				String.valueOf(((InetSocketAddress) context.getContactAddress()).getPort()));
+		request.addRequestHeader("X-Node-Destination",
+				tag.getNodeID() != null ? tag.getNodeID().toString() : "");
+
+		try {
+			DHTMessage message = tag.getMessage();
+			ByteBuffer data = context.getMessageFactory()
+					.writeMessage(ip, message);
+
+			request.setRequestContent(new ByteArrayBuffer(data.array()));
+
+			client.send(request);
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 }
