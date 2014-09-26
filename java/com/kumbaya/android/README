@@ -1,0 +1,8 @@
+
+Importing to Eclipse
+
+1) File → Import → General → Existing Projects into Workspace → Next
+2) Select build/android
+3) Add source java/com/kumbaya/android
+4) Remove from classpath anything other than java/com/kumbaya/android
+5) Run as -> Android Application

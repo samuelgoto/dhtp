@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="gen"/>
+	<classpathentry excluding="com/kumbaya/dht/|com/kumbaya/monitor/|com/kumbaya/www/|org/limewire/collection/|org/limewire/collection/glazedlists/|org/limewire/common/|org/limewire/concurrent/|org/limewire/i18n/|org/limewire/inject/|org/limewire/inspection/|org/limewire/io/|org/limewire/jmx/|org/limewire/lifecycle/|org/limewire/listener/|org/limewire/logging/|org/limewire/mojito/|org/limewire/mojito/concurrent/|org/limewire/mojito/db/|org/limewire/mojito/db/impl/|org/limewire/mojito/exceptions/|org/limewire/mojito/handler/|org/limewire/mojito/handler/request/|org/limewire/mojito/handler/response/|org/limewire/mojito/io/|org/limewire/mojito/manager/|org/limewire/mojito/messages/|org/limewire/mojito/messages/impl/|org/limewire/mojito/result/|org/limewire/mojito/routing/|org/limewire/mojito/routing/impl/|org/limewire/mojito/security/|org/limewire/mojito/settings/|org/limewire/mojito/statistics/|org/limewire/mojito/util/|org/limewire/security/|org/limewire/security/certificate/|org/limewire/security/id/|org/limewire/service/|org/limewire/setting/|org/limewire/setting/evt/|org/limewire/setting/jmx/|org/limewire/statistic/|org/limewire/util/" kind="src" path="java"/>
+	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
+	<classpathentry kind="output" path="bin/classes"/>
+</classpath>
