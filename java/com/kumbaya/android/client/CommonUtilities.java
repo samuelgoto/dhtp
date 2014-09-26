@@ -24,9 +24,9 @@ import android.content.Intent;
  */
 public final class CommonUtilities {
 
-	static final int GCM_PORT = 8888;
+	static final int GCM_PORT = 80;
 	
-	static final String GCM_HOSTNAME = "10.0.2.2";
+	static final String GCM_HOSTNAME = "kumbaya-android.appspot.com";
 	
     /**
      * Base URL of the Demo Server (such as http://my_host:8080/gcm-demo)

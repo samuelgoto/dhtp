@@ -51,7 +51,9 @@ public class BackgroundService extends Service {
 	private Looper mServiceLooper;
 	private ServiceHandler mServiceHandler;
 	AsyncTask<Void, Void, Void> mRegisterTask;
-    final String hostname = "localhost";
+	// NOTE(goto): you can set this to localhost while running appengine
+	// locally.
+    final String hostname = "kumbaya-android.appspot.com";
     int port = CommonUtilities.GCM_PORT;
     int proxy = CommonUtilities.GCM_PORT;
     private final Context context = this;
