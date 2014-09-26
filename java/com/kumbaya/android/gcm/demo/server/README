@@ -1,0 +1,6 @@
+Importing to Eclipse
+
+1) Create new Web Application Project
+2) Fix the war file:
+rm $PROJECT_WORKSPACE/war -drf
+ln -s $PWD/build/appengine/war $PROJECT_WORKSPACE/war
