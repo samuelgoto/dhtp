@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.kumbaya.monitor.Sampler.Clock;
+import com.kumbaya.annotations.VarZ;
 
 @Singleton
 class VarZInterceptor implements MethodInterceptor {

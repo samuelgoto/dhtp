@@ -24,6 +24,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.kumbaya.monitor.Sampler.Clock;
+import com.kumbaya.annotations.VarZ;
 
 public class VarZTest {
 	private IMocksControl control = EasyMock.createControl();

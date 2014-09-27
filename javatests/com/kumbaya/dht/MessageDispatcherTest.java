@@ -73,6 +73,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.util.Providers;
+import com.kumbaya.www.JettyServer;
 
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.expect;

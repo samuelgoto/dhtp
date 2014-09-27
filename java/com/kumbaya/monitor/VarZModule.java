@@ -2,6 +2,7 @@ package com.kumbaya.monitor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
+import com.kumbaya.annotations.VarZ;
 
 public class VarZModule extends AbstractModule {
 	@Override

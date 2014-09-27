@@ -15,7 +15,7 @@ import org.limewire.mojito.messages.DHTMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.kumbaya.monitor.VarZ;
+import com.kumbaya.annotations.VarZ;
 import com.kumbaya.monitor.VarZLogger;
 
 @Singleton
