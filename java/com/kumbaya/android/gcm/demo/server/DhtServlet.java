@@ -30,10 +30,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.limewire.mojito.messages.DHTMessage;
-import org.limewire.mojito.messages.MessageFactory;
-import org.limewire.mojito.messages.impl.DefaultMessageFactory;
-import org.limewire.util.CommonUtils;
 
 import com.google.android.gcm.server.Constants;
 import com.google.android.gcm.server.Message;
