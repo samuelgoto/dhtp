@@ -107,7 +107,7 @@ public class BackgroundService extends Service {
 					} catch (Exception e) {
 					}
 				}
-				dht.bootstrap("10.0.2.2", 8081).get();
+				dht.bootstrap("kumbaya-node0.herokuapp.com", 80).get();
 			} catch (IOException e) {
 				error("io exception");
 			} catch (InterruptedException e) {
