@@ -53,10 +53,10 @@ public class BackgroundService extends Service {
 	AsyncTask<Void, Void, Void> mRegisterTask;
 	// NOTE(goto): you can set this to localhost while running appengine
 	// locally.
-    final String hostname = "kumbaya-android.appspot.com";
-    int port = CommonUtilities.GCM_PORT;
-    int proxy = CommonUtilities.GCM_PORT;
-    private final Context context = this;
+	final String hostname = "kumbaya-android.appspot.com";
+	int port = CommonUtilities.GCM_PORT;
+	int proxy = CommonUtilities.GCM_PORT;
+	private final Context context = this;
 	private final Injector injector = Guice.createInjector(
 			new AbstractModule() {
 				@Override
@@ -64,27 +64,28 @@ public class BackgroundService extends Service {
 					bind(MessageDispatcher.class).to(AsyncMessageDispatcher.class);
 					bind(Context.class).toInstance(context);
 					bind(Server.class).to(GcmServer.class);
-					
+
 					bind(org.limewire.mojito.Context.class).toInstance(
 							(org.limewire.mojito.Context) MojitoFactory.createDHT(hostname));
 				}
 			});
+
 	@Inject private Dht dht;
 	@Inject private AsyncMessageDispatcher dispatcher;
 	@Inject private org.limewire.mojito.Context messageFactory;
 	private final Binder mBinder = new LocalBinder();
 
-    public class LocalBinder extends Binder {
-        BackgroundService getService() {
-            // Return this instance of LocalService so clients can call public methods
-            return BackgroundService.this;
-        }
-    }
-	
+	public class LocalBinder extends Binder {
+		BackgroundService getService() {
+			// Return this instance of LocalService so clients can call public methods
+			return BackgroundService.this;
+		}
+	}
+
 	private void error(String message) {
 		Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 	}
-	
+
 	// Handler that receives messages from the thread
 	private final class ServiceHandler extends Handler {
 		public ServiceHandler(Looper looper) {
@@ -98,15 +99,6 @@ public class BackgroundService extends Service {
 
 			try {
 				dht.start(hostname, port, proxy);
-				// TODO(goto): lets the GCM server catch up.
-				// There is probably a better way to do this, maybe waiting on 
-				// Server.isBound()?
-				synchronized (this) {
-					try {
-						wait(10 * 1000);
-					} catch (Exception e) {
-					}
-				}
 				dht.bootstrap("kumbaya-node0.herokuapp.com", 80).get();
 			} catch (IOException e) {
 				error("io exception");
@@ -115,20 +107,6 @@ public class BackgroundService extends Service {
 			} catch (ExecutionException e) {
 				error("execution exception");
 			}
-			
-			// Waits until we are bootstrapped.
-			while (!dht.isBootstraped()) {
-				synchronized (this) {
-					try {
-						// wait(1000);
-					} catch (Exception e) {
-					}
-				}
-			}
-
-			// Stop the service using the startId, so that we don't stop
-			// the service in the middle of handling another job
-			// stopSelf(msg.arg1);
 		}
 	}
 
@@ -143,7 +121,7 @@ public class BackgroundService extends Service {
 		thread.start();
 
 		injector.injectMembers(this);
-		
+
 		// Get the HandlerThread's Looper and use it for our Handler
 		mServiceLooper = thread.getLooper();
 		mServiceHandler = new ServiceHandler(mServiceLooper);
@@ -152,55 +130,58 @@ public class BackgroundService extends Service {
 	static class GcmServer implements Server {
 		@Inject private Context context;
 		@Inject private Provider<org.limewire.mojito.Context> node;
-		
+
 		@Override
-		public void bind(SocketAddress arg0) throws IOException {
+		public void bind(SocketAddress address) throws IOException {
 			// Make sure the device has the proper dependencies.
-	        GCMRegistrar.checkDevice(context);
-	        // Make sure the manifest was properly set - comment out this line
-	        // while developing the app, then uncomment it when it's ready.
-	        GCMRegistrar.checkManifest(context);
-	        
-	        KUID nodeId = node.get().getLocalNodeID();
-	        ServerUtilities.id = Optional.of(nodeId);
-	        
-	        final String regId = GCMRegistrar.getRegistrationId(context);
-            //GCMRegistrar.unregister(context);
-	        if (regId.equals("")) {
-	            // Automatically registers application on startup.
-	            GCMRegistrar.register(context, SENDER_ID);
-	        } else {
-	            // Device is already registered on GCM, check server.
-	            //if (GCMRegistrar.isRegisteredOnServer(context)) {
-	                // Skips registration.
-	            //	CommonUtilities.displayMessage(context, 
-	            //			context.getString(R.string.already_registered) + "\n");
-	            //} else {
-	                // Try to register again.
-	           // }
-	            //CommonUtilities.displayMessage(context, 
-	            //		context.getString(R.string.already_registered) + "\n");
-	        	// Always register the device on the server.
-                ServerUtilities.register(context, regId);
-	        }
+			GCMRegistrar.checkDevice(context);
+			// Make sure the manifest was properly set - comment out this line
+			// while developing the app, then uncomment it when it's ready.
+			GCMRegistrar.checkManifest(context);
+
+			KUID nodeId = node.get().getLocalNodeID();
+			ServerUtilities.id = Optional.of(nodeId);
+
+			final String regId = GCMRegistrar.getRegistrationId(context);
+			//GCMRegistrar.unregister(context);
+			if (regId.equals("")) {
+				// Automatically registers application on startup.
+				GCMRegistrar.register(context, SENDER_ID);
+			} else {
+				ServerUtilities.register(context, regId);
+			}
+			
+			while (!GCMRegistrar.isRegisteredOnServer(context)) {
+				try {
+					// Blocks until we are not registered on the server.
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					throw new IOException("Failed to bind to GCM", e);
+				}
+			}
 		}
 
 		@Override
 		public void close() {
-	        GCMRegistrar.onDestroy(context);
+			GCMRegistrar.onDestroy(context);
 		}
 	}
-	
+
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, "Kumbaya starting", Toast.LENGTH_SHORT).show();
 
-        // For each start request, send a message to start a job and deliver the
-		// start ID so we know which request we're stopping when we finish the job
-		Message msg = mServiceHandler.obtainMessage();
-		msg.arg1 = startId;
-		mServiceHandler.sendMessage(msg);
-		
+		if (intent == null || dht.isBootstraped()) {
+			Toast.makeText(this, "Kumbaya is already running ... skipping.",
+					Toast.LENGTH_SHORT).show();
+		} else {
+			// For each start request, send a message to start a job and deliver the
+			// start ID so we know which request we're stopping when we finish the job
+			Message msg = mServiceHandler.obtainMessage();
+			msg.arg1 = startId;
+			mServiceHandler.sendMessage(msg);
+		}
+
 		// If we get killed, after returning from here, restart
 		return START_STICKY;
 	}
@@ -210,33 +191,33 @@ public class BackgroundService extends Service {
 		return mBinder;
 	}
 
-    /** method for clients */
-    public void handleMessage(InetSocketAddress src, byte[] data) {
-    	if (data == null || src == null || src.getPort() == 0) {
-    		return;
-    	}
+	/** method for clients */
+	public void handleMessage(InetSocketAddress src, byte[] data) {
+		if (data == null || src == null || src.getPort() == 0) {
+			return;
+		}
 
-    	try {
+		try {
 			DHTMessage message = messageFactory.getMessageFactory()
 					.createMessage(src, ByteBuffer.wrap(data));				
 
 			Log.w("BackgroundService", "Got message: " + message.getOpCode() +
 					", from: " + message.getContact().toString());
-			
+
 			Log.w("BackgroundService", messageFactory.toString());
 			Log.w("BackgroundService", messageFactory.getRouteTable().toString());
-			
+
 			dispatcher.handleMessage(message);
 
 			Log.w("BackgroundService", messageFactory.toString());
 			Log.w("BackgroundService", messageFactory.getRouteTable().toString());
 
-    	} catch (Exception e) {
+		} catch (Exception e) {
 			// ignores silently.
 			throw new RuntimeException(e);
 		}
-    }
-	
+	}
+
 	@Override
 	public void onDestroy() {
 		Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
