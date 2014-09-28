@@ -191,8 +191,20 @@ public class BackgroundService extends Service {
 		return mBinder;
 	}
 
-	/** method for clients */
-	public void handleMessage(InetSocketAddress src, byte[] data) {
+	public String toString() {
+		// Returns a debug string.
+		return messageFactory.toString()
+				+ "" 
+				+ messageFactory.getRouteTable().toString()
+				+ ""
+				+ messageFactory.getDatabase().toString();
+	}
+	
+	/**
+	 * This method is available exclusively for the communication between the
+	 * GCM intent receiver and the internal node.
+	 */
+	void handleMessage(InetSocketAddress src, byte[] data) {
 		if (data == null || src == null || src.getPort() == 0) {
 			return;
 		}

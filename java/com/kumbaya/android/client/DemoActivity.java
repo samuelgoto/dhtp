@@ -21,6 +21,7 @@ import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
 import static com.kumbaya.android.client.CommonUtilities.SERVER_URL;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 import org.eclipse.jetty.client.HttpClient;
@@ -31,21 +32,26 @@ import org.limewire.security.SecureMessage;
 import org.limewire.security.SecureMessageCallback;
 
 import com.google.android.gcm.GCMRegistrar;
+import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.kumbaya.android.client.BackgroundService.LocalBinder;
 import com.kumbaya.dht.Dht;
 import com.kumbaya.dht.DhtModule;
 import com.kumbaya.monitor.VarZModule;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -55,20 +61,32 @@ import android.widget.TextView;
  * Main UI for the demo app.
  */
 public class DemoActivity extends Activity {
+    private final ServiceConnection connection = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder b) {
+            LocalBinder binder = (LocalBinder) b;
+            service = Optional.of(binder.getService());
+            System.out.println(service);
+            mDisplay.append(service.get().toString());
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+		}
+    };
+
+    private Optional<BackgroundService> service = Optional.absent();
     TextView mDisplay;
 
-    static class Foo {
-    	public void bar() {
-    		
-    	}
-    }
-    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 		
 		Intent intent = new Intent(this, BackgroundService.class);
 		startService(intent);
+		
+		Intent i = new Intent(this, BackgroundService.class);
+        bindService(i, connection, Context.BIND_AUTO_CREATE);
 		
 		checkNotNull(SERVER_URL, "SERVER_URL");
         checkNotNull(SENDER_ID, "SENDER_ID");
@@ -77,7 +95,6 @@ public class DemoActivity extends Activity {
         mDisplay = (TextView) findViewById(R.id.display);
         registerReceiver(mHandleMessageReceiver,
                 new IntentFilter(DISPLAY_MESSAGE_ACTION));
-        
     }
 
     @Override
@@ -107,6 +124,9 @@ public class DemoActivity extends Activity {
             case R.id.options_clear:
                 mDisplay.setText(null);
                 return true;
+            case R.id.options_refresh:
+                mDisplay.setText(service.get().toString());
+                return true;
             case R.id.options_exit:
                 finish();
                 return true;
@@ -118,6 +138,7 @@ public class DemoActivity extends Activity {
     @Override
     protected void onDestroy() {
         unregisterReceiver(mHandleMessageReceiver);
+        unbindService(connection);
         super.onDestroy();
     }
 
@@ -136,5 +157,4 @@ public class DemoActivity extends Activity {
             mDisplay.append(newMessage + "\n");
         }
     };
-
 }

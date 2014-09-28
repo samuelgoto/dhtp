@@ -97,26 +97,20 @@ public class GCMIntentService extends GCMBaseIntentService {
         final String hostname = extras.getString("X-Node-Host");
         final int port = Integer.parseInt(extras.getString("X-Node-Port"));
         // final String message = getString(R.string.gcm_message);
-        displayMessage(context, message);
+        // displayMessage(context, message);
         // notifies user
-        generateNotification(context, message);
+        // generateNotification(context, message);
         
         // NOTE(goto): is there a more efficient way to do this?
 		Intent i = new Intent(this, BackgroundService.class);
         ServiceConnection connection = new ServiceConnection() {
 			@Override
 			public void onServiceConnected(ComponentName name, IBinder service) {
-				// String hostname = request.getHeader("X-Node-Host");
-				// String port = request.getHeader("X-Node-Port");
-
-				// InetSocketAddress src = InetSocketAddress.createUnresolved(
-				//		hostname, Integer.valueOf(port));
-		        
 	            LocalBinder binder = (LocalBinder) service;
-	            BackgroundService foo = binder.getService();
+	            BackgroundService dht = binder.getService();
 				InetSocketAddress src = InetSocketAddress.createUnresolved(
 						hostname, Integer.valueOf(port));
-		        foo.handleMessage(src, body);
+		        dht.handleMessage(src, body);
 		        unbindService(this);
 			}
 
@@ -156,20 +150,19 @@ public class GCMIntentService extends GCMBaseIntentService {
      */
     private static void generateNotification(Context context, String message) {
         // int icon = R.drawable.abc_ab_share_pack_holo_dark;
-        long when = System.currentTimeMillis();
-        NotificationManager notificationManager = (NotificationManager)
-                context.getSystemService(Context.NOTIFICATION_SERVICE);
+        // long when = System.currentTimeMillis();
+        // NotificationManager notificationManager = (NotificationManager)
+        //        context.getSystemService(Context.NOTIFICATION_SERVICE);
         // Notification notification = new Notification(icon, message, when);
-        String title = context.getString(R.string.app_name);
-        Intent notificationIntent = new Intent(context, DemoActivity.class);
+        // String title = context.getString(R.string.app_name);
+        // Intent notificationIntent = new Intent(context, DemoActivity.class);
         // set intent so it does not start a new activity
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
-                Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        // notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
+        //        Intent.FLAG_ACTIVITY_SINGLE_TOP);
         // PendingIntent intent =
         ///        PendingIntent.getActivity(context, 0, notificationIntent, 0);
         // notification.setLatestEventInfo(context, title, message, intent);
         // notification.flags |= Notification.FLAG_AUTO_CANCEL;
         // notificationManager.notify(0, notification);
     }
-
 }
