@@ -1,5 +1,6 @@
 build/android/bin/
 build/android/gen/
+build/android/proguard
 build/android/.project
 build/appengine/war/WEB-INF/classes/
 build/appengine/war/WEB-INF/appengine-generated/

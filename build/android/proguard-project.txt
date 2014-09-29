@@ -18,3 +18,25 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+-dontwarn javax.**
+-dontwarn java.**
+-dontwarn sun.**
+-dontwarn net.jcip.**
+-dontwarn net.sf.**
+-dontwarn org.apache.**
+-dontwarn org.eclipse.**
+-dontwarn org.slf4j
+-dontwarn com.jgoodies.**
+-dontwarn com.publicobject.**
+-dontwarn org.jdesktop.**
+-dontwarn org.jfree.**
+-dontwarn org.jdom.**
+-dontwarn org.jaxen.**
+-dontwarn junitx.**
+-dontwarn org.aopalliance.**
+-dontwarn de.kupzog.**
+-dontwarn ca.odell.**
+-dontwarn org.hibernate.**
+-dontwarn com.kumbaya.**
+-dontwarn android.**
+-dontwarn com.google.**

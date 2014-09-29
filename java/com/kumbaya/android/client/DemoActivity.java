@@ -37,6 +37,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.kumbaya.android.R;
 import com.kumbaya.android.client.BackgroundService.LocalBinder;
 import com.kumbaya.dht.Dht;
 import com.kumbaya.dht.DhtModule;

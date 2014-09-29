@@ -33,6 +33,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.google.android.gcm.GCMBaseIntentService;
+import com.kumbaya.android.R;
 import com.kumbaya.android.client.BackgroundService.LocalBinder;
 
 /**

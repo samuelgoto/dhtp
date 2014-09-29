@@ -22,6 +22,7 @@ import static com.kumbaya.android.client.CommonUtilities.displayMessage;
 import com.google.android.gcm.GCMRegistrar;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.kumbaya.android.R;
 
 import android.content.Context;
 import android.util.Log;
