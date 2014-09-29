@@ -35,6 +35,6 @@
     <string name="options_refresh">Refresh</string>
     <string name="options_clear">Clear</string>
     <string name="options_exit">Exit</string>
-    <string name="query_hint">Hello World</string>
+    <string name="query_hint">Search Kumbaya</string>
     
 </resources>

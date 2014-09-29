@@ -22,14 +22,6 @@
     android:paddingLeft="16dp"
     android:paddingRight="16dp" >
 
-    <EditText
-        android:id="@+id/search"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/query_hint"
-        android:imeOptions="actionSearch"
-        android:inputType="text" />
-
     <ScrollView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" >

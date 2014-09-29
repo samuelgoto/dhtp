@@ -62,8 +62,13 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MenuItem.OnActionExpandListener;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.SearchView;
+import android.widget.SearchView.OnQueryTextListener;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
@@ -105,7 +110,7 @@ public class DemoActivity extends Activity {
         mDisplay = (TextView) findViewById(R.id.display);
         registerReceiver(mHandleMessageReceiver,
                 new IntentFilter(DISPLAY_MESSAGE_ACTION));
-        
+        /*
         EditText editText = (EditText) findViewById(R.id.search);
         editText.setOnEditorActionListener(new OnEditorActionListener() {
 			@Override
@@ -114,48 +119,71 @@ public class DemoActivity extends Activity {
                 if (keyCode == EditorInfo.IME_ACTION_SEARCH ||
                 	(event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
                 	
-                	new AsyncTask<String, Void, List<String>>() {
-						@Override
-						protected List<String> doInBackground(String... params) {
-		                	try {
-								return service.get().get(params[0], 5000);
-							} catch (InterruptedException e) {
-								return Lists.newArrayList();
-							} catch (ExecutionException e) {
-								return Lists.newArrayList();
-							} catch (TimeoutException e) {
-								return Lists.newArrayList();
-							} catch (NotBootstrappedException e) {
-								return Lists.newArrayList();
-							}
-						}
-						
-						@Override
-					    protected void onPostExecute(List<String> result) {
-							mDisplay.setText("");
-							for (String entry : result) {
-								mDisplay.append(entry);
-							}
-					    }
-                	}.execute(v.getText().toString());
-                	
                 	return true;
                 }
                 return false;
 			}
         });
+        */
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.options_menu, menu);
+        
+        final MenuItem menuItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search)
+        		.getActionView();
+        searchView.setOnQueryTextListener(new OnQueryTextListener() {
+			@Override
+			public boolean onQueryTextSubmit(String query) {
+				// System.out.println(query);
+				menuItem.collapseActionView();
+
+            	new AsyncTask<String, Void, List<String>>() {
+					@Override
+					protected List<String> doInBackground(String... params) {
+	                	try {
+							return service.get().get(params[0], 5000);
+						} catch (InterruptedException e) {
+							return Lists.newArrayList();
+						} catch (ExecutionException e) {
+							return Lists.newArrayList();
+						} catch (TimeoutException e) {
+							return Lists.newArrayList();
+						} catch (NotBootstrappedException e) {
+							return Lists.newArrayList();
+						}
+					}
+					
+					@Override
+				    protected void onPostExecute(List<String> result) {
+						mDisplay.setText("");
+						for (String entry : result) {
+							mDisplay.append(entry);
+						}
+				    }
+            	}.execute(query);
+
+				return false;
+			}
+
+			@Override
+			public boolean onQueryTextChange(String newText) {
+				return false;
+			}
+        });
+        
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
+        	case R.id.action_search:
+        		// searchView.setIconified(false);
+        		return true;
             case R.id.options_clear:
                 mDisplay.setText(null);
                 return true;
