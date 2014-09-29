@@ -1,7 +1,5 @@
 package com.kumbaya.android.client;
 
-import static com.kumbaya.android.client.CommonUtilities.DISPLAY_MESSAGE_ACTION;
-import static com.kumbaya.android.client.CommonUtilities.EXTRA_MESSAGE;
 import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
 
 import java.io.IOException;
@@ -9,7 +7,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -17,11 +14,7 @@ import org.limewire.mojito.KUID;
 import org.limewire.mojito.MojitoFactory;
 import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.io.MessageDispatcher;
-import org.limewire.mojito.io.Tag;
 import org.limewire.mojito.messages.DHTMessage;
-import org.limewire.mojito.result.BootstrapResult;
-import org.limewire.security.SecureMessage;
-import org.limewire.security.SecureMessageCallback;
 
 import com.google.android.gcm.GCMRegistrar;
 import com.google.common.base.Function;
@@ -32,16 +25,13 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
-import com.google.inject.util.Providers;
 import com.kumbaya.dht.AsyncMessageDispatcher;
 import com.kumbaya.dht.Dht;
 import com.kumbaya.dht.Server;
 
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
