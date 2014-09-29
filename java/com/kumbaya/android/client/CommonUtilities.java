@@ -22,10 +22,14 @@ import android.content.Intent;
  * Helper class providing methods and constants common to other classes in the
  * app.
  */
-public final class CommonUtilities {
+final class CommonUtilities {
 
 	static final int GCM_PORT = 80;
 	
+	/**
+	 * TODO(goto): make this configured dynamically, possibly even use the
+	 * DHT itself to discover new GCM endpoints.
+	 */
 	static final String GCM_HOSTNAME = "kumbaya-android.appspot.com";
 	
     /**
@@ -64,8 +68,8 @@ public final class CommonUtilities {
      * @param message message to be displayed.
      */
     static void displayMessage(Context context, String message) {
-        // Intent intent = new Intent(DISPLAY_MESSAGE_ACTION);
-        // intent.putExtra(EXTRA_MESSAGE, message);
-        // context.sendBroadcast(intent);
+        Intent intent = new Intent(DISPLAY_MESSAGE_ACTION);
+        intent.putExtra(EXTRA_MESSAGE, message);
+        context.sendBroadcast(intent);
     }
 }

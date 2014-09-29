@@ -8,11 +8,14 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.limewire.mojito.KUID;
 import org.limewire.mojito.MojitoFactory;
+import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.io.MessageDispatcher;
 import org.limewire.mojito.io.Tag;
 import org.limewire.mojito.messages.DHTMessage;
@@ -21,7 +24,9 @@ import org.limewire.security.SecureMessage;
 import org.limewire.security.SecureMessageCallback;
 
 import com.google.android.gcm.GCMRegistrar;
+import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -48,6 +53,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 public class BackgroundService extends Service {
+    @SuppressWarnings("hiding")
+    private static final String TAG = "BackgroundService";
 	private Looper mServiceLooper;
 	private ServiceHandler mServiceHandler;
 	AsyncTask<Void, Void, Void> mRegisterTask;
@@ -96,10 +103,14 @@ public class BackgroundService extends Service {
 		public void handleMessage(Message msg) {
 			// Normally we would do some work here, like download a file.
 			// For our sample, we just sleep for 5 seconds.
+	        Log.i(TAG, "Starting DHT.");
 
 			try {
+		        Log.i(TAG, "Binding to port.");
 				dht.start(hostname, port, proxy);
+		        Log.i(TAG, "Bootstraping.");
 				dht.bootstrap("kumbaya-node0.herokuapp.com", 80).get();
+		        Log.i(TAG, "Done bootstraping.");
 			} catch (IOException e) {
 				error("io exception");
 			} catch (InterruptedException e) {
@@ -143,17 +154,20 @@ public class BackgroundService extends Service {
 			ServerUtilities.id = Optional.of(nodeId);
 
 			final String regId = GCMRegistrar.getRegistrationId(context);
-			//GCMRegistrar.unregister(context);
+			// GCMRegistrar.unregister(context);
 			if (regId.equals("")) {
+		        Log.i(TAG, "Device is not registered locally. Registering.");
 				// Automatically registers application on startup.
 				GCMRegistrar.register(context, SENDER_ID);
 			} else {
+		        Log.i(TAG, "Device is already registered. Registering on the server.");
 				ServerUtilities.register(context, regId);
 			}
 			
 			while (!GCMRegistrar.isRegisteredOnServer(context)) {
 				try {
 					// Blocks until we are not registered on the server.
+			        Log.i(TAG, "Device is not registered on the server yet. Sleeping.");
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					throw new IOException("Failed to bind to GCM", e);
@@ -190,6 +204,14 @@ public class BackgroundService extends Service {
 	public IBinder onBind(Intent intent) {
 		return mBinder;
 	}
+	
+	public List<String> get(String key, int timeoutMs) throws InterruptedException, ExecutionException, TimeoutException {
+		return Lists.transform(dht.get(key, timeoutMs), new Function<DHTValueEntity, String>() {
+			public String apply(DHTValueEntity value) {
+				return value.getValue().toString();
+			}
+		});
+	}
 
 	public String toString() {
 		// Returns a debug string.
@@ -213,17 +235,10 @@ public class BackgroundService extends Service {
 			DHTMessage message = messageFactory.getMessageFactory()
 					.createMessage(src, ByteBuffer.wrap(data));				
 
-			Log.w("BackgroundService", "Got message: " + message.getOpCode() +
+			Log.i("BackgroundService", "Got message: " + message.getOpCode() +
 					", from: " + message.getContact().toString());
 
-			Log.w("BackgroundService", messageFactory.toString());
-			Log.w("BackgroundService", messageFactory.getRouteTable().toString());
-
 			dispatcher.handleMessage(message);
-
-			Log.w("BackgroundService", messageFactory.toString());
-			Log.w("BackgroundService", messageFactory.getRouteTable().toString());
-
 		} catch (Exception e) {
 			// ignores silently.
 			throw new RuntimeException(e);

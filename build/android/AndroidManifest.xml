@@ -17,7 +17,6 @@
     <!-- Keeps the processor from sleeping when a message is received. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
-
     <!--
      Creates a custom permission so only this app can receive its messages.
 
@@ -25,10 +24,10 @@
            where PACKAGE is the application's package name.
     -->
     <permission
-        android:name="com.kumbaya.android.client.permission.C2D_MESSAGE"
+        android:name="com.kumbaya.android.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
     <uses-permission
-        android:name="com.kumbaya.android.client.permission.C2D_MESSAGE" />
+        android:name="com.kumbaya.android.permission.C2D_MESSAGE" />
 
     <!-- This app has permission to register and receive data message. -->
     <uses-permission
@@ -56,7 +55,7 @@
           so only GCM services can send data messages for the app.
         -->
         <receiver
-            android:name="com.google.android.gcm.GCMBroadcastReceiver"
+            android:name="com.kumbaya.android.client.LocalGCMBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
                 <!-- Receives the actual messages. -->
@@ -74,7 +73,7 @@
           By default, it must be named .GCMIntentService, unless the
           application uses a custom BroadcastReceiver that redefines its name.
         -->
-        <service android:name=".client.GCMIntentService" />
+        <service android:name=".client.GCMIntentService" android:enabled="true" />
         <service android:name=".client.BackgroundService" />
 
     </application>

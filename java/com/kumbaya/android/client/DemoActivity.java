@@ -23,9 +23,13 @@ import static com.kumbaya.android.client.CommonUtilities.SERVER_URL;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jetty.client.HttpClient;
 import org.limewire.mojito.MojitoFactory;
+import org.limewire.mojito.exceptions.NotBootstrappedException;
 import org.limewire.mojito.io.MessageDispatcher;
 import org.limewire.mojito.io.Tag;
 import org.limewire.security.SecureMessage;
@@ -53,10 +57,14 @@ import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 
 /**
  * Main UI for the demo app.
@@ -67,7 +75,6 @@ public class DemoActivity extends Activity {
 		public void onServiceConnected(ComponentName name, IBinder b) {
             LocalBinder binder = (LocalBinder) b;
             service = Optional.of(binder.getService());
-            System.out.println(service);
             mDisplay.append(service.get().toString());
 		}
 
@@ -93,9 +100,39 @@ public class DemoActivity extends Activity {
         checkNotNull(SENDER_ID, "SENDER_ID");
 
         setContentView(R.layout.main);
+
         mDisplay = (TextView) findViewById(R.id.display);
         registerReceiver(mHandleMessageReceiver,
                 new IntentFilter(DISPLAY_MESSAGE_ACTION));
+        
+        EditText editText = (EditText) findViewById(R.id.search);
+        editText.setOnEditorActionListener(new OnEditorActionListener() {
+			@Override
+			public boolean onEditorAction(TextView v, int keyCode,
+					KeyEvent event) {
+                if (keyCode == EditorInfo.IME_ACTION_SEARCH ||
+                	(event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                	try {
+						List<String> result = service.get().get(
+								v.getText().toString(), 5000);
+						mDisplay.setText("");
+						for (String entry : result) {
+							mDisplay.append(entry);
+						}
+					} catch (InterruptedException e) {
+			            mDisplay.setText("interrupted");
+					} catch (ExecutionException e) {
+			            mDisplay.setText("error");
+					} catch (TimeoutException e) {
+			            mDisplay.setText("timeout");
+					} catch (NotBootstrappedException e) {
+			            mDisplay.setText("not bootstrapped");
+					}
+                	return true;
+                }
+                return false;
+			}
+        });
     }
 
     @Override
@@ -108,25 +145,11 @@ public class DemoActivity extends Activity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
-            /*
-             * Typically, an application registers automatically, so options
-             * below are disabled. Uncomment them if you want to manually
-             * register or unregister the device (you will also need to
-             * uncomment the equivalent options on options_menu.xml).
-             */
-            /*
-            case R.id.options_register:
-                GCMRegistrar.register(this, SENDER_ID);
-                return true;
-            case R.id.options_unregister:
-                GCMRegistrar.unregister(this);
-                return true;
-             */
             case R.id.options_clear:
                 mDisplay.setText(null);
                 return true;
             case R.id.options_refresh:
-                mDisplay.setText(service.get().toString());
+            	mDisplay.setText(service.get().toString());
                 return true;
             case R.id.options_exit:
                 finish();

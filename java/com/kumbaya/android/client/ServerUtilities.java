@@ -43,7 +43,7 @@ import org.limewire.mojito.KUID;
 /**
  * Helper class used to communicate with the demo server.
  */
-public final class ServerUtilities {
+final class ServerUtilities {
 
     private static final int MAX_ATTEMPTS = 5;
     private static final int BACKOFF_MILLI_SECONDS = 2000;
@@ -57,7 +57,7 @@ public final class ServerUtilities {
     	Preconditions.checkState(id.isPresent(),
     			"You can only register once a node id has been assigned.");
     	
-        Log.i(TAG, "registering device (regId = " + regId + ")");
+        Log.i(TAG, "Registering device on the server (regId = " + regId + ")");
         String serverUrl = SERVER_URL + "/register";
         Map<String, String> params = new HashMap<String, String>();
         params.put("regId", regId);
@@ -67,7 +67,7 @@ public final class ServerUtilities {
         // demo server. As the server might be down, we will retry it a couple
         // times.
         for (int i = 1; i <= MAX_ATTEMPTS; i++) {
-            Log.d(TAG, "Attempt #" + i + " to register");
+            Log.d(TAG, "Attempt #" + i + " to register on server.");
             try {
                 displayMessage(context, context.getString(
                         R.string.server_registering, i, MAX_ATTEMPTS));

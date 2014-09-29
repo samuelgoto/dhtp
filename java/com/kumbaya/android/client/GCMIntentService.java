@@ -84,14 +84,17 @@ public class GCMIntentService extends GCMBaseIntentService {
 
     @Override
     protected void onUnregistered(Context context, String registrationId) {
-        Log.i(TAG, "Device unregistered");
+        Log.i(TAG, "Device unregistered locally.");
         displayMessage(context, getString(R.string.gcm_unregistered));
         ServerUtilities.unregister(context, registrationId);
     }
 
     @Override
     protected void onMessage(Context context, Intent intent) {
-        // Log.i(TAG, "Received message. Extras: " + intent.getExtras());
+        Log.i(TAG, "Received message.");
+    	if (intent == null) {
+    		return;
+    	}
         Bundle extras = intent.getExtras();
         final String message = extras.get("debug").toString();
         final byte[] body = Base64.decode(extras.getString("body").getBytes(), 0);
