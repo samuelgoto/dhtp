@@ -37,6 +37,7 @@ import org.limewire.security.SecureMessageCallback;
 
 import com.google.android.gcm.GCMRegistrar;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -112,22 +113,32 @@ public class DemoActivity extends Activity {
 					KeyEvent event) {
                 if (keyCode == EditorInfo.IME_ACTION_SEARCH ||
                 	(event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
-                	try {
-						List<String> result = service.get().get(
-								v.getText().toString(), 5000);
-						mDisplay.setText("");
-						for (String entry : result) {
-							mDisplay.append(entry);
+                	
+                	new AsyncTask<String, Void, List<String>>() {
+						@Override
+						protected List<String> doInBackground(String... params) {
+		                	try {
+								return service.get().get(params[0], 5000);
+							} catch (InterruptedException e) {
+								return Lists.newArrayList();
+							} catch (ExecutionException e) {
+								return Lists.newArrayList();
+							} catch (TimeoutException e) {
+								return Lists.newArrayList();
+							} catch (NotBootstrappedException e) {
+								return Lists.newArrayList();
+							}
 						}
-					} catch (InterruptedException e) {
-			            mDisplay.setText("interrupted");
-					} catch (ExecutionException e) {
-			            mDisplay.setText("error");
-					} catch (TimeoutException e) {
-			            mDisplay.setText("timeout");
-					} catch (NotBootstrappedException e) {
-			            mDisplay.setText("not bootstrapped");
-					}
+						
+						@Override
+					    protected void onPostExecute(List<String> result) {
+							mDisplay.setText("");
+							for (String entry : result) {
+								mDisplay.append(entry);
+							}
+					    }
+                	}.execute(v.getText().toString());
+                	
                 	return true;
                 }
                 return false;
