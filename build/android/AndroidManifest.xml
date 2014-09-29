@@ -38,7 +38,7 @@
         android:label="@string/app_name"
         android:icon="@drawable/ic_launcher">
         <activity
-            android:name=".client.DemoActivity"
+            android:name="com.kumbaya.android.client.DemoActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
