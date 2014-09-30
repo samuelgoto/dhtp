@@ -20,13 +20,14 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:paddingLeft="16dp"
-    android:paddingRight="16dp">
+    android:paddingRight="16dp"
+    android:background="#888888" >
     
     <TextView
        android:id="@+id/textView1"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
-       android:text="Hello World" />
+       android:text="@string/create_fragment_text" />
     
     <EditText
         android:id="@+id/key"

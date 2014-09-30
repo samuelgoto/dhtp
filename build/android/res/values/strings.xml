@@ -36,5 +36,6 @@
     <string name="options_debug">Debug</string>
     <string name="options_exit">Exit</string>
     <string name="query_hint">Search Kumbaya</string>
+    <string name="create_fragment_text">Create a value in Kumbaya:</string>
     
 </resources>
