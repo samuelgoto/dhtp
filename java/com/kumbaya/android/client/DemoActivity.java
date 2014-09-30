@@ -96,42 +96,28 @@ public class DemoActivity extends FragmentActivity {
 	};
 
 	private Optional<BackgroundService> service = Optional.absent();
-	DemoCollectionPagerAdapter mDemoCollectionPagerAdapter;
+	PagerAdapter mDemoCollectionPagerAdapter;
 	ViewPager mViewPager;
 	private final CreateFragment createFragment = new CreateFragment();
 	private final DebugFragment debugFragment = new DebugFragment();
 	private final SearchFragment searchFragment = new SearchFragment();
 
-
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
-		Intent intent = new Intent(this, BackgroundService.class);
-		startService(intent);
-
-		Intent i = new Intent(this, BackgroundService.class);
-		bindService(i, connection, Context.BIND_AUTO_CREATE);
 
 		checkNotNull(SERVER_URL, "SERVER_URL");
 		checkNotNull(SENDER_ID, "SENDER_ID");
 
 		setContentView(R.layout.main);
-
-		registerReceiver(mHandleMessageReceiver,
-				new IntentFilter(DISPLAY_MESSAGE_ACTION));
 		
-		// ViewPager and its adapters use support library
-        // fragments, so use getSupportFragmentManager.
 		Fragment fragments[] = {
 				createFragment,
 				searchFragment, 
 				debugFragment};
 
         mDemoCollectionPagerAdapter =
-                new DemoCollectionPagerAdapter(
-                        getSupportFragmentManager(),
-                        fragments);
+                new PagerAdapter(getSupportFragmentManager(), fragments);
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mDemoCollectionPagerAdapter);
         mViewPager.setCurrentItem(1);
@@ -144,22 +130,12 @@ public class DemoActivity extends FragmentActivity {
             	}
             }
         });
-        
-		/*
-        EditText editText = (EditText) findViewById(R.id.search);
-        editText.setOnEditorActionListener(new OnEditorActionListener() {
-			@Override
-			public boolean onEditorAction(TextView v, int keyCode,
-					KeyEvent event) {
-                if (keyCode == EditorInfo.IME_ACTION_SEARCH ||
-                	(event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
 
-                	return true;
-                }
-                return false;
-			}
-        });
-		 */
+		Intent intent = new Intent(this, BackgroundService.class);
+		startService(intent);
+
+		Intent i = new Intent(this, BackgroundService.class);
+		bindService(i, connection, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override
@@ -252,13 +228,10 @@ public class DemoActivity extends FragmentActivity {
 		}
 	};
 
-
-	// Since this is an object collection, use a FragmentStatePagerAdapter,
-	// and NOT a FragmentPagerAdapter.
-	public class DemoCollectionPagerAdapter extends FragmentStatePagerAdapter {
+	private static class PagerAdapter extends FragmentStatePagerAdapter {
 		private final Fragment fragments[];
 		
-		public DemoCollectionPagerAdapter(FragmentManager fm, Fragment fragments[]) {
+		public PagerAdapter(FragmentManager fm, Fragment fragments[]) {
 			super(fm);
 			this.fragments = fragments;
 		}
@@ -279,9 +252,7 @@ public class DemoActivity extends FragmentActivity {
 		}
 	}
 
-	// Instances of this class are fragments representing a single
-	// object in our collection.
-	public static class DebugFragment extends Fragment {
+	private static class DebugFragment extends Fragment {
 		private TextView textView;
 
 		public void setText(String text) {
@@ -299,7 +270,7 @@ public class DemoActivity extends FragmentActivity {
 		}
 	}
 	
-	public static class SearchFragment extends Fragment {
+	private static class SearchFragment extends Fragment {
 		TextView mDisplay;
 		
 		public void setText(String text) {
@@ -322,8 +293,7 @@ public class DemoActivity extends FragmentActivity {
 		}
 	}
 	
-	public static class CreateFragment extends Fragment {
-
+	private static class CreateFragment extends Fragment {
 		@Override
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
@@ -334,7 +304,7 @@ public class DemoActivity extends FragmentActivity {
 		}
 	}
 
-	public class ZoomOutPageTransformer implements ViewPager.PageTransformer {
+	private static class ZoomOutPageTransformer implements ViewPager.PageTransformer {
 	    private static final float MIN_SCALE = 0.85f;
 	    private static final float MIN_ALPHA = 0.5f;
 

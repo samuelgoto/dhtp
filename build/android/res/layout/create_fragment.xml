@@ -19,15 +19,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:background="#888888" >
+    android:padding="16dp"
+    android:background="#e51c23" >
     
     <TextView
        android:id="@+id/textView1"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
-       android:text="@string/create_fragment_text" />
+       android:text="@string/create_fragment_text"
+       android:textColor="#D9FFFFFF" />
     
     <EditText
         android:id="@+id/key"
