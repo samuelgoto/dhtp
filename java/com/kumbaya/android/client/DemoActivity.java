@@ -58,13 +58,17 @@ import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MenuItem.OnActionExpandListener;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.SearchView;
@@ -81,7 +85,6 @@ public class DemoActivity extends Activity {
 		public void onServiceConnected(ComponentName name, IBinder b) {
             LocalBinder binder = (LocalBinder) b;
             service = Optional.of(binder.getService());
-            mDisplay.append(service.get().toString());
 		}
 
 		@Override
@@ -106,7 +109,7 @@ public class DemoActivity extends Activity {
         checkNotNull(SENDER_ID, "SENDER_ID");
 
         setContentView(R.layout.main);
-
+        
         mDisplay = (TextView) findViewById(R.id.display);
         registerReceiver(mHandleMessageReceiver,
                 new IntentFilter(DISPLAY_MESSAGE_ACTION));
@@ -182,12 +185,8 @@ public class DemoActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
         	case R.id.action_search:
-        		// searchView.setIconified(false);
         		return true;
-            case R.id.options_clear:
-                mDisplay.setText(null);
-                return true;
-            case R.id.options_refresh:
+            case R.id.options_debug:
             	mDisplay.setText(service.get().toString());
                 return true;
             case R.id.options_exit:
@@ -216,8 +215,8 @@ public class DemoActivity extends Activity {
             new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String newMessage = intent.getExtras().getString(EXTRA_MESSAGE);
-            mDisplay.append(newMessage + "\n");
+            // String newMessage = intent.getExtras().getString(EXTRA_MESSAGE);
+            // mDisplay.append(newMessage + "\n");
         }
     };
 }

@@ -145,6 +145,10 @@ public class Dht {
 		return dht.isBootstrapped();
 	}
 
+	public boolean isBound() {
+		return dht.isBound();
+	}
+
 	public Dht stop() {
 		dht.close();
 		return this;

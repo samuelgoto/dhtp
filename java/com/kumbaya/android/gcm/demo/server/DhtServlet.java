@@ -150,6 +150,7 @@ public class DhtServlet extends BaseServlet {
 			if (error.equals(Constants.ERROR_NOT_REGISTERED)) {
 				// application has been removed from device - unregister it
 				Datastore.unregister(regId);
+				logger.severe("application has been removed from device - unregister it");
 			} else {
 				logger.severe("Error sending message to device " + regId
 						+ ": " + error);

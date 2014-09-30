@@ -94,7 +94,7 @@ public class BackgroundService extends Service {
 			// Normally we would do some work here, like download a file.
 			// For our sample, we just sleep for 5 seconds.
 	        Log.i(TAG, "Starting DHT.");
-
+	        
 			try {
 		        Log.i(TAG, "Binding to port.");
 				dht.start(hostname, port, proxy);
@@ -102,14 +102,11 @@ public class BackgroundService extends Service {
 				dht.bootstrap("kumbaya-node0.herokuapp.com", 80).get();
 		        Log.i(TAG, "Done bootstraping.");
 			} catch (IOException e) {
-		        Log.e(TAG, "IOException.");
-				error("io exception");
+		        Log.w(TAG, "IOException.", e);
 			} catch (InterruptedException e) {
-		        Log.e(TAG, "InterruptedException.");
-				error("interrupted exception");
+		        Log.w(TAG, "InterruptedException.", e);
 			} catch (ExecutionException e) {
-		        Log.e(TAG, "ExecutionException.");
-				error("execution exception");
+		        Log.w(TAG, "ExecutionException.", e);
 			}
 		}
 	}
@@ -178,7 +175,7 @@ public class BackgroundService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Toast.makeText(this, "Kumbaya starting", Toast.LENGTH_SHORT).show();
 
-		if (intent == null || dht.isBootstraped()) {
+		if (intent == null || dht.isBound()) {
 			Toast.makeText(this, "Kumbaya is already running ... skipping.",
 					Toast.LENGTH_SHORT).show();
 		} else {
