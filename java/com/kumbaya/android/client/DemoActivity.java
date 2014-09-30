@@ -75,6 +75,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.SearchView;
+import android.widget.Toast;
 import android.widget.SearchView.OnQueryTextListener;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
@@ -205,6 +206,32 @@ public class DemoActivity extends FragmentActivity {
 		}
 	}
 
+	/** Called when the user touches the button */
+	public void createValue(View view) {
+		final String key = createFragment.getKey();
+		final String value = createFragment.getValue();
+		System.out.println("Creating a value!");
+		
+		new AsyncTask<String, Boolean, Boolean>() {
+			@Override
+			protected Boolean doInBackground(String... params) {
+				try {
+					service.get().put(key, value);
+					return true;
+				} catch (InterruptedException e) {
+				} catch (ExecutionException e) {
+				} catch (NotBootstrappedException e) {
+				}
+				return false;
+			}
+
+			@Override
+			protected void onPostExecute(Boolean result) {
+				System.out.println("Succeeded? " + result);
+			}
+		}.execute();
+	}
+	
 	@Override
 	protected void onDestroy() {
 		unregisterReceiver(mHandleMessageReceiver);
@@ -294,11 +321,25 @@ public class DemoActivity extends FragmentActivity {
 	}
 	
 	private static class CreateFragment extends Fragment {
+		private EditText keyView; 
+		private EditText valueView; 
+
+		public String getKey() {
+			return keyView.getText().toString();
+		}
+		
+		public String getValue() {
+			return valueView.getText().toString();
+		}
+
 		@Override
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
 			View rootView = inflater.inflate(
 					R.layout.create_fragment, container, false);
+		
+			keyView = (EditText) rootView.findViewById(R.id.key);
+			valueView = (EditText) rootView.findViewById(R.id.value);
 			
 			return rootView;
 		}

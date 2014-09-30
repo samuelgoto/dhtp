@@ -194,6 +194,10 @@ public class BackgroundService extends Service {
 	public IBinder onBind(Intent intent) {
 		return mBinder;
 	}
+
+	public void put(String key, String value) throws InterruptedException, ExecutionException {
+		dht.put(key, value);
+	}
 	
 	public List<String> get(String key, int timeoutMs) throws InterruptedException, ExecutionException, TimeoutException {
 		return Lists.transform(dht.get(key, timeoutMs), new Function<DHTValueEntity, String>() {
