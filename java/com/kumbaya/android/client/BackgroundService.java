@@ -20,6 +20,8 @@ import com.google.android.gcm.GCMRegistrar;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -90,23 +92,6 @@ public class BackgroundService extends Service {
 
 		@Override
 		public void handleMessage(Message msg) {
-			// Normally we would do some work here, like download a file.
-			// For our sample, we just sleep for 5 seconds.
-	        Log.i(TAG, "Starting DHT.");
-	        
-			try {
-		        Log.i(TAG, "Binding to port.");
-				dht.start(hostname, port, proxy);
-		        Log.i(TAG, "Bootstraping.");
-				dht.bootstrap("kumbaya-node0.herokuapp.com", 80).get();
-		        Log.i(TAG, "Done bootstraping.");
-			} catch (IOException e) {
-		        Log.w(TAG, "IOException.", e);
-			} catch (InterruptedException e) {
-		        Log.w(TAG, "InterruptedException.", e);
-			} catch (ExecutionException e) {
-		        Log.w(TAG, "ExecutionException.", e);
-			}
 		}
 	}
 
@@ -178,7 +163,7 @@ public class BackgroundService extends Service {
 		
 		// Toast.makeText(this, "Kumbaya starting", Toast.LENGTH_SHORT).show();
 
-		if (intent == null || dht.isBound()) {
+        if (intent == null || dht.isBound()) {
 			// This is a re-start of the application. No need to re-bind kumbaya.
 			// Toast.makeText(this, "Kumbaya is already running ... skipping.",
 			//		Toast.LENGTH_SHORT).show();
@@ -197,6 +182,59 @@ public class BackgroundService extends Service {
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
+	}
+	
+	interface Runnable<K> {
+		K run() throws Exception;
+	}
+	
+	private <K> ListenableFuture<K> run(final Runnable<K> runnable) {
+		final SettableFuture<K> future = SettableFuture.create();
+		new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				try {
+					K result = runnable.run();
+					future.set(result);
+				} catch (Exception e) {
+					future.setException(e);
+				}
+				return null;
+			}
+		}.execute();
+		return future;
+	}
+	
+	public ListenableFuture<Boolean> bootstrap() {
+		return run(new Runnable<Boolean>() {
+			@Override
+			public Boolean run() throws ExecutionException {
+		        Log.i(TAG, "Starting DHT.");
+
+				if (dht.isBootstraped()) {
+			        Log.i(TAG, "Already bootstrapped ... returning early.");
+					return true;
+				}
+
+				try {
+			        Log.i(TAG, "Binding to port.");
+					dht.start(hostname, port, proxy);
+			        Log.i(TAG, "Bootstraping.");
+					dht.bootstrap("kumbaya-node0.herokuapp.com", 80).get();
+			        Log.i(TAG, "Done bootstraping.");
+			        return true;
+				} catch (IOException e) {
+			        Log.w(TAG, "IOException.", e);
+					throw new ExecutionException("", e);
+				} catch (InterruptedException e) {
+			        Log.w(TAG, "InterruptedException.", e);
+					throw new ExecutionException("", e);
+				} catch (ExecutionException e) {
+			        Log.w(TAG, "ExecutionException.", e);
+					throw new ExecutionException("", e);
+				}
+			}
+		});
 	}
 
 	public void put(String key, String value) throws InterruptedException, ExecutionException {
@@ -246,6 +284,5 @@ public class BackgroundService extends Service {
 	@Override
 	public void onDestroy() {
         Log.i(TAG, "Destroying the service.");
-		// Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
 	}
 }

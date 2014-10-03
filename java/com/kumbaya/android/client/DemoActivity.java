@@ -15,45 +15,28 @@
  */
 package com.kumbaya.android.client;
 
-import static com.kumbaya.android.client.CommonUtilities.DISPLAY_MESSAGE_ACTION;
-import static com.kumbaya.android.client.CommonUtilities.EXTRA_MESSAGE;
 import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
 import static com.kumbaya.android.client.CommonUtilities.SERVER_URL;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.eclipse.jetty.client.HttpClient;
-import org.limewire.mojito.MojitoFactory;
 import org.limewire.mojito.exceptions.NotBootstrappedException;
-import org.limewire.mojito.io.MessageDispatcher;
-import org.limewire.mojito.io.Tag;
-import org.limewire.security.SecureMessage;
-import org.limewire.security.SecureMessageCallback;
 
-import com.google.android.gcm.GCMRegistrar;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.kumbaya.android.R;
 import com.kumbaya.android.client.BackgroundService.LocalBinder;
-import com.kumbaya.dht.Dht;
-import com.kumbaya.dht.DhtModule;
-import com.kumbaya.monitor.VarZModule;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -64,22 +47,17 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MenuItem.OnActionExpandListener;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.SearchView;
-import android.widget.Toast;
 import android.widget.SearchView.OnQueryTextListener;
 import android.widget.TextView;
-import android.widget.TextView.OnEditorActionListener;
+import android.widget.Toast;
 
 /**
  * Main UI for the demo app.
@@ -92,6 +70,16 @@ public class DemoActivity extends FragmentActivity {
 		public void onServiceConnected(ComponentName name, IBinder b) {
 			LocalBinder binder = (LocalBinder) b;
 			service = Optional.of(binder.getService());
+			
+			ListenableFuture<Boolean> bootstrapped = service.get().bootstrap();
+			Futures.addCallback(bootstrapped, new FutureCallback<Boolean>() {
+				  public void onSuccess(Boolean success) {
+				        Log.i(TAG, "Bootstrapped succeeded? " + success);
+				  }
+				  public void onFailure(Throwable thrown) {
+				        Log.i(TAG, "Failed to bootstrap.");
+				  }
+			});
 		}
 
 		@Override
@@ -285,7 +273,7 @@ public class DemoActivity extends FragmentActivity {
 		}
 	}
 
-	private static class DebugFragment extends Fragment {
+	public static class DebugFragment extends Fragment {
 		private TextView textView;
 
 		public void setText(String text) {
@@ -303,7 +291,7 @@ public class DemoActivity extends FragmentActivity {
 		}
 	}
 	
-	private static class SearchFragment extends Fragment {
+	public static class SearchFragment extends Fragment {
 		TextView mDisplay;
 		
 		public void setText(String text) {
@@ -326,7 +314,7 @@ public class DemoActivity extends FragmentActivity {
 		}
 	}
 	
-	private static class CreateFragment extends Fragment {
+	public static class CreateFragment extends Fragment {
 		private EditText keyView; 
 		private EditText valueView; 
 
