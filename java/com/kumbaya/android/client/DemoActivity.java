@@ -19,27 +19,19 @@ import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
 import static com.kumbaya.android.client.CommonUtilities.SERVER_URL;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeoutException;
-
-import org.limewire.mojito.exceptions.NotBootstrappedException;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.kumbaya.android.R;
 import com.kumbaya.android.client.BackgroundService.LocalBinder;
 
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -143,9 +135,7 @@ public class DemoActivity extends FragmentActivity {
 
 		Intent intent = new Intent(this, BackgroundService.class);
 		startService(intent);
-
-		Intent i = new Intent(this, BackgroundService.class);
-		bindService(i, connection, Context.BIND_AUTO_CREATE);
+		bindService(intent, connection, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override
@@ -242,15 +232,6 @@ public class DemoActivity extends FragmentActivity {
 					getString(R.string.error_config, name));
 		}
 	}
-
-	private final BroadcastReceiver mHandleMessageReceiver =
-			new BroadcastReceiver() {
-		@Override
-		public void onReceive(Context context, Intent intent) {
-			// String newMessage = intent.getExtras().getString(EXTRA_MESSAGE);
-			// mDisplay.append(newMessage + "\n");
-		}
-	};
 
 	private static class PagerAdapter extends FragmentStatePagerAdapter {
 		private final Fragment fragments[];
