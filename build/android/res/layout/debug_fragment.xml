@@ -25,6 +25,6 @@
         android:id="@+id/debug_log"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:textColor="#D9FFFFFF"
+        android:textColor="#D9000000"
         android:padding="16dp" />
 </ScrollView>

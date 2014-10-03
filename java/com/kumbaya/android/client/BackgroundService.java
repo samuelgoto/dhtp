@@ -43,7 +43,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 public class BackgroundService extends Service {
-    @SuppressWarnings("hiding")
     private static final String TAG = "BackgroundService";
 	private Looper mServiceLooper;
 	private ServiceHandler mServiceHandler;
@@ -113,7 +112,9 @@ public class BackgroundService extends Service {
 
 	@Override
 	public void onCreate() {
-		// Start up the thread running the service.  Note that we create a
+        Log.i(TAG, "Creating the background service.");
+
+        // Start up the thread running the service.  Note that we create a
 		// separate thread because the service normally runs in the process's
 		// main thread, which we don't want to block.  We also make it
 		// background priority so CPU-intensive work will not disrupt our UI.
@@ -173,11 +174,14 @@ public class BackgroundService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		Toast.makeText(this, "Kumbaya starting", Toast.LENGTH_SHORT).show();
+        Log.i(TAG, "Starting the service.");
+		
+		// Toast.makeText(this, "Kumbaya starting", Toast.LENGTH_SHORT).show();
 
 		if (intent == null || dht.isBound()) {
-			Toast.makeText(this, "Kumbaya is already running ... skipping.",
-					Toast.LENGTH_SHORT).show();
+			// This is a re-start of the application. No need to re-bind kumbaya.
+			// Toast.makeText(this, "Kumbaya is already running ... skipping.",
+			//		Toast.LENGTH_SHORT).show();
 		} else {
 			// For each start request, send a message to start a job and deliver the
 			// start ID so we know which request we're stopping when we finish the job
@@ -241,6 +245,7 @@ public class BackgroundService extends Service {
 
 	@Override
 	public void onDestroy() {
-		Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
+        Log.i(TAG, "Destroying the service.");
+		// Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
 	}
 }

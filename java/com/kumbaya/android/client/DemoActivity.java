@@ -63,6 +63,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -84,6 +85,8 @@ import android.widget.TextView.OnEditorActionListener;
  * Main UI for the demo app.
  */
 public class DemoActivity extends FragmentActivity {
+    private static final String TAG = "DemoActivity";
+
 	private final ServiceConnection connection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder b) {
@@ -107,6 +110,8 @@ public class DemoActivity extends FragmentActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+        Log.i(TAG, "Creating the activity.");
+		
 		checkNotNull(SERVER_URL, "SERVER_URL");
 		checkNotNull(SENDER_ID, "SENDER_ID");
 
@@ -234,7 +239,8 @@ public class DemoActivity extends FragmentActivity {
 	
 	@Override
 	protected void onDestroy() {
-		unregisterReceiver(mHandleMessageReceiver);
+        Log.i(TAG, "Destroying the activity.");
+
 		unbindService(connection);
 		super.onDestroy();
 	}
