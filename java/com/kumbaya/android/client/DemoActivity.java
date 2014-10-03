@@ -258,68 +258,54 @@ public class DemoActivity extends FragmentActivity {
 	}
 
 	public static class DebugFragment extends Fragment {
-		private TextView textView;
-
 		public void setText(String text) {
+			TextView textView = ((TextView) getView().findViewById(
+					R.id.debug_log));
 			textView.setText(text);
 		}
 		
 		@Override
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
-			View rootView = inflater.inflate(
+			return inflater.inflate(
 					R.layout.debug_fragment, container, false);
-			textView = ((TextView) rootView.findViewById(
-					R.id.debug_log));
-			return rootView;
 		}
 	}
 	
 	public static class SearchFragment extends Fragment {
-		TextView mDisplay;
 		
 		public void setText(String text) {
+			TextView mDisplay = (TextView) getView().findViewById(R.id.serp);
 			mDisplay.setText(text);
 		}
 
 		public void appendText(String text) {
+			TextView mDisplay = (TextView) getView().findViewById(R.id.serp);
 			mDisplay.append(text);
 		}
 
 		@Override
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
-			View rootView = inflater.inflate(
-					R.layout.search_fragment, container, false);
-			
-			mDisplay = (TextView) rootView.findViewById(R.id.serp);
-
-			return rootView;
+			return inflater.inflate(R.layout.search_fragment, container, false);
 		}
 	}
 	
 	public static class CreateFragment extends Fragment {
-		private EditText keyView; 
-		private EditText valueView; 
-
 		public String getKey() {
+			EditText keyView = (EditText) getView().findViewById(R.id.key);
 			return keyView.getText().toString();
 		}
 		
 		public String getValue() {
+			EditText valueView = (EditText) getView().findViewById(R.id.value);
 			return valueView.getText().toString();
 		}
 
 		@Override
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
-			View rootView = inflater.inflate(
-					R.layout.create_fragment, container, false);
-		
-			keyView = (EditText) rootView.findViewById(R.id.key);
-			valueView = (EditText) rootView.findViewById(R.id.value);
-			
-			return rootView;
+			return inflater.inflate(R.layout.create_fragment, container, false);
 		}
 	}
 }
