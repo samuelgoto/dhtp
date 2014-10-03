@@ -20,6 +20,7 @@ import static com.kumbaya.android.client.CommonUtilities.SERVER_URL;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeoutException;
 
 import org.limewire.mojito.exceptions.NotBootstrappedException;
@@ -40,7 +41,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -65,6 +68,15 @@ import android.widget.Toast;
 public class DemoActivity extends FragmentActivity {
     private static final String TAG = "DemoActivity";
 
+    private final Executor executor = new Executor() {
+        private final Handler mHandler = new Handler(Looper.getMainLooper());
+
+        @Override
+        public void execute(Runnable command) {
+            mHandler.post(command);
+        }
+    };
+    
 	private final ServiceConnection connection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder b) {
@@ -79,7 +91,7 @@ public class DemoActivity extends FragmentActivity {
 				  public void onFailure(Throwable thrown) {
 				        Log.i(TAG, "Failed to bootstrap.");
 				  }
-			});
+			}, executor);
 		}
 
 		@Override
@@ -90,9 +102,9 @@ public class DemoActivity extends FragmentActivity {
 	private Optional<BackgroundService> service = Optional.absent();
 	PagerAdapter mDemoCollectionPagerAdapter;
 	ViewPager mViewPager;
-	private final CreateFragment createFragment = new CreateFragment();
-	private final DebugFragment debugFragment = new DebugFragment();
-	private final SearchFragment searchFragment = new SearchFragment();
+	private CreateFragment createFragment;
+	private DebugFragment debugFragment;
+	private SearchFragment searchFragment;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -105,6 +117,10 @@ public class DemoActivity extends FragmentActivity {
 
 		setContentView(R.layout.main);
 		
+		createFragment = new CreateFragment();
+		debugFragment = new DebugFragment();
+		searchFragment = new SearchFragment();
+
 		Fragment fragments[] = {
 				createFragment,
 				searchFragment, 
@@ -119,7 +135,7 @@ public class DemoActivity extends FragmentActivity {
         mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
-            	if (position == 2) {
+            	if (position == 2 && service.isPresent()) {
         			debugFragment.setText(service.get().toString());
             	}
             }
@@ -146,30 +162,24 @@ public class DemoActivity extends FragmentActivity {
 				menuItem.collapseActionView();
 		        mViewPager.setCurrentItem(1);
 
-				new AsyncTask<String, Void, List<String>>() {
+		        final ListenableFuture<List<String>> result = service.get().get(
+		        		query, 5000);
+		        
+		        result.addListener(new Runnable() {
 					@Override
-					protected List<String> doInBackground(String... params) {
+					public void run() {
 						try {
-							return service.get().get(params[0], 5000);
-						} catch (InterruptedException e) {
-							return Lists.newArrayList();
-						} catch (ExecutionException e) {
-							return Lists.newArrayList();
-						} catch (TimeoutException e) {
-							return Lists.newArrayList();
-						} catch (NotBootstrappedException e) {
-							return Lists.newArrayList();
+							List<String> list = result.get();
+							searchFragment.setText("");
+							for (String entry : list) {
+								searchFragment.appendText(entry);
+							}
+						} catch (Exception e) {
+							searchFragment.setText(
+									"An error occurred while searching for your key: " + e);
 						}
 					}
-
-					@Override
-					protected void onPostExecute(List<String> result) {
-						searchFragment.setText("");
-						for (String entry : result) {
-							searchFragment.appendText(entry);
-						}
-					}
-				}.execute(query);
+		        }, executor);
 
 				return false;
 			}
@@ -203,26 +213,19 @@ public class DemoActivity extends FragmentActivity {
 	public void createValue(View view) {
 		final String key = createFragment.getKey();
 		final String value = createFragment.getValue();
-		System.out.println("Creating a value!");
-		
-		new AsyncTask<String, Boolean, Boolean>() {
-			@Override
-			protected Boolean doInBackground(String... params) {
-				try {
-					service.get().put(key, value);
-					return true;
-				} catch (InterruptedException e) {
-				} catch (ExecutionException e) {
-				} catch (NotBootstrappedException e) {
-				}
-				return false;
-			}
+	
+		ListenableFuture<Void> result = service.get().put(key, value);
 
-			@Override
-			protected void onPostExecute(Boolean result) {
-				System.out.println("Succeeded? " + result);
-			}
-		}.execute();
+		final Context context = this;
+		
+		Futures.addCallback(result, new FutureCallback<Void>() {
+			  public void onSuccess(Void explosion) {
+					Toast.makeText(context, "Value created!", Toast.LENGTH_SHORT).show();
+			  }
+			  public void onFailure(Throwable thrown) {
+					Toast.makeText(context, "Failed to create value :(", Toast.LENGTH_SHORT).show();
+			  }
+		}, executor);
 	}
 	
 	@Override

@@ -81,7 +81,6 @@ public class BackgroundService extends Service {
 	}
 
 	private void error(String message) {
-		Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 	}
 
 	// Handler that receives messages from the thread
@@ -187,7 +186,7 @@ public class BackgroundService extends Service {
 	interface Runnable<K> {
 		K run() throws Exception;
 	}
-	
+
 	private <K> ListenableFuture<K> run(final Runnable<K> runnable) {
 		final SettableFuture<K> future = SettableFuture.create();
 		new AsyncTask<Void, Void, Void>() {
@@ -237,14 +236,25 @@ public class BackgroundService extends Service {
 		});
 	}
 
-	public void put(String key, String value) throws InterruptedException, ExecutionException {
-		dht.put(key, value);
+	public ListenableFuture<Void> put(final String key, final String value) {
+		return run(new Runnable<Void>() {
+			@Override
+			public Void run() throws Exception {
+				dht.put(key, value);
+				return null;
+			}
+		});
 	}
 	
-	public List<String> get(String key, int timeoutMs) throws InterruptedException, ExecutionException, TimeoutException {
-		return Lists.transform(dht.get(key, timeoutMs), new Function<DHTValueEntity, String>() {
-			public String apply(DHTValueEntity value) {
-				return value.getValue().toString();
+	public ListenableFuture<List<String>> get(final String key, final int timeoutMs) {
+		return run(new Runnable<List<String>>() {
+			@Override
+			public List<String> run() throws Exception {
+				return Lists.transform(dht.get(key, timeoutMs), new Function<DHTValueEntity, String>() {
+					public String apply(DHTValueEntity value) {
+						return value.getValue().toString();
+					}
+				});
 			}
 		});
 	}
