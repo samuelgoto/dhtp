@@ -46,9 +46,6 @@ import android.widget.Toast;
 
 public class BackgroundService extends Service {
     private static final String TAG = "BackgroundService";
-	private Looper mServiceLooper;
-	private ServiceHandler mServiceHandler;
-	AsyncTask<Void, Void, Void> mRegisterTask;
 	// NOTE(goto): you can set this to localhost while running appengine
 	// locally.
 	final String hostname = "kumbaya-android.appspot.com";
@@ -68,11 +65,24 @@ public class BackgroundService extends Service {
 				}
 			});
 
-	@Inject private Dht dht;
-	@Inject private AsyncMessageDispatcher dispatcher;
-	@Inject private org.limewire.mojito.Context messageFactory;
+	@Inject private Dht dht = null;
+	@Inject private AsyncMessageDispatcher dispatcher = null;
+	@Inject private org.limewire.mojito.Context messageFactory = null;
 	private final Binder mBinder = new LocalBinder();
 
+	public BackgroundService() {
+        // NOTE(goto): this doesn't smell right, but android is somehow
+        // calling this constructor with an existing instance attached
+        // to it, where private properties are already set. weird.
+        Log.i(TAG, "Hash code: " + this.hashCode());
+        if (this.dht != null) {
+            Log.i(TAG, "Service already created. Bootstraped? " + dht.isBootstraped());
+        	return;
+        }
+        Log.i(TAG, "Injecting members.");
+        injector.injectMembers(this);
+	}
+	
 	public class LocalBinder extends Binder {
 		BackgroundService getService() {
 			// Return this instance of LocalService so clients can call public methods
@@ -80,37 +90,9 @@ public class BackgroundService extends Service {
 		}
 	}
 
-	private void error(String message) {
-	}
-
-	// Handler that receives messages from the thread
-	private final class ServiceHandler extends Handler {
-		public ServiceHandler(Looper looper) {
-			super(looper);
-		}
-
-		@Override
-		public void handleMessage(Message msg) {
-		}
-	}
-
 	@Override
 	public void onCreate() {
         Log.i(TAG, "Creating the background service.");
-
-        // Start up the thread running the service.  Note that we create a
-		// separate thread because the service normally runs in the process's
-		// main thread, which we don't want to block.  We also make it
-		// background priority so CPU-intensive work will not disrupt our UI.
-		HandlerThread thread = new HandlerThread("ServiceStartArguments",
-				android.os.Process.THREAD_PRIORITY_BACKGROUND);
-		thread.start();
-
-		injector.injectMembers(this);
-
-		// Get the HandlerThread's Looper and use it for our Handler
-		mServiceLooper = thread.getLooper();
-		mServiceHandler = new ServiceHandler(mServiceLooper);
 	}
 
 	static class GcmServer implements Server {
@@ -158,22 +140,8 @@ public class BackgroundService extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "Starting the service.");
+        Log.i(TAG, "Starting the service: " + (dht.isBootstraped() ? "bootstraped" : "not bootstraped"));
 		
-		// Toast.makeText(this, "Kumbaya starting", Toast.LENGTH_SHORT).show();
-
-        if (intent == null || dht.isBound()) {
-			// This is a re-start of the application. No need to re-bind kumbaya.
-			// Toast.makeText(this, "Kumbaya is already running ... skipping.",
-			//		Toast.LENGTH_SHORT).show();
-		} else {
-			// For each start request, send a message to start a job and deliver the
-			// start ID so we know which request we're stopping when we finish the job
-			Message msg = mServiceHandler.obtainMessage();
-			msg.arg1 = startId;
-			mServiceHandler.sendMessage(msg);
-		}
-
 		// If we get killed, after returning from here, restart
 		return START_STICKY;
 	}
@@ -210,18 +178,25 @@ public class BackgroundService extends Service {
 			public Boolean run() throws ExecutionException {
 		        Log.i(TAG, "Starting DHT.");
 
-				if (dht.isBootstraped()) {
-			        Log.i(TAG, "Already bootstrapped ... returning early.");
-					return true;
-				}
 
 				try {
-			        Log.i(TAG, "Binding to port.");
-					dht.start(hostname, port, proxy);
-			        Log.i(TAG, "Bootstraping.");
-					dht.bootstrap("kumbaya-node0.herokuapp.com", 80).get();
-			        Log.i(TAG, "Done bootstraping.");
-			        return true;
+
+					if (dht.isBound()) {
+				        Log.i(TAG, "Already bound..");
+					} else {
+				        Log.i(TAG, "Binding to port.");
+				        dht.start(hostname, port, proxy);
+					}
+
+					if (dht.isBootstraped()) {
+				        Log.i(TAG, "Already bootstraped.");
+					} else {
+				        Log.i(TAG, "Bootstraping.");
+						dht.bootstrap("kumbaya-node0.herokuapp.com", 80).get();
+				        Log.i(TAG, "Done bootstraping.");
+					}
+
+					return true;
 				} catch (IOException e) {
 			        Log.w(TAG, "IOException.", e);
 					throw new ExecutionException("", e);

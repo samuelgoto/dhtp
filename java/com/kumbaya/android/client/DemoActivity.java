@@ -60,14 +60,7 @@ import android.widget.Toast;
 public class DemoActivity extends FragmentActivity {
     private static final String TAG = "DemoActivity";
 
-    private final Executor executor = new Executor() {
-        private final Handler mHandler = new Handler(Looper.getMainLooper());
-
-        @Override
-        public void execute(Runnable command) {
-            mHandler.post(command);
-        }
-    };
+    private final Executor executor = Executors.mainLooperExecutor();
     
 	private final ServiceConnection connection = new ServiceConnection() {
 		@Override
@@ -133,9 +126,11 @@ public class DemoActivity extends FragmentActivity {
             }
         });
 
-		Intent intent = new Intent(this, BackgroundService.class);
+        Intent intent = new Intent(this, BackgroundService.class);
 		startService(intent);
-		bindService(intent, connection, Context.BIND_AUTO_CREATE);
+
+		Intent i = new Intent(this, BackgroundService.class);
+		bindService(i, connection, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override
@@ -258,7 +253,14 @@ public class DemoActivity extends FragmentActivity {
 	}
 
 	public static class DebugFragment extends Fragment {
+		private static final String TAG = "DebugFragment";
+
 		public void setText(String text) {
+			if (getView() == null) {
+		        Log.e(TAG, "View not available.");
+				return;
+			}
+
 			TextView textView = ((TextView) getView().findViewById(
 					R.id.debug_log));
 			textView.setText(text);
@@ -273,13 +275,22 @@ public class DemoActivity extends FragmentActivity {
 	}
 	
 	public static class SearchFragment extends Fragment {
+		private static final String TAG = "SearchFragment";
 		
 		public void setText(String text) {
+			if (getView() == null) {
+		        Log.e(TAG, "View not available.");
+				return;
+			}
 			TextView mDisplay = (TextView) getView().findViewById(R.id.serp);
 			mDisplay.setText(text);
 		}
 
 		public void appendText(String text) {
+			if (getView() == null) {
+		        Log.e(TAG, "View not available.");
+				return;
+			}
 			TextView mDisplay = (TextView) getView().findViewById(R.id.serp);
 			mDisplay.append(text);
 		}
@@ -287,17 +298,30 @@ public class DemoActivity extends FragmentActivity {
 		@Override
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
+	        Log.i(TAG, "Creating view.");
 			return inflater.inflate(R.layout.search_fragment, container, false);
 		}
 	}
 	
 	public static class CreateFragment extends Fragment {
+		private static final String TAG = "CreateFragment";
+
 		public String getKey() {
+			if (getView() == null) {
+		        Log.e(TAG, "View not available.");
+				return null;
+			}
+
 			EditText keyView = (EditText) getView().findViewById(R.id.key);
 			return keyView.getText().toString();
 		}
 		
 		public String getValue() {
+			if (getView() == null) {
+		        Log.e(TAG, "View not available.");
+				return null;
+			}
+			
 			EditText valueView = (EditText) getView().findViewById(R.id.value);
 			return valueView.getText().toString();
 		}
