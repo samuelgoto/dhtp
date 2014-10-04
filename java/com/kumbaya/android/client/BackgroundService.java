@@ -1,69 +1,42 @@
 package com.kumbaya.android.client;
 
-import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
-import org.limewire.mojito.KUID;
-import org.limewire.mojito.MojitoFactory;
 import org.limewire.mojito.db.DHTValueEntity;
-import org.limewire.mojito.io.MessageDispatcher;
 import org.limewire.mojito.messages.DHTMessage;
 
-import com.google.android.gcm.GCMRegistrar;
 import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Provider;
 import com.kumbaya.dht.AsyncMessageDispatcher;
 import com.kumbaya.dht.Dht;
-import com.kumbaya.dht.Server;
 
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Binder;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
-import android.widget.Toast;
 
 public class BackgroundService extends Service {
     private static final String TAG = "BackgroundService";
 	// NOTE(goto): you can set this to localhost while running appengine
 	// locally.
-	final String hostname = "kumbaya-android.appspot.com";
-	int port = CommonUtilities.GCM_PORT;
-	int proxy = CommonUtilities.GCM_PORT;
+	private final String hostname = CommonUtilities.GCM_HOSTNAME;
+	private final int port = CommonUtilities.GCM_PORT;
+	private final int proxy = CommonUtilities.GCM_PORT;
 	private final Context context = this;
 	private final Injector injector = Guice.createInjector(
-			new AbstractModule() {
-				@Override
-				protected void configure() {
-					bind(MessageDispatcher.class).to(AsyncMessageDispatcher.class);
-					bind(Context.class).toInstance(context);
-					bind(Server.class).to(GcmServer.class);
-
-					bind(org.limewire.mojito.Context.class).toInstance(
-							(org.limewire.mojito.Context) MojitoFactory.createDHT(hostname));
-				}
-			});
+			new ClientModule(context));
 
 	@Inject private Dht dht = null;
 	@Inject private AsyncMessageDispatcher dispatcher = null;
@@ -95,49 +68,6 @@ public class BackgroundService extends Service {
         Log.i(TAG, "Creating the background service.");
 	}
 
-	static class GcmServer implements Server {
-		@Inject private Context context;
-		@Inject private Provider<org.limewire.mojito.Context> node;
-
-		@Override
-		public void bind(SocketAddress address) throws IOException {
-			// Make sure the device has the proper dependencies.
-			GCMRegistrar.checkDevice(context);
-			// Make sure the manifest was properly set - comment out this line
-			// while developing the app, then uncomment it when it's ready.
-			GCMRegistrar.checkManifest(context);
-
-			KUID nodeId = node.get().getLocalNodeID();
-			ServerUtilities.id = Optional.of(nodeId);
-
-			final String regId = GCMRegistrar.getRegistrationId(context);
-			// GCMRegistrar.unregister(context);
-			if (regId.equals("")) {
-		        Log.i(TAG, "Device is not registered locally. Registering.");
-				// Automatically registers application on startup.
-				GCMRegistrar.register(context, SENDER_ID);
-			} else {
-		        Log.i(TAG, "Device is already registered. Registering on the server.");
-				ServerUtilities.register(context, regId);
-			}
-			
-			while (!GCMRegistrar.isRegisteredOnServer(context)) {
-				try {
-					// Blocks until we are not registered on the server.
-			        Log.i(TAG, "Device is not registered on the server yet. Sleeping.");
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					throw new IOException("Failed to bind to GCM", e);
-				}
-			}
-		}
-
-		@Override
-		public void close() {
-			GCMRegistrar.onDestroy(context);
-		}
-	}
-
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "Starting the service: " + (dht.isBootstraped() ? "bootstraped" : "not bootstraped"));
@@ -151,7 +81,7 @@ public class BackgroundService extends Service {
 		return mBinder;
 	}
 	
-	interface Runnable<K> {
+	private interface Runnable<K> {
 		K run() throws Exception;
 	}
 
