@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.HandlerThread;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -44,6 +45,7 @@ public class BackgroundService extends Service {
 	private final Binder mBinder = new LocalBinder();
 
 	public BackgroundService() {
+		super();
         // NOTE(goto): this doesn't smell right, but android is somehow
         // calling this constructor with an existing instance attached
         // to it, where private properties are already set. weird.
@@ -65,17 +67,29 @@ public class BackgroundService extends Service {
 
 	@Override
 	public void onCreate() {
+		super.onCreate();
         Log.i(TAG, "Creating the background service.");
+        
+        HandlerThread thread = new HandlerThread("ServiceStartArguments",
+				android.os.Process.THREAD_PRIORITY_BACKGROUND);
+		thread.start();
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		super.onStartCommand(intent, flags, startId);
         Log.i(TAG, "Starting the service: " + (dht.isBootstraped() ? "bootstraped" : "not bootstraped"));
 		
 		// If we get killed, after returning from here, restart
 		return START_STICKY;
 	}
 
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+        Log.i(TAG, "Destroying the service.");
+	}
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -194,10 +208,5 @@ public class BackgroundService extends Service {
 			// ignores silently.
 			throw new RuntimeException(e);
 		}
-	}
-
-	@Override
-	public void onDestroy() {
-        Log.i(TAG, "Destroying the service.");
 	}
 }
