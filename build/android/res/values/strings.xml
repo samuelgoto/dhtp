@@ -37,7 +37,9 @@
     <string name="options_exit">Exit</string>
     <string name="query_hint">Search Kumbaya</string>
     <string name="create_fragment_text">Create a value in Kumbaya:</string>
+    <string name="booting_fragment_text">Connecting to the Kumbaya network ...</string>
     <string name="welcome">Welcome to Kumbaya! Swipe left to create a value, right to debug or click on search to query the network!</string>
     <string name="button_create">Create value</string>
+    <string name="button_search">Search</string>
     
 </resources>

@@ -15,16 +15,36 @@
   - under the License.
 -->
 
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:orientation="vertical"
     android:background="#673ab7" >
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#D9FFFFFF"
+        android:padding="16dp"
+        android:text="@string/welcome" />
+    
+    <EditText
+        android:id="@+id/query"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text" />
+    
+  <ScrollView
+	    android:layout_width="fill_parent"
+    	android:layout_height="fill_parent">
 
     <TextView
         android:id="@+id/serp"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:textColor="#D9FFFFFF"
-        android:padding="16dp"
-        android:text="@string/welcome" />
-</ScrollView>
+        android:padding="16dp" />
+    
+  </ScrollView>
+  
+</LinearLayout>

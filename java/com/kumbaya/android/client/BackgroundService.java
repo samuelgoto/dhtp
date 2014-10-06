@@ -35,13 +35,12 @@ public class BackgroundService extends Service {
 	private final String hostname = CommonUtilities.GCM_HOSTNAME;
 	private final int port = CommonUtilities.GCM_PORT;
 	private final int proxy = CommonUtilities.GCM_PORT;
-	private final Context context = this;
 	private final Injector injector = Guice.createInjector(
-			new ClientModule(context));
+			new ClientModule(this));
 
 	@Inject private Dht dht = null;
 	@Inject private AsyncMessageDispatcher dispatcher = null;
-	@Inject private org.limewire.mojito.Context messageFactory = null;
+	@Inject private org.limewire.mojito.Context context = null;
 	private final Binder mBinder = new LocalBinder();
 
 	public BackgroundService() {
@@ -68,16 +67,12 @@ public class BackgroundService extends Service {
 	public void onCreate() {
 		super.onCreate();
         Log.i(TAG, "Creating the background service.");
-        
-        HandlerThread thread = new HandlerThread("ServiceStartArguments",
-				android.os.Process.THREAD_PRIORITY_BACKGROUND);
-		thread.start();
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		super.onStartCommand(intent, flags, startId);
-        Log.i(TAG, "Starting the service: " + (dht.isBootstraped() ? "bootstraped" : "not bootstraped"));
+        Log.i(TAG, "Starting the service.");
 
         bootstrap();
         
@@ -116,13 +111,29 @@ public class BackgroundService extends Service {
 		}.execute();
 		return future;
 	}
+
+	public boolean isBootstraped() {
+		return dht.isBootstraped();
+	}
+		
+	public ListenableFuture<Boolean> waitForBootstrap() {
+		return run(new Runnable<Boolean>() {
+			@Override
+			public Boolean run() throws Exception {
+				while (!dht.isBootstraped()) {
+					Thread.sleep(1000);
+				}
+				return true;
+			}
+		});
+	}
 	
 	public ListenableFuture<Boolean> bootstrap() {
 		return run(new Runnable<Boolean>() {
 			@Override
 			public Boolean run() throws ExecutionException {
 		        Log.i(TAG, "Starting DHT.");
-
+		        
 				try {
 
 					if (dht.isBound()) {
@@ -180,11 +191,11 @@ public class BackgroundService extends Service {
 
 	public String toString() {
 		// Returns a debug string.
-		return messageFactory.toString()
+		return context.toString()
 				+ "" 
-				+ messageFactory.getRouteTable().toString()
+				+ context.getRouteTable().toString()
 				+ ""
-				+ messageFactory.getDatabase().toString();
+				+ context.getDatabase().toString();
 	}
 	
 	/**
@@ -197,7 +208,7 @@ public class BackgroundService extends Service {
 		}
 
 		try {
-			DHTMessage message = messageFactory.getMessageFactory()
+			DHTMessage message = context.getMessageFactory()
 					.createMessage(src, ByteBuffer.wrap(data));				
 
 			Log.i("BackgroundService", "Got message: " + message.getOpCode() +

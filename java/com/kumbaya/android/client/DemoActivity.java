@@ -26,8 +26,11 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.kumbaya.android.R;
+import com.kumbaya.android.R.drawable;
+import com.kumbaya.android.R.id;
 import com.kumbaya.android.client.BackgroundService.LocalBinder;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -48,6 +51,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.view.KeyEvent;
 import android.widget.EditText;
 import android.widget.SearchView;
 import android.widget.SearchView.OnQueryTextListener;
@@ -58,15 +64,25 @@ import android.widget.Toast;
  * Main UI for the demo app.
  */
 public class DemoActivity extends FragmentActivity {
-    private static final String TAG = "DemoActivity";
+	private static final String TAG = "DemoActivity";
 
-    private final Executor executor = Executors.mainLooperExecutor();
-    
+	private final Executor executor = Executors.mainLooperExecutor();
+
+	private final Activity context = this;
+
 	private final ServiceConnection connection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder b) {
 			LocalBinder binder = (LocalBinder) b;
 			service = Optional.of(binder.getService());
+
+			service.get().waitForBootstrap().addListener(new Runnable() {
+				@Override
+				public void run() {
+					Log.i(TAG, "Bootstraped!");
+					mViewPager.setCurrentItem(1);
+				}
+			}, executor);
 		}
 
 		@Override
@@ -77,6 +93,7 @@ public class DemoActivity extends FragmentActivity {
 	private Optional<BackgroundService> service = Optional.absent();
 	PagerAdapter mDemoCollectionPagerAdapter;
 	ViewPager mViewPager;
+	private BootFragment bootFragment;
 	private CreateFragment createFragment;
 	private DebugFragment debugFragment;
 	private SearchFragment searchFragment;
@@ -85,38 +102,42 @@ public class DemoActivity extends FragmentActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-        Log.i(TAG, "Creating the activity.");
-		
+		Log.i(TAG, "Creating the activity.");
+
 		checkNotNull(SERVER_URL, "SERVER_URL");
 		checkNotNull(SENDER_ID, "SENDER_ID");
 
 		setContentView(R.layout.main);
-		
+
+		bootFragment = new BootFragment();
+		searchFragment = new SearchFragment();
 		createFragment = new CreateFragment();
 		debugFragment = new DebugFragment();
-		searchFragment = new SearchFragment();
 
 		Fragment fragments[] = {
-				createFragment,
+				bootFragment,
 				searchFragment, 
+				createFragment,
 				debugFragment};
 
-        mDemoCollectionPagerAdapter =
-                new PagerAdapter(getSupportFragmentManager(), fragments);
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mDemoCollectionPagerAdapter);
-        mViewPager.setCurrentItem(1);
-        mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
-        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-            	if (position == 2 && service.isPresent()) {
-        			debugFragment.setText(service.get().toString());
-            	}
-            }
-        });
+		mDemoCollectionPagerAdapter =
+				new PagerAdapter(getSupportFragmentManager(), fragments);
+		mViewPager = (ViewPager) findViewById(R.id.pager);
+		mViewPager.setAdapter(mDemoCollectionPagerAdapter);
+		mViewPager.setCurrentItem(0);
+		mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
+		mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+			@Override
+			public void onPageSelected(int position) {
+				if (position == 0 && service.isPresent() && service.get().isBootstraped()) {
+					// mViewPager.setCurrentItem(1);
+				} else if (position == 3 && service.isPresent()) {
+					debugFragment.setText(service.get().toString());
+				}
+			}
+		});
 
-        Intent intent = new Intent(this, BackgroundService.class);
+		Intent intent = new Intent(this, BackgroundService.class);
 		startService(intent);
 
 		Intent i = new Intent(this, BackgroundService.class);
@@ -135,12 +156,12 @@ public class DemoActivity extends FragmentActivity {
 			@Override
 			public boolean onQueryTextSubmit(String query) {
 				menuItem.collapseActionView();
-		        mViewPager.setCurrentItem(1);
+				mViewPager.setCurrentItem(1);
 
-		        final ListenableFuture<List<String>> result = service.get().get(
-		        		query, 5000);
-		        
-		        result.addListener(new Runnable() {
+				final ListenableFuture<List<String>> result = service.get().get(
+						query, 5000);
+
+				result.addListener(new Runnable() {
 					@Override
 					public void run() {
 						try {
@@ -154,7 +175,7 @@ public class DemoActivity extends FragmentActivity {
 									"An error occurred while searching for your key: " + e);
 						}
 					}
-		        }, executor);
+				}, executor);
 
 				return false;
 			}
@@ -185,27 +206,63 @@ public class DemoActivity extends FragmentActivity {
 	}
 
 	/** Called when the user touches the button */
+	public void searchValue(View view) {
+		final String query = searchFragment.getQuery();
+		search(query);
+	}
+
+	public void search(String query) {
+		mViewPager.setCurrentItem(1);
+
+		searchFragment.setQuery(query);
+
+		final ListenableFuture<List<String>> result = service.get().get(query, 5000);
+		result.addListener(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					List<String> list = result.get();
+					searchFragment.setText("");
+					for (String entry : list) {
+						searchFragment.appendText(entry);
+					}
+				} catch (Exception e) {
+					searchFragment.setText(
+							"An error occurred while searching for your key: " + e);
+				}
+			}
+		}, executor);
+	}
+
+	/** Called when the user touches the button */
 	public void createValue(View view) {
 		final String key = createFragment.getKey();
 		final String value = createFragment.getValue();
-	
+
+		// TODO(goto): why isn't this working?
+		InputMethodManager imm = (InputMethodManager)
+				getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromInputMethod(view.getWindowToken(), 0);
+
 		ListenableFuture<Void> result = service.get().put(key, value);
 
-		final Context context = this;
-		
+		final DemoActivity context = this;
+
 		Futures.addCallback(result, new FutureCallback<Void>() {
-			  public void onSuccess(Void explosion) {
-					Toast.makeText(context, "Value created!", Toast.LENGTH_SHORT).show();
-			  }
-			  public void onFailure(Throwable thrown) {
-					Toast.makeText(context, "Failed to create value :(", Toast.LENGTH_SHORT).show();
-			  }
+			public void onSuccess(Void explosion) {
+				Toast.makeText(context, "Value created!", Toast.LENGTH_SHORT).show();
+
+				context.search(key);
+			}
+			public void onFailure(Throwable thrown) {
+				Toast.makeText(context, "Failed to create value :(", Toast.LENGTH_SHORT).show();
+			}
 		}, executor);
 	}
-	
+
 	@Override
 	protected void onDestroy() {
-        Log.i(TAG, "Destroying the activity.");
+		Log.i(TAG, "Destroying the activity.");
 
 		unbindService(connection);
 		super.onDestroy();
@@ -220,7 +277,7 @@ public class DemoActivity extends FragmentActivity {
 
 	private static class PagerAdapter extends FragmentStatePagerAdapter {
 		private final Fragment fragments[];
-		
+
 		public PagerAdapter(FragmentManager fm, Fragment fragments[]) {
 			super(fm);
 			this.fragments = fragments;
@@ -233,7 +290,7 @@ public class DemoActivity extends FragmentActivity {
 
 		@Override
 		public int getCount() {
-			return 3;
+			return 4;
 		}
 
 		@Override
@@ -247,7 +304,7 @@ public class DemoActivity extends FragmentActivity {
 
 		public void setText(String text) {
 			if (getView() == null) {
-		        Log.e(TAG, "View not available.");
+				Log.e(TAG, "View not available.");
 				return;
 			}
 
@@ -255,7 +312,7 @@ public class DemoActivity extends FragmentActivity {
 					R.id.debug_log));
 			textView.setText(text);
 		}
-		
+
 		@Override
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
@@ -263,13 +320,48 @@ public class DemoActivity extends FragmentActivity {
 					R.layout.debug_fragment, container, false);
 		}
 	}
-	
+
 	public static class SearchFragment extends Fragment {
 		private static final String TAG = "SearchFragment";
-		
+		private DemoActivity search;
+
+		@Override
+		public void onAttach(Activity activity) {
+			super.onAttach(activity);
+			
+			search = (DemoActivity) activity;
+		}
+
+		@Override
+		public void setMenuVisibility(final boolean visible) {
+			super.setMenuVisibility(visible);
+			if (!visible) {
+				setQuery("");
+				setText("");
+			}
+		}
+
+		public void setQuery(String query) {
+			if (getView() == null) {
+				Log.e(TAG, "View not available.");
+				return;
+			}
+			EditText text = (EditText) getView().findViewById(R.id.query);
+			text.setText(query);
+		}
+
+		public String getQuery() {
+			if (getView() == null) {
+				Log.e(TAG, "View not available.");
+				return null;
+			}
+			EditText query = (EditText) getView().findViewById(R.id.query);
+			return query.getText().toString();
+		}
+
 		public void setText(String text) {
 			if (getView() == null) {
-		        Log.e(TAG, "View not available.");
+				Log.e(TAG, "View not available.");
 				return;
 			}
 			TextView mDisplay = (TextView) getView().findViewById(R.id.serp);
@@ -278,7 +370,7 @@ public class DemoActivity extends FragmentActivity {
 
 		public void appendText(String text) {
 			if (getView() == null) {
-		        Log.e(TAG, "View not available.");
+				Log.e(TAG, "View not available.");
 				return;
 			}
 			TextView mDisplay = (TextView) getView().findViewById(R.id.serp);
@@ -288,30 +380,61 @@ public class DemoActivity extends FragmentActivity {
 		@Override
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
-	        Log.i(TAG, "Creating view.");
-			return inflater.inflate(R.layout.search_fragment, container, false);
+			Log.i(TAG, "Creating view.");
+			View fragment = inflater.inflate(R.layout.search_fragment, container, false);
+
+			EditText editText = (EditText) fragment.findViewById(R.id.query);
+
+			editText.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+				@Override
+				public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+					if (actionId == EditorInfo.IME_ACTION_DONE) {
+						search.search(getQuery());
+						return true;
+					}
+					return false;
+				}
+			});
+			return fragment;
 		}
 	}
-	
+
 	public static class CreateFragment extends Fragment {
 		private static final String TAG = "CreateFragment";
 
+		@Override
+		public void setMenuVisibility(final boolean visible) {
+			super.setMenuVisibility(visible);
+
+			if (getView() == null) {
+				Log.e(TAG, "View not available.");
+				return;
+			}
+
+			if (!visible) {
+				EditText keyView = (EditText) getView().findViewById(R.id.key);
+				keyView.setText("");
+				EditText valueView = (EditText) getView().findViewById(R.id.value);
+				valueView.setText("");
+			}
+		}
+
 		public String getKey() {
 			if (getView() == null) {
-		        Log.e(TAG, "View not available.");
+				Log.e(TAG, "View not available.");
 				return null;
 			}
 
 			EditText keyView = (EditText) getView().findViewById(R.id.key);
 			return keyView.getText().toString();
 		}
-		
+
 		public String getValue() {
 			if (getView() == null) {
-		        Log.e(TAG, "View not available.");
+				Log.e(TAG, "View not available.");
 				return null;
 			}
-			
+
 			EditText valueView = (EditText) getView().findViewById(R.id.value);
 			return valueView.getText().toString();
 		}
@@ -320,6 +443,15 @@ public class DemoActivity extends FragmentActivity {
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
 			return inflater.inflate(R.layout.create_fragment, container, false);
+		}
+	}
+
+	public static class BootFragment extends Fragment {
+		private static final String TAG = "BootFragment";
+		@Override
+		public View onCreateView(LayoutInflater inflater,
+				ViewGroup container, Bundle savedInstanceState) {
+			return inflater.inflate(R.layout.booting_fragment, container, false);
 		}
 	}
 }

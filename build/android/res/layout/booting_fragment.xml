@@ -20,32 +20,13 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="#e51c23" >
+    android:background="#259b24" >
     
     <TextView
        android:id="@+id/textView1"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
-       android:text="@string/create_fragment_text"
+       android:text="@string/booting_fragment_text"
        android:textColor="#D9FFFFFF" />
-    
-    <EditText
-        android:id="@+id/key"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:inputType="text" />
-
-    <EditText
-        android:id="@+id/value"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" 
-        android:inputType="text" />
-
-    <Button
-        android:id="@+id/button_create"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/button_create"
-        android:onClick="createValue" />
     
 </LinearLayout>
