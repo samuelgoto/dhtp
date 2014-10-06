@@ -67,16 +67,6 @@ public class DemoActivity extends FragmentActivity {
 		public void onServiceConnected(ComponentName name, IBinder b) {
 			LocalBinder binder = (LocalBinder) b;
 			service = Optional.of(binder.getService());
-			
-			ListenableFuture<Boolean> bootstrapped = service.get().bootstrap();
-			Futures.addCallback(bootstrapped, new FutureCallback<Boolean>() {
-				  public void onSuccess(Boolean success) {
-				        Log.i(TAG, "Bootstrapped succeeded? " + success);
-				  }
-				  public void onFailure(Throwable thrown) {
-				        Log.i(TAG, "Failed to bootstrap.");
-				  }
-			}, executor);
 		}
 
 		@Override

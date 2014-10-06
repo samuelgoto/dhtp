@@ -46,13 +46,12 @@ public class BackgroundService extends Service {
 
 	public BackgroundService() {
 		super();
-        // NOTE(goto): this doesn't smell right, but android is somehow
-        // calling this constructor with an existing instance attached
-        // to it, where private properties are already set. weird.
         Log.i(TAG, "Hash code: " + this.hashCode());
         if (this.dht != null) {
-            Log.i(TAG, "Service already created. Bootstraped? " + dht.isBootstraped());
-        	return;
+            // NOTE(goto): this doesn't smell right, but android is somehow
+            // calling this constructor with an existing instance attached
+            // to it, where private properties are already set. weird.
+            Log.e(TAG, "Service already created. Bootstraped? " + dht.isBootstraped());
         }
         Log.i(TAG, "Injecting members.");
         injector.injectMembers(this);
@@ -79,17 +78,19 @@ public class BackgroundService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		super.onStartCommand(intent, flags, startId);
         Log.i(TAG, "Starting the service: " + (dht.isBootstraped() ? "bootstraped" : "not bootstraped"));
-		
+
+        bootstrap();
+        
 		// If we get killed, after returning from here, restart
 		return START_STICKY;
 	}
-
 
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
         Log.i(TAG, "Destroying the service.");
 	}
+
 	@Override
 	public IBinder onBind(Intent intent) {
 		return mBinder;
@@ -121,7 +122,6 @@ public class BackgroundService extends Service {
 			@Override
 			public Boolean run() throws ExecutionException {
 		        Log.i(TAG, "Starting DHT.");
-
 
 				try {
 
