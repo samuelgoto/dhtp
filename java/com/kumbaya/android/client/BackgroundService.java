@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import org.limewire.mojito.db.DHTValueEntity;
+import org.limewire.mojito.io.MessageDispatcher.MessageDispatcherEvent;
+import org.limewire.mojito.io.MessageDispatcher.MessageDispatcherListener;
 import org.limewire.mojito.messages.DHTMessage;
 
 import com.google.common.base.Function;
@@ -29,6 +31,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 public class BackgroundService extends Service {
+	public static String UPDATE_ACTION = "com.kumbaya.android.client.UPDATE_ACTION";
     private static final String TAG = "BackgroundService";
 	// NOTE(goto): you can set this to localhost while running appengine
 	// locally.
@@ -74,6 +77,15 @@ public class BackgroundService extends Service {
 		super.onStartCommand(intent, flags, startId);
         Log.i(TAG, "Starting the service.");
 
+        dispatcher.addMessageDispatcherListener(new MessageDispatcherListener() {
+			@Override
+			public void handleMessageDispatcherEvent(MessageDispatcherEvent event) {
+				dispatchEvent(event.getMessage().getOpCode().toString(),
+						event.getSocketAddress() != null ? 
+								event.getSocketAddress().toString() : "");
+			}
+        });
+        
         bootstrap();
         
 		// If we get killed, after returning from here, restart
@@ -214,10 +226,21 @@ public class BackgroundService extends Service {
 			Log.i("BackgroundService", "Got message: " + message.getOpCode() +
 					", from: " + message.getContact().toString());
 
+			dispatchEvent(
+					message.getOpCode().toString(),
+					message.getContact().getContactAddress().toString());
+			
 			dispatcher.handleMessage(message);
 		} catch (Exception e) {
 			// ignores silently.
 			throw new RuntimeException(e);
 		}
+	}
+	
+	private void dispatchEvent(String type, String origin) {
+        Intent intent = new Intent(UPDATE_ACTION);
+        intent.putExtra("type", type);
+        intent.putExtra("origin", origin);
+        sendBroadcast(intent);
 	}
 }

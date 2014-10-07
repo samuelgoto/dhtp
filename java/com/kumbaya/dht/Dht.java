@@ -32,10 +32,12 @@ import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.db.DHTValueType;
 import org.limewire.mojito.db.Storable;
 import org.limewire.mojito.db.StorableModel;
+import org.limewire.mojito.io.MessageDispatcher;
 import org.limewire.mojito.result.BootstrapResult;
 import org.limewire.mojito.result.FindValueResult;
 import org.limewire.mojito.result.StoreResult;
 import org.limewire.mojito.settings.NetworkSettings;
+import org.limewire.mojito.statistics.NetworkStatisticContainer;
 import org.limewire.mojito.util.ContactUtils;
 import org.limewire.mojito.util.DatabaseUtils;
 
@@ -54,6 +56,8 @@ public class Dht {
 	@Inject private Context dht;
 	@Inject private Model model;
 	@Inject private Provider<MessageDispatcherFactoryImpl> dispatcher;
+	@Inject private Provider<MessageDispatcher> messageDispatcher;
+	
 
 	public StoreResult put(String key, String value) throws InterruptedException, ExecutionException {
 		return put(DHTValueEntity.createFromValue(dht, Keys.of(key), Values.of(value)));
