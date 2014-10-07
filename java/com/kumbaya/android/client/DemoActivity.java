@@ -208,6 +208,12 @@ public class DemoActivity extends FragmentActivity {
 	/** Called when the user touches the button */
 	public void searchValue(View view) {
 		final String query = searchFragment.getQuery();
+		
+		EditText queryEditText = (EditText) findViewById(R.id.query); 
+		InputMethodManager imm = (InputMethodManager)getSystemService(
+			      Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(queryEditText.getWindowToken(), 0);
+		
 		search(query);
 	}
 
@@ -235,14 +241,14 @@ public class DemoActivity extends FragmentActivity {
 	}
 
 	/** Called when the user touches the button */
-	public void createValue(View view) {
+	public void createValue() {
 		final String key = createFragment.getKey();
 		final String value = createFragment.getValue();
 
-		// TODO(goto): why isn't this working?
-		InputMethodManager imm = (InputMethodManager)
-				getSystemService(Context.INPUT_METHOD_SERVICE);
-		imm.hideSoftInputFromInputMethod(view.getWindowToken(), 0);
+		EditText valueEditText = (EditText) findViewById(R.id.value); 
+		InputMethodManager imm = (InputMethodManager)getSystemService(
+			      Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(valueEditText.getWindowToken(), 0);
 
 		ListenableFuture<Void> result = service.get().put(key, value);
 
@@ -401,6 +407,7 @@ public class DemoActivity extends FragmentActivity {
 
 	public static class CreateFragment extends Fragment {
 		private static final String TAG = "CreateFragment";
+		private DemoActivity creator;
 
 		@Override
 		public void setMenuVisibility(final boolean visible) {
@@ -440,9 +447,31 @@ public class DemoActivity extends FragmentActivity {
 		}
 
 		@Override
+		public void onAttach(Activity activity) {
+			super.onAttach(activity);
+			
+			creator = (DemoActivity) activity;
+		}
+
+		@Override
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
-			return inflater.inflate(R.layout.create_fragment, container, false);
+			View fragment = inflater.inflate(R.layout.create_fragment, container, false);
+
+			EditText editText = (EditText) fragment.findViewById(R.id.value);
+
+			editText.setOnEditorActionListener(new EditText.OnEditorActionListener() {
+				@Override
+				public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+					if (actionId == EditorInfo.IME_ACTION_DONE) {
+						creator.createValue();
+						return true;
+					}
+					return false;
+				}
+			});
+
+			return fragment;
 		}
 	}
 
