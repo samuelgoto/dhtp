@@ -432,8 +432,6 @@ public abstract class BaseDatabase implements Database {
     
     @Override
     public synchronized String toString() {
-		System.out.println(database());
-
         StringBuilder buffer = new StringBuilder();
         for (DHTValueEntityBag bag : database().values()) {
             buffer.append(bag.toString());

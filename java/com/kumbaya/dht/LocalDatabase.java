@@ -29,8 +29,6 @@ class LocalDatabase extends BaseDatabase {
 			db.commit();
 		}
 		
-		System.out.println(database());
-		
 		return result;
 	}
 
