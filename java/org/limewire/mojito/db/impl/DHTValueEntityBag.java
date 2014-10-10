@@ -40,8 +40,6 @@ public class DHTValueEntityBag implements Serializable {
 
     private static final int LOAD_NULLING_DELAY 
         = DatabaseSettings.VALUE_REQUEST_LOAD_NULLING_DELAY.getValue();
-
-    private final DatabaseImpl database;
     
     private final KUID primaryKey;
     
@@ -57,13 +55,8 @@ public class DHTValueEntityBag implements Serializable {
      */
     private transient long lastRequestTime;
     
-    DHTValueEntityBag(DatabaseImpl database, KUID primaryKey) {
-        this.database = database;
+    DHTValueEntityBag(KUID primaryKey) {
         this.primaryKey = primaryKey;
-    }
-    
-    public Database getDatabase() {
-        return database;
     }
     
     public KUID getPrimaryKey() {

@@ -477,7 +477,7 @@ public class Context implements MojitoDHT, RouteTable.ContactPinger {
         }
         
         this.database = database;
-        purgeDatabase();
+        // purgeDatabase();
     }
     
     /**

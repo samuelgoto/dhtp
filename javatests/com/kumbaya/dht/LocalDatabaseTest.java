@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Map;
 import java.util.Random;
 
 import org.junit.Before;
@@ -17,6 +18,7 @@ import org.limewire.mojito.MojitoFactory;
 import org.limewire.mojito.db.DHTValue;
 import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.db.DHTValueType;
+import org.limewire.mojito.db.impl.DHTValueEntityBag;
 import org.limewire.mojito.db.impl.DHTValueImpl;
 import org.limewire.mojito.result.FindValueResult;
 import org.limewire.mojito.routing.Contact;
@@ -50,22 +52,23 @@ public class LocalDatabaseTest {
 		return InetSocketAddress.createUnresolved(hostname, port);
 	}
 	
-	private DHTValueEntity value(SocketAddress address, KUID key, DHTValue value) {
+	private DHTValueEntity value(Contact address, KUID key, DHTValue value) {
 		return DHTValueEntity.createFromRemote(
-				remote(address), remote(address), key, value);
+				address, address, key, value);
 	}
 	
 	@Test
 	public void testDatabase() {
 		String file = createFile();
 		LocalDatabase db = new LocalDatabase(db(file));
-		db.store(value(ip("localhost", 8080), Keys.of("key"), Values.of("value")));
+		Contact creator = remote(ip("localhost", 8080));
+		db.store(value(creator, Keys.of("key"), Values.of("value")));
 		
 		LocalDatabase db2 = new LocalDatabase(db(file));
-		assertTrue(db2.contains(Keys.of("key"), null));
+		assertTrue(db2.contains(Keys.of("key"), creator.getNodeID()));
 		assertEquals(
 				Values.of("value"),
-				db2.get(Keys.of("key")).get(Keys.of("key")).getValue());
+				db2.get(Keys.of("key")).get(creator.getNodeID()).getValue());
 	}
 	
 	private String createFile() {
@@ -73,7 +76,7 @@ public class LocalDatabaseTest {
 		return "/tmp/test-" + id + ".db";
 	}
 	
-	private DB db(String name) {
+	private static DB db(String name) {
 		return DBMaker.newFileDB(new File(name))
 				.closeOnJvmShutdown()
 				.make();
@@ -108,5 +111,13 @@ public class LocalDatabaseTest {
 
 		node.close();
 		dht.close();
+	}
+	
+	public static void main(String args[]) throws Exception {
+		System.out.println("Testing how MapDb works under JVM restarts");
+		
+		DB db = db("/tmp/bootstrap.db");
+		Map<KUID, DHTValueEntityBag> map = db.getTreeMap("default");
+		System.out.println(map);
 	}
 }

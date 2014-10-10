@@ -143,9 +143,19 @@ public class MapDbTest {
 		assertEquals(0, map.size());
 	}
 
-	private DB db(String name) {
+	private static DB db(String name) {
 		return DBMaker.newFileDB(new File(name))
 				.closeOnJvmShutdown()
 				.make();
+	}
+	
+	public static void main(String args[]) throws Exception {
+		System.out.println("Testing how MapDb works under JVM restarts");
+		
+		DB db = db("/tmp/bootstrap.db");
+		Map<Integer, String> map = db.getTreeMap("default");
+		map.put(new Random().nextInt(), "hello world");
+		System.out.println(map);
+		db.commit();
 	}
 }
