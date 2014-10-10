@@ -5,10 +5,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.Collection;
-import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,8 +17,6 @@ import org.limewire.mojito.MojitoFactory;
 import org.limewire.mojito.db.DHTValue;
 import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.db.DHTValueType;
-import org.limewire.mojito.db.Database;
-import org.limewire.mojito.db.DatabaseSecurityConstraint;
 import org.limewire.mojito.db.impl.DHTValueImpl;
 import org.limewire.mojito.result.FindValueResult;
 import org.limewire.mojito.routing.Contact;
@@ -33,11 +28,6 @@ import org.limewire.mojito.settings.NetworkSettings;
 import org.limewire.mojito.util.ContactUtils;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
-
-import ca.odell.glazedlists.impl.Preconditions;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 
 public class LocalDatabaseTest {
 	@Before

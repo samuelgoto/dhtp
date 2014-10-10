@@ -1,5 +1,8 @@
 package com.kumbaya.dht;
 
+import java.io.File;
+
+import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -14,6 +17,8 @@ import org.apache.log4j.PatternLayout;
 import org.limewire.mojito.Context;
 import org.limewire.mojito.MojitoFactory;
 import org.limewire.mojito.io.MessageDispatcher;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 
 
 public class Standalone {
@@ -25,6 +30,7 @@ public class Standalone {
 		options.addOption("port", true, "The external port");
 		options.addOption("hostname", true, "The external hostname");
 		options.addOption("bootstrap", true, "The node to bootstrap");
+		options.addOption("db", true, "Whether to write values to disk or not");
 
 		CommandLineParser parser = new PosixParser();
 		CommandLine line = parser.parse(options, args);
@@ -50,7 +56,11 @@ public class Standalone {
 			proxy = port;
 			hostname = "localhost";
 		}
-
+		
+		final Optional<String> localDb = line.hasOption("db") ? 
+				Optional.of(line.getOptionValue("db", "/tmp/kumbaya.db")) :
+				Optional.<String>absent();
+		
 		Injector injector = Guice.createInjector(
 				new DhtModule(),
 				new AbstractModule() {
@@ -58,6 +68,13 @@ public class Standalone {
 					protected void configure() {
 						bind(Context.class).toInstance(
 								(Context) MojitoFactory.createDHT(hostname));
+						if (localDb.isPresent()) {
+							DB db = DBMaker.newFileDB(new File(localDb.get()))
+									.closeOnJvmShutdown()
+									.make();
+
+							bind(DB.class).toInstance(db);
+						}
 					}
 				});
 

@@ -21,8 +21,6 @@ import static org.junit.Assert.assertTrue;
 import com.kumbaya.dht.Dht;
 import com.kumbaya.dht.Keys;
 
-import org.easymock.EasyMock;
-import org.easymock.IMocksControl;
 import org.junit.Before;
 import org.junit.Test;
 import org.limewire.io.SimpleNetworkInstanceUtils;
@@ -33,7 +31,6 @@ import org.limewire.mojito.MojitoFactory;
 import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.db.DHTValueType;
 import org.limewire.mojito.db.impl.DHTValueImpl;
-import org.limewire.mojito.io.MessageDispatcherFactory;
 import org.limewire.mojito.result.FindValueResult;
 import org.limewire.mojito.result.StoreResult;
 import org.limewire.mojito.routing.Version;

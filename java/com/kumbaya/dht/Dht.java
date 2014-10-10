@@ -57,7 +57,7 @@ public class Dht {
 	@Inject private Model model;
 	@Inject private Provider<MessageDispatcherFactoryImpl> dispatcher;
 	@Inject private Provider<MessageDispatcher> messageDispatcher;
-	
+	@Inject(optional = true) private LocalDatabase localDb;
 
 	public StoreResult put(String key, String value) throws InterruptedException, ExecutionException {
 		return put(DHTValueEntity.createFromValue(dht, Keys.of(key), Values.of(value)));
@@ -132,6 +132,11 @@ public class Dht {
 				DHTValueType.TEXT, model);
 
 		dht.setMessageDispatcher(dispatcher.get());
+		
+		if (localDb != null) {
+			dht.setDatabase(localDb);
+		}
+		
 		dht.bind(new InetSocketAddress(hostname, port));
 		dht.setExternalAddress(InetSocketAddress.createUnresolved(hostname,  proxy));
 		dht.start();
