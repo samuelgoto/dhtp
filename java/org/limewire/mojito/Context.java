@@ -443,7 +443,7 @@ public class Context implements MojitoDHT, RouteTable.ContactPinger {
      * @see com.limegroup.mojito.MojitoDHT#setDatabase(com.limegroup.mojito.db.Database)
      */
     public synchronized void setDatabase(Database database) {
-        setDatabase(database, true);
+        setDatabase(database, false);
     }
     
     /*
@@ -477,7 +477,10 @@ public class Context implements MojitoDHT, RouteTable.ContactPinger {
         }
         
         this.database = database;
-        // purgeDatabase();
+
+        if (remove) {
+            purgeDatabase();
+        }
     }
     
     /**
