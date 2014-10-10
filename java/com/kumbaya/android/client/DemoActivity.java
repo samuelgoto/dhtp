@@ -30,6 +30,7 @@ import com.kumbaya.android.R.drawable;
 import com.kumbaya.android.R.id;
 import com.kumbaya.android.client.BackgroundService.LocalBinder;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -37,6 +38,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -104,19 +108,24 @@ public class DemoActivity extends FragmentActivity {
 	private DebugFragment debugFragment;
 	private SearchFragment searchFragment;
 
-    private final BroadcastReceiver mHandleMessageReceiver =
-            new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context c, Intent intent) {
-            String message = intent.getExtras().getString("type");
-            String origin = intent.getExtras().getString("origin");
-            
-            TextView text = (TextView) context.findViewById(R.id.progress_status);
-            
-            text.setText(message + " from: " + origin);
-        }
-    };
-    
+	private final BroadcastReceiver mHandleMessageReceiver =
+			new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context c, Intent intent) {
+			String message = intent.getExtras().getString("type");
+			String origin = intent.getExtras().getString("origin");
+
+			final TextView text = (TextView) context.findViewById(R.id.progress_status);
+			text.setText(message + " from: " + origin);
+			new Handler().postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					text.setText("");
+				}
+			}, 4000);
+		}
+	};
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -128,6 +137,9 @@ public class DemoActivity extends FragmentActivity {
 
 		setContentView(R.layout.main);
 
+		ActionBar bar = getActionBar();
+		bar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#259b24")));
+		
 		bootFragment = new BootFragment();
 		searchFragment = new SearchFragment();
 		createFragment = new CreateFragment();
@@ -148,10 +160,10 @@ public class DemoActivity extends FragmentActivity {
 		mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
 			@Override
 			public void onPageSelected(int position) {
-	            TextView text = (TextView) context.findViewById(R.id.progress_status);
-	            text.setText("");
-	            
-	            if (position == 0 && service.isPresent() && service.get().isBootstraped()) {
+				TextView text = (TextView) context.findViewById(R.id.progress_status);
+				text.setText("");
+
+				if (position == 0 && service.isPresent() && service.get().isBootstraped()) {
 					// mViewPager.setCurrentItem(1);
 				} else if (position == 3 && service.isPresent()) {
 					debugFragment.setText(service.get().toString());
@@ -159,46 +171,20 @@ public class DemoActivity extends FragmentActivity {
 			}
 		});
 
-        registerReceiver(mHandleMessageReceiver,
-                new IntentFilter(BackgroundService.UPDATE_ACTION));
-		
-        // Start lengthy operation in a background thread
-        final RelativeLayout progressBar = (RelativeLayout) context.findViewById(
-        		R.id.progress_bar);
+		registerReceiver(mHandleMessageReceiver,
+				new IntentFilter(BackgroundService.UPDATE_ACTION));
 
-        new Runnable() {
-            public void run() {
-            	TextView textView = new TextView(context);
-            	textView.setText("hello world");
+		new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void... params) {
+				Intent intent = new Intent(context, BackgroundService.class);
+				startService(intent);
 
-            	LayoutParams params = new LayoutParams(
-            			LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-
-            	textView.setX(0);
-            	textView.setY(0);
-                textView.setLayoutParams(params);
-            	
-            	progressBar.addView(textView);
-            	
-            	final int[] mProgressStatus = {0};
-                while (mProgressStatus[0] < 100) {
-                    mProgressStatus[0] += 1;
-
-                    try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-					}
-                    
-                	textView.setX(mProgressStatus[0] * 10);
-                }
-            }
-        };
-        
-		Intent intent = new Intent(this, BackgroundService.class);
-		startService(intent);
-
-		Intent i = new Intent(this, BackgroundService.class);
-		bindService(i, connection, Context.BIND_AUTO_CREATE);
+				Intent i = new Intent(context, BackgroundService.class);
+				bindService(i, connection, Context.BIND_AUTO_CREATE);
+				return null;
+			}
+		}.execute();
 	}
 
 	@Override
@@ -213,26 +199,7 @@ public class DemoActivity extends FragmentActivity {
 			@Override
 			public boolean onQueryTextSubmit(String query) {
 				menuItem.collapseActionView();
-				mViewPager.setCurrentItem(1);
-
-				final ListenableFuture<List<String>> result = service.get().get(
-						query, 5000);
-
-				result.addListener(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							List<String> list = result.get();
-							searchFragment.setText("");
-							for (String entry : list) {
-								searchFragment.appendText(entry);
-							}
-						} catch (Exception e) {
-							searchFragment.setText(
-									"An error occurred while searching for your key: " + e);
-						}
-					}
-				}, executor);
+				search(query);
 
 				return false;
 			}
@@ -251,12 +218,6 @@ public class DemoActivity extends FragmentActivity {
 		switch(item.getItemId()) {
 		case R.id.action_search:
 			return true;
-		case R.id.options_debug:
-			debugFragment.setText(service.get().toString());
-			return true;
-		case R.id.options_exit:
-			finish();
-			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -269,9 +230,9 @@ public class DemoActivity extends FragmentActivity {
 
 		EditText queryEditText = (EditText) findViewById(R.id.query); 
 		InputMethodManager imm = (InputMethodManager)getSystemService(
-			      Context.INPUT_METHOD_SERVICE);
+				Context.INPUT_METHOD_SERVICE);
 		imm.hideSoftInputFromWindow(queryEditText.getWindowToken(), 0);
-		
+
 		final ListenableFuture<List<String>> result = service.get().get(query, 5000);
 		result.addListener(new Runnable() {
 			@Override
@@ -297,7 +258,7 @@ public class DemoActivity extends FragmentActivity {
 
 		EditText valueEditText = (EditText) findViewById(R.id.value); 
 		InputMethodManager imm = (InputMethodManager)getSystemService(
-			      Context.INPUT_METHOD_SERVICE);
+				Context.INPUT_METHOD_SERVICE);
 		imm.hideSoftInputFromWindow(valueEditText.getWindowToken(), 0);
 
 		ListenableFuture<Void> result = service.get().put(key, value);
@@ -384,7 +345,7 @@ public class DemoActivity extends FragmentActivity {
 		@Override
 		public void onAttach(Activity activity) {
 			super.onAttach(activity);
-			
+
 			search = (DemoActivity) activity;
 		}
 
@@ -499,7 +460,7 @@ public class DemoActivity extends FragmentActivity {
 		@Override
 		public void onAttach(Activity activity) {
 			super.onAttach(activity);
-			
+
 			creator = (DemoActivity) activity;
 		}
 

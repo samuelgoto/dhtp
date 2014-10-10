@@ -32,7 +32,6 @@
         android:id="@+id/options_unregister"
         android:title="@string/options_unregister">
     </item>
-    -->
     <item
         android:id="@+id/options_debug"
         android:title="@string/options_debug">
@@ -41,13 +40,13 @@
         android:id="@+id/options_exit"
         android:title="@string/options_exit">
     </item>
+    -->
     <item
     	android:id="@+id/action_search"
         android:title="@string/query_hint"
-        android:icon="@android:color/transparent"
+        android:icon="@drawable/ic_action_search"
         android:showAsAction="ifRoom|collapseActionView"
         android:actionViewClass="android.widget.SearchView"
-        android:enabled="false"
         >
     </item>
 </menu>
