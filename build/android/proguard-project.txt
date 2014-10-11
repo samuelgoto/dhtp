@@ -18,6 +18,44 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-keep public class * extends org.limewire.mojito.KUID
+
+-keepclassmembers public class * extends org.limewire.mojito.KUID { 
+   public <init>(...);
+}
+
+-keep public class * extends org.limewire.mojito.db.impl.DHTValueEntityBag
+
+-keepclassmembers public class * extends org.limewire.mojito.db.impl.DHTValueEntityBag { 
+   public <init>(...);
+}
+
+-keep public class * extends org.limewire.mojito.db.DHTValueEntity
+
+-keepclassmembers public class * extends org.limewire.mojito.db.DHTValueEntity { 
+   public <init>(...);
+}
+
+-keep public class * extends org.limewire.mojito.db.impl.DHTValueImpl
+
+-keepclassmembers public class * extends org.limewire.mojito.db.impl.DHTValueImpl { 
+   public <init>(...);
+}
+
+-keep public class * extends org.limewire.mojito.db.DHTValueType
+
+-keepclassmembers public class * extends org.limewire.mojito.db.DHTValueType { 
+   public <init>(...);
+}
+
+-keep public class * extends org.limewire.mojito.routing.Version
+
+-keepclassmembers public class * extends org.limewire.mojito.routing.Version { 
+   public <init>(...);
+}
+
+
 -dontwarn javax.**
 -dontwarn java.**
 -dontwarn sun.**

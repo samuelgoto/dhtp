@@ -100,6 +100,13 @@ public class DHTValueEntity implements Serializable {
         return new DHTValueEntity(creator, sender, primaryKey, value, false);
     }
     
+    // Allows this object to be serialized on android with an empty
+    // constructor.
+    // https://groups.google.com/forum/#!topic/mapdb/5xWIK6JAPwI
+    public DHTValueEntity() {
+    	this(null, null, null, null, false);
+    }
+    
     /**
      * Constructor to create DHTValueEntities. It's package private
      * for testing purposes. Use the factory methods!
@@ -109,11 +116,13 @@ public class DHTValueEntity implements Serializable {
         this.creator = creator;
         this.sender = sender;
         this.primaryKey = primaryKey;
-        this.secondaryKey = creator.getNodeID();
+        this.secondaryKey = creator != null ? creator.getNodeID() : null;
         this.value = value;
         this.local = local;
         
-        this.hashCode = 17*primaryKey.hashCode() + secondaryKey.hashCode();
+        this.hashCode = secondaryKey != null ?
+        		17*primaryKey.hashCode() + secondaryKey.hashCode() :
+        			0;
     }
     
     /**

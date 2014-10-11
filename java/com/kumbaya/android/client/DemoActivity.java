@@ -18,6 +18,7 @@ package com.kumbaya.android.client;
 import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
 import static com.kumbaya.android.client.CommonUtilities.SERVER_URL;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -151,6 +152,8 @@ public class DemoActivity extends FragmentActivity {
 				createFragment,
 				debugFragment};
 
+		File f = context.getFilesDir();
+		
 		mDemoCollectionPagerAdapter =
 				new PagerAdapter(getSupportFragmentManager(), fragments);
 		mViewPager = (ViewPager) findViewById(R.id.pager);
@@ -239,9 +242,13 @@ public class DemoActivity extends FragmentActivity {
 			public void run() {
 				try {
 					List<String> list = result.get();
-					searchFragment.setText("");
-					for (String entry : list) {
-						searchFragment.appendText(entry);
+					if (list.isEmpty()) {
+						searchFragment.setText("No value found :(");
+					} else {
+						searchFragment.setText("");
+						for (String entry : list) {
+							searchFragment.appendText(entry);
+						}
 					}
 				} catch (Exception e) {
 					searchFragment.setText(

@@ -89,6 +89,13 @@ public class KUID implements Comparable<KUID>, Serializable {
     /** The hashCode of this Object. */
     private final int hashCode;
     
+    // Allows this object to be serialized on android with an empty
+    // constructor.
+    // https://groups.google.com/forum/#!topic/mapdb/5xWIK6JAPwI
+    public KUID() {
+    	this(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    }
+    
     protected KUID(byte[] id) {
         if (id == null) {
             throw new NullPointerException("ID is null");

@@ -54,7 +54,14 @@ public class DHTValueEntityBag implements Serializable {
      * The time the request load was last updated
      */
     private transient long lastRequestTime;
-    
+
+    // Allows this object to be serialized on android with an empty
+    // constructor.
+    // https://groups.google.com/forum/#!topic/mapdb/5xWIK6JAPwI
+    public DHTValueEntityBag() {
+    	this(null);
+    }
+    	
     DHTValueEntityBag(KUID primaryKey) {
         this.primaryKey = primaryKey;
     }

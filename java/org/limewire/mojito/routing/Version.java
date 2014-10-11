@@ -41,6 +41,10 @@ public class Version implements Serializable, Comparable<Version> {
     
     private final int version;
     
+    public Version() {
+    	this(0);
+    }
+    
     private Version(int version) {
         this.version = version;
     }

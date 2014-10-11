@@ -62,6 +62,10 @@ public class DHTValueImpl implements DHTValue {
      */
     private final int hashCode;
     
+    public DHTValueImpl() {
+    	this(DHTValueType.ANY, Version.ZERO, EMPTY);
+    }
+    
     public DHTValueImpl(DHTValueType valueType, 
             Version version, byte[] value) {
         this.valueType = valueType;
