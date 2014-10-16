@@ -1,6 +1,5 @@
 package com.kumbaya.dht;
 
-import java.io.File;
 import java.util.Map;
 
 import org.limewire.mojito.KUID;
@@ -8,7 +7,6 @@ import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.db.impl.BaseDatabase;
 import org.limewire.mojito.db.impl.DHTValueEntityBag;
 import org.mapdb.DB;
-import org.mapdb.DBMaker;
 
 
 import com.google.inject.Inject;

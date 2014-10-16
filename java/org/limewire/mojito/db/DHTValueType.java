@@ -74,9 +74,10 @@ public final class DHTValueType implements Comparable<DHTValueType>, Serializabl
     private final int type;
 
     public DHTValueType() {
+    	// NOTE(goto): this is only useful to allow android applications to
+    	// instantiate this using reflection.
     	this("ZERO_ARG_CTOR", 0);
     }
-
     
     private DHTValueType(String name, int type) {
         this.name = name;

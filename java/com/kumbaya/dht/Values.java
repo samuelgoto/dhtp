@@ -32,6 +32,14 @@ public class Values {
     return new DHTValueImpl(type, Version.ZERO, value.getBytes());
   }
   
+  public static DHTValue of(String value, String type) {
+	  int hash = 7;
+	  for (int i = 0; i < type.length(); i++) {
+	      hash = hash * 31 + type.charAt(i);
+	  }
+	  return of(value, DHTValueType.valueOf(hash));
+  }
+  
   public static String of(DHTValueEntity entity) {
 	  Preconditions.checkArgument(entity.getValue().getValueType() == DHTValueType.TEXT);
 	  return new String(entity.getValue().getValue());

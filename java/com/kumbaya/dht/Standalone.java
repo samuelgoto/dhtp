@@ -16,7 +16,6 @@ import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.PatternLayout;
 import org.limewire.mojito.Context;
 import org.limewire.mojito.MojitoFactory;
-import org.limewire.mojito.io.MessageDispatcher;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 

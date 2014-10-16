@@ -37,7 +37,6 @@ import org.limewire.mojito.result.BootstrapResult;
 import org.limewire.mojito.result.FindValueResult;
 import org.limewire.mojito.result.StoreResult;
 import org.limewire.mojito.settings.NetworkSettings;
-import org.limewire.mojito.statistics.NetworkStatisticContainer;
 import org.limewire.mojito.util.ContactUtils;
 import org.limewire.mojito.util.DatabaseUtils;
 

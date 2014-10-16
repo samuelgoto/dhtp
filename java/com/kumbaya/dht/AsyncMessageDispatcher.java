@@ -1,12 +1,10 @@
 package com.kumbaya.dht;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 import java.io.IOException;
 import java.net.SocketAddress;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -14,7 +12,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.limewire.mojito.Context;
 import org.limewire.mojito.io.MessageDispatcher;
-import org.limewire.mojito.io.MessageDispatcherImpl;
 import org.limewire.mojito.io.Tag;
 import org.limewire.mojito.messages.DHTMessage;
 import org.limewire.security.SecureMessage;
