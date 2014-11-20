@@ -19,6 +19,10 @@
 #   public *;
 #}
 
+-keep class org.android.** { *; }
+-keep class com.kumbaya.** { *; }
+-keep class org.limewire.** { *; }
+
 -keep public class * extends org.limewire.mojito.KUID
 
 -keepclassmembers public class * extends org.limewire.mojito.KUID { 
@@ -61,7 +65,6 @@
 -dontwarn sun.**
 -dontwarn net.jcip.**
 -dontwarn net.sf.**
--dontwarn org.apache.**
 -dontwarn org.eclipse.**
 -dontwarn org.slf4j
 -dontwarn com.jgoodies.**
@@ -70,6 +73,7 @@
 -dontwarn org.jfree.**
 -dontwarn org.jdom.**
 -dontwarn org.jaxen.**
+-dontwarn org.apache.**
 -dontwarn junitx.**
 -dontwarn org.aopalliance.**
 -dontwarn de.kupzog.**
