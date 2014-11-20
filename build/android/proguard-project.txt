@@ -23,6 +23,8 @@
 -keep class com.kumbaya.** { *; }
 -keep class org.limewire.** { *; }
 
+-keepattributes com.kumbaya.**
+
 -keep public class * extends org.limewire.mojito.KUID
 
 -keepclassmembers public class * extends org.limewire.mojito.KUID { 
