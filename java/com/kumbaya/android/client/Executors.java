@@ -5,8 +5,8 @@ import java.util.concurrent.Executor;
 import android.os.Handler;
 import android.os.Looper;
 
-public class Executors {
-	public static Executor mainLooperExecutor() {
+class Executors {
+	static Executor mainLooperExecutor() {
 		return new Executor() {
 	        private final Handler mHandler = new Handler(Looper.getMainLooper());
 

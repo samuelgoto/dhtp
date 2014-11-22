@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.kumbaya.android.R;
 import com.kumbaya.android.R.drawable;
 import com.kumbaya.android.R.id;
@@ -92,37 +93,12 @@ public class DemoActivity extends FragmentActivity {
 	private final Executor executor = Executors.mainLooperExecutor();
 
 	private final DemoActivity context = this;
-
+	
 	private final ServiceConnection connection = new ServiceConnection() {
-		@Override
+        @Override
 		public void onServiceConnected(ComponentName name, IBinder b) {
 			LocalBinder binder = (LocalBinder) b;
 			service = Optional.of(binder.getService());
-
-			service.get().waitForBootstrap().addListener(new Runnable() {
-				@Override
-				public void run() {
-					// Announcing ourselves to the network.
-					TelephonyManager manager = (TelephonyManager) getSystemService(
-							Context.TELEPHONY_SERVICE);
-					String phoneNumber = manager.getLine1Number();
-					String countryCode = manager.getSimCountryIso().toUpperCase();
-					phoneNumber = countryCode + " " + phoneNumber;
-					// TODO(goto): canonicalize the phone number serialization and
-					// store a different value here.
-					ListenableFuture<Void> result = service.get().put(
-							phoneNumber, phoneNumber);
-					Log.i(TAG, "Bootstraped!");
-					bootFragment.setText("Bootstrapped! Now announcing ourselves...");
-					result.addListener(new Runnable() {
-						@Override
-						public void run() {
-							Log.i(TAG, "Announced!");
-							mViewPager.setCurrentItem(1);
-						}
-					}, executor);
-				}
-			}, executor);
 		}
 
 		@Override
@@ -130,6 +106,7 @@ public class DemoActivity extends FragmentActivity {
 		}
 	};
 
+	
 	private Optional<BackgroundService> service = Optional.absent();
 	PagerAdapter mDemoCollectionPagerAdapter;
 	ViewPager mViewPager;
@@ -194,14 +171,12 @@ public class DemoActivity extends FragmentActivity {
 		ActionBar bar = getActionBar();
 		bar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#259b24")));
 
-		bootFragment = new BootFragment();
 		searchFragment = new SearchFragment();
 		createFragment = new CreateFragment();
 		debugFragment = new DebugFragment();
 		contactsFragment = new ContactsFragment();
 
 		Fragment fragments[] = {
-				bootFragment,
 				searchFragment, 
 				createFragment,
 				debugFragment,
@@ -219,59 +194,10 @@ public class DemoActivity extends FragmentActivity {
 				TextView text = (TextView) context.findViewById(R.id.progress_status);
 				text.setText("");
 
-				if (position == 0 && service.isPresent() && service.get().isBootstraped()) {
+				//if (position == 0 && service.isPresent() && service.get().isBootstraped()) {
 					// mViewPager.setCurrentItem(1);
-				} else if (position == 3 && service.isPresent()) {
-					/*
-					new AsyncTask<Void, Void, String>() {
-						@Override
-						protected String doInBackground(Void... params) {
-							TelephonyManager manager = (TelephonyManager) getSystemService(
-									Context.TELEPHONY_SERVICE);
-							String mPhoneNumber = manager.getLine1Number();
-							String countryCode = manager.getSimCountryIso().toUpperCase();
-
-							final String localAreaCode;
-							if (manager.getPhoneType() == TelephonyManager.PHONE_TYPE_GSM) {
-								GsmCellLocation cellLocation = (GsmCellLocation) manager.getCellLocation();
-								localAreaCode = String.valueOf(cellLocation.getLac());
-							} else if (manager.getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA) {
-								CdmaCellLocation cellLocation = (CdmaCellLocation) manager.getCellLocation();
-								localAreaCode = String.valueOf(cellLocation.toString());
-							} else {
-								localAreaCode = "UNKNOWN";
-							}
-
-							ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-
-							// NOTE(goto): this should always return false on emulators according to
-							// http://stackoverflow.com/questions/7876302/enabling-wifi-on-android-emulator
-							final NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
-							// Do some of the heavy lifting asynchronously.
-							String result = "";
-							// NOTE(goto): this is the number I get in my
-							// emulator: 15555215554 for the phone number.
-							// I get something like 650394932 when I run this with 
-							// a real phone + the country code is correct.
-							result += "Phone number: " + mPhoneNumber + "\n";
-							result += "Country code: " + countryCode + "\n";
-							result += "Area code: " + localAreaCode + "\n";
-							result += "Call log: " + getCallLog().size() + "\n";
-							result += "Contacts: " + readContacts().size() + "\n";
-							result += "Wifi connected: " + wifi.isConnected() + "\n";
-							return result;
-						}
-
-					    protected void onPostExecute(String result) {
-							String current = debugFragment.getText();
-							debugFragment.setText(current + "\n" + result);
-					    }
-					}.execute();
-					 */
-
+				if (position == 2 && service.isPresent()) {
 					String result = service.get().toString();
-
 					debugFragment.setText(result);
 				}
 			}
@@ -283,9 +209,6 @@ public class DemoActivity extends FragmentActivity {
 		new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
-				Intent intent = new Intent(context, BackgroundService.class);
-				startService(intent);
-
 				Intent i = new Intent(context, BackgroundService.class);
 				bindService(i, connection, Context.BIND_AUTO_CREATE);
 				return null;
@@ -330,7 +253,7 @@ public class DemoActivity extends FragmentActivity {
 	}
 
 	public void search(String query) {
-		mViewPager.setCurrentItem(1);
+		mViewPager.setCurrentItem(0);
 
 		searchFragment.setQuery(query);
 
