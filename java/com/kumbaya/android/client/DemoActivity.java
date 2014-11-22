@@ -15,7 +15,6 @@
  */
 package com.kumbaya.android.client;
 
-import java.io.File;
 import java.sql.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -25,10 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.kumbaya.android.R;
-import com.kumbaya.android.R.drawable;
-import com.kumbaya.android.R.id;
 import com.kumbaya.android.client.sdk.BackgroundService;
 import com.kumbaya.android.client.sdk.BackgroundService.LocalBinder;
 
@@ -36,7 +32,6 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -44,13 +39,10 @@ import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.provider.CallLog;
 import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
@@ -61,9 +53,6 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
-import android.telephony.TelephonyManager;
-import android.telephony.cdma.CdmaCellLocation;
-import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -71,14 +60,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.view.KeyEvent;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.SearchView;
 import android.widget.SearchView.OnQueryTextListener;
 import android.widget.TextView;
@@ -110,7 +95,6 @@ public class DemoActivity extends FragmentActivity {
 	private Optional<BackgroundService> service = Optional.absent();
 	PagerAdapter mDemoCollectionPagerAdapter;
 	ViewPager mViewPager;
-	private BootFragment bootFragment;
 	private CreateFragment createFragment;
 	private DebugFragment debugFragment;
 	private SearchFragment searchFragment;
@@ -194,8 +178,6 @@ public class DemoActivity extends FragmentActivity {
 				TextView text = (TextView) context.findViewById(R.id.progress_status);
 				text.setText("");
 
-				//if (position == 0 && service.isPresent() && service.get().isBootstraped()) {
-					// mViewPager.setCurrentItem(1);
 				if (position == 2 && service.isPresent()) {
 					String result = service.get().toString();
 					debugFragment.setText(result);
@@ -316,13 +298,6 @@ public class DemoActivity extends FragmentActivity {
 		unregisterReceiver(mHandleMessageReceiver);
 		unbindService(connection);
 		super.onDestroy();
-	}
-
-	private void checkNotNull(Object reference, String name) {
-		if (reference == null) {
-			throw new NullPointerException(
-					getString(R.string.error_config, name));
-		}
 	}
 
 	private static class PagerAdapter extends FragmentStatePagerAdapter {
@@ -675,25 +650,6 @@ public class DemoActivity extends FragmentActivity {
 			});
 
 			return fragment;
-		}
-	}
-
-	public static class BootFragment extends Fragment {
-		private static final String TAG = "BootFragment";
-
-		public void setText(String text) {
-			if (getView() == null) {
-				Log.e(TAG, "View not available.");
-				return;
-			}
-			TextView mDisplay = (TextView) getView().findViewById(R.id.boot_status);
-			mDisplay.setText(text);
-		}
-
-		@Override
-		public View onCreateView(LayoutInflater inflater,
-				ViewGroup container, Bundle savedInstanceState) {
-			return inflater.inflate(R.layout.booting_fragment, container, false);
 		}
 	}
 }

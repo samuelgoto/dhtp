@@ -104,19 +104,23 @@ public class BootActivity extends Activity {
         new Handler().postDelayed(new Runnable() {
 			@Override
 			public void run() {
-				Log.i(TAG, "Starting service");
-				registerReceiver(updateReceiver,
-						new IntentFilter(BackgroundService.UPDATE_ACTION));
-
-				Intent intent = new Intent(context, BackgroundService.class);
-				startService(intent);
-
-				Intent i = new Intent(context, BackgroundService.class);
-				bindService(i, connection, Context.BIND_AUTO_CREATE);
-				Log.i(TAG, "Done");
+				startService();
 			}
         }, 100);
     }
+	
+	private void startService() {
+		Log.i(TAG, "Starting service");
+		registerReceiver(updateReceiver,
+				new IntentFilter(BackgroundService.UPDATE_ACTION));
+
+		Intent intent = new Intent(context, BackgroundService.class);
+		startService(intent);
+
+		Intent i = new Intent(context, BackgroundService.class);
+		bindService(i, connection, Context.BIND_AUTO_CREATE);
+		Log.i(TAG, "Done");
+	}
     
 	@Override
 	protected void onDestroy() {
