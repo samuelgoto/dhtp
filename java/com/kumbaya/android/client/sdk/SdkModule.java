@@ -32,11 +32,11 @@ class SdkModule extends AbstractModule {
 						CommonUtilities.GCM_HOSTNAME));
 
 		// NOTE(goto): context.getFilesDir() is throwing a NPE.
-		DB db = DBMaker.newFileDB(
-				new File("/data/data/com.kumbaya.android/files/kumbaya-v1.db"))
-				.closeOnJvmShutdown()
-				.make();
+		// DB db = DBMaker.newFileDB(
+		//		new File("/data/data/com.kumbaya.android/files/kumbaya-v1.db"))
+		//		.closeOnJvmShutdown()
+		//		.make();
 		
-		bind(DB.class).toInstance(db);
+		// bind(DB.class).toInstance(db);
 	}
 }
