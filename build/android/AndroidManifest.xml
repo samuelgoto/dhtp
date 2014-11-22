@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.kumbaya.android"
-    android:versionCode="9"
+    android:versionCode="10"
     android:versionName="1.1" >
 
     <uses-sdk
@@ -17,6 +17,35 @@
     <!-- Keeps the processor from sleeping when a message is received. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- Gives access to the user's raw phone number. -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    
+    <!-- Gives access to the user's local area code. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+	<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    
+    <!-- Gives an alternative way to get the phone number.
+         @see http://stackoverflow.com/questions/2480288
+      -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    
+    <!-- Useful to known where to start to look for friends on the kumbaya
+         network, since you may have hundreds of contacts and:
+         - when you join the network you'd like to see your close friends first
+         - there is a higher chance that your friends joined the network
+           compared to a random contact.
+      -->
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+     
+    <!-- Gives access to the contacts. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    
+    <!-- Gives access to network state.
+         This is helpful to sleep/wakeup kumbaya based on whether we are
+         on a wifi connection or not.
+      -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
     <!--
      Creates a custom permission so only this app can receive its messages.
 

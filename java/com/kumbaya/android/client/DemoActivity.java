@@ -19,10 +19,12 @@ import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
 import static com.kumbaya.android.client.CommonUtilities.SERVER_URL;
 
 import java.io.File;
+import java.sql.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -35,22 +37,31 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.provider.CallLog;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.telephony.TelephonyManager;
+import android.telephony.cdma.CdmaCellLocation;
+import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -127,6 +138,33 @@ public class DemoActivity extends FragmentActivity {
 		}
 	};
 
+	static class Phone {
+		private final String owner;
+		private final String number;
+		
+		Phone(String number, String owner) {
+			this.owner = owner;
+			this.number = number;
+		}
+		
+		static Phone of(String number, String owner) {
+			return new Phone(number, owner);
+		}
+		
+		String owner() {
+			return owner;
+		}
+		
+		String number() {
+			return number;
+		}
+		
+		@Override
+		public String toString() {
+			return "Phone: " + number + ", owner: " + owner;
+		}
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -140,7 +178,7 @@ public class DemoActivity extends FragmentActivity {
 
 		ActionBar bar = getActionBar();
 		bar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#259b24")));
-		
+
 		bootFragment = new BootFragment();
 		searchFragment = new SearchFragment();
 		createFragment = new CreateFragment();
@@ -153,7 +191,7 @@ public class DemoActivity extends FragmentActivity {
 				debugFragment};
 
 		File f = context.getFilesDir();
-		
+
 		mDemoCollectionPagerAdapter =
 				new PagerAdapter(getSupportFragmentManager(), fragments);
 		mViewPager = (ViewPager) findViewById(R.id.pager);
@@ -169,8 +207,111 @@ public class DemoActivity extends FragmentActivity {
 				if (position == 0 && service.isPresent() && service.get().isBootstraped()) {
 					// mViewPager.setCurrentItem(1);
 				} else if (position == 3 && service.isPresent()) {
-					debugFragment.setText(service.get().toString());
+					TelephonyManager manager = (TelephonyManager) getSystemService(
+							Context.TELEPHONY_SERVICE);
+					String mPhoneNumber = manager.getLine1Number();
+					String countryCode = manager.getSimCountryIso().toUpperCase();
+					
+					final String localAreaCode;
+					if (manager.getPhoneType() == TelephonyManager.PHONE_TYPE_GSM) {
+						GsmCellLocation cellLocation = (GsmCellLocation) manager.getCellLocation();
+						localAreaCode = String.valueOf(cellLocation.getLac());
+					} else if (manager.getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA) {
+						CdmaCellLocation cellLocation = (CdmaCellLocation) manager.getCellLocation();
+						localAreaCode = String.valueOf(cellLocation.toString());
+					} else {
+						localAreaCode = "UNKNOWN";
+					}
+					
+					ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+					// NOTE(goto): this should always return false on emulators according to
+					// http://stackoverflow.com/questions/7876302/enabling-wifi-on-android-emulator
+					NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+					String result = "";
+
+					// NOTE(goto): this is the number I get in my
+					// emulator: 15555215554 for the phone number.
+					result += "Phone number: " + mPhoneNumber + "\n";
+					result += "Country code: " + countryCode + "\n";
+					result += "Area code: " + localAreaCode + "\n";
+					result += "Call log: " + getCallLog().size() + "\n";
+					result += "Contacts: " + readContacts().size() + "\n";
+					result += "Wifi connected: " + wifi.isConnected() + "\n";
+					
+					result += service.get().toString();
+
+					debugFragment.setText(result);
 				}
+			}
+
+			private List<String> getCallLog() {
+				ImmutableList.Builder<String> result = ImmutableList.builder();
+		        StringBuffer sb = new StringBuffer();
+		        Cursor managedCursor = managedQuery(CallLog.Calls.CONTENT_URI, null,
+		                null, null, null);
+		        int number = managedCursor.getColumnIndex(CallLog.Calls.NUMBER);
+		        int type = managedCursor.getColumnIndex(CallLog.Calls.TYPE);
+		        int date = managedCursor.getColumnIndex(CallLog.Calls.DATE);
+		        int duration = managedCursor.getColumnIndex(CallLog.Calls.DURATION);
+		        sb.append("Call Details :");
+		        while (managedCursor.moveToNext()) {
+		            String phNumber = managedCursor.getString(number);
+		            String callType = managedCursor.getString(type);
+		            String callDate = managedCursor.getString(date);
+		            Date callDayTime = new Date(Long.valueOf(callDate));
+		            String callDuration = managedCursor.getString(duration);
+		            String dir = null;
+		            int dircode = Integer.parseInt(callType);
+		            switch (dircode) {
+		            case CallLog.Calls.OUTGOING_TYPE:
+		                dir = "OUTGOING";
+		                break;
+
+		            case CallLog.Calls.INCOMING_TYPE:
+		                dir = "INCOMING";
+		                break;
+
+		            case CallLog.Calls.MISSED_TYPE:
+		                dir = "MISSED";
+		                break;
+		            }
+		            result.add(phNumber);
+		        }
+		        managedCursor.close();
+		        return result.build();
+		    }
+			
+			public List<Phone> readContacts() {
+				ImmutableList.Builder<Phone> result = ImmutableList.builder();
+				
+				ContentResolver cr = getContentResolver();
+
+				Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
+						null, null, null, null);
+
+				if (cur.getCount() > 0) {
+					while (cur.moveToNext()) {
+						String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+						String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+						if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+							// get the phone number
+							Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,
+									ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?",
+									new String[]{id}, null);
+
+							while (pCur.moveToNext()) {
+								String phone = pCur.getString(
+										pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+								result.add(Phone.of(phone, name));
+							}
+							pCur.close();
+						}
+					}
+				}
+				
+				return result.build();
 			}
 		});
 
