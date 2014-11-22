@@ -15,9 +15,6 @@
  */
 package com.kumbaya.android.client;
 
-import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
-import static com.kumbaya.android.client.CommonUtilities.SERVER_URL;
-
 import java.io.File;
 import java.sql.Date;
 import java.util.List;
@@ -31,7 +28,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.kumbaya.android.R;
 import com.kumbaya.android.R.drawable;
 import com.kumbaya.android.R.id;
-import com.kumbaya.android.client.BackgroundService.LocalBinder;
+import com.kumbaya.android.client.sdk.BackgroundService;
+import com.kumbaya.android.client.sdk.BackgroundService.LocalBinder;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -191,10 +189,6 @@ public class DemoActivity extends FragmentActivity {
 		super.onCreate(savedInstanceState);
 
 		Log.i(TAG, "Creating the activity.");
-
-		checkNotNull(SERVER_URL, "SERVER_URL");
-		checkNotNull(SENDER_ID, "SENDER_ID");
-
 		setContentView(R.layout.main);
 
 		ActionBar bar = getActionBar();

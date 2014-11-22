@@ -1,4 +1,4 @@
-package com.kumbaya.android.client;
+package com.kumbaya.android.client.sdk;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -31,7 +31,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 public class BackgroundService extends Service {
-	public static String UPDATE_ACTION = "com.kumbaya.android.client.UPDATE_ACTION";
+	public static String UPDATE_ACTION = "com.kumbaya.android.client.sdk.UPDATE_ACTION";
     private static final String TAG = "BackgroundService";
 	// NOTE(goto): you can set this to localhost while running appengine
 	// locally.
@@ -39,7 +39,7 @@ public class BackgroundService extends Service {
 	private final int port = CommonUtilities.GCM_PORT;
 	private final int proxy = CommonUtilities.GCM_PORT;
 	private final Injector injector = Guice.createInjector(
-			new ClientModule(this));
+			new SdkModule(this));
 
 	@Inject private Dht dht = null;
 	@Inject private AsyncMessageDispatcher dispatcher = null;
@@ -60,8 +60,7 @@ public class BackgroundService extends Service {
 	}
 	
 	public class LocalBinder extends Binder {
-		BackgroundService getService() {
-			// Return this instance of LocalService so clients can call public methods
+		public BackgroundService getService() {
 			return BackgroundService.this;
 		}
 	}

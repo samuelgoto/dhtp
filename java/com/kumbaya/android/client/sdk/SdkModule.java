@@ -1,4 +1,4 @@
-package com.kumbaya.android.client;
+package com.kumbaya.android.client.sdk;
 
 import java.io.File;
 
@@ -14,10 +14,10 @@ import com.google.inject.Provider;
 import com.kumbaya.dht.AsyncMessageDispatcher;
 import com.kumbaya.dht.Server;
 
-class ClientModule extends AbstractModule {
+class SdkModule extends AbstractModule {
 	private final Context context;
 	
-	ClientModule(Context context) {
+	SdkModule(Context context) {
 		this.context = context;
 	}
 	

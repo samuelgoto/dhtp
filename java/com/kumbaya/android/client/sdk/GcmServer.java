@@ -1,6 +1,6 @@
-package com.kumbaya.android.client;
+package com.kumbaya.android.client.sdk;
 
-import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
+import static com.kumbaya.android.client.sdk.CommonUtilities.SENDER_ID;
 
 import java.io.IOException;
 import java.net.SocketAddress;

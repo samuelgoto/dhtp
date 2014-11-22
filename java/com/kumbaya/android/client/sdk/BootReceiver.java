@@ -1,4 +1,5 @@
-package com.kumbaya.android.client;
+package com.kumbaya.android.client.sdk;
+
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

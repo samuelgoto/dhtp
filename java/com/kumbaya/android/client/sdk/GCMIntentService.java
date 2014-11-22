@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kumbaya.android.client;
+package com.kumbaya.android.client.sdk;
 
-import static com.kumbaya.android.client.CommonUtilities.SENDER_ID;
-import static com.kumbaya.android.client.CommonUtilities.displayMessage;
+import static com.kumbaya.android.client.sdk.CommonUtilities.SENDER_ID;
+import static com.kumbaya.android.client.sdk.CommonUtilities.displayMessage;
 
 import java.net.InetSocketAddress;
 
@@ -34,7 +34,7 @@ import android.util.Log;
 
 import com.google.android.gcm.GCMBaseIntentService;
 import com.kumbaya.android.R;
-import com.kumbaya.android.client.BackgroundService.LocalBinder;
+import com.kumbaya.android.client.sdk.BackgroundService.LocalBinder;
 
 /**
  * IntentService responsible for handling GCM messages.

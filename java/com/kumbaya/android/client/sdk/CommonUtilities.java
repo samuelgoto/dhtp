@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.kumbaya.android.client;
+package com.kumbaya.android.client.sdk;
 
 import android.content.Context;
 import android.content.Intent;
