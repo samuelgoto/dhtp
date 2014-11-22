@@ -145,7 +145,6 @@ public class BootActivity extends Activity {
 	protected void onDestroy() {
 		Log.i(TAG, "Destroying the activity.");
 		unregisterReceiver(updateReceiver);
-		unbindService(connection);
 		super.onDestroy();
 	}
 }
