@@ -2,9 +2,7 @@ package com.kumbaya.android.client;
 
 import java.util.concurrent.Executor;
 
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.kumbaya.android.R;
 import com.kumbaya.android.client.sdk.BackgroundService;
 import com.kumbaya.android.client.sdk.BackgroundService.LocalBinder;
@@ -16,7 +14,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -101,9 +98,13 @@ public class BootActivity extends Activity {
         
         setContentView(R.layout.booting_fragment);
         
-        new AsyncTask<Void, Void, Void>() {
+        // Creating and starting the background services takes some time,
+        // so do it off the UI thread.
+		Log.i(TAG, "Kicking off the service creation");
+        new Handler().postDelayed(new Runnable() {
 			@Override
-			protected Void doInBackground(Void... params) {
+			public void run() {
+				Log.i(TAG, "Starting service");
 				registerReceiver(updateReceiver,
 						new IntentFilter(BackgroundService.UPDATE_ACTION));
 
@@ -112,9 +113,9 @@ public class BootActivity extends Activity {
 
 				Intent i = new Intent(context, BackgroundService.class);
 				bindService(i, connection, Context.BIND_AUTO_CREATE);
-				return null;
+				Log.i(TAG, "Done");
 			}
-        }.execute();
+        }, 100);
     }
     
 	@Override
