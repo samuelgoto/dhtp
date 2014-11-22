@@ -32,6 +32,7 @@ public class BootActivity extends Activity {
 		public void onServiceConnected(ComponentName name, IBinder b) {
 			LocalBinder binder = (LocalBinder) b;
 			final BackgroundService service = binder.getService();
+			// TODO(goto): deal with timeouts.
 			service.waitForBootstrap().addListener(new Runnable() {
 				@Override
 				public void run() {
@@ -56,7 +57,6 @@ public class BootActivity extends Activity {
 						@Override
 						public void run() {
 							Log.i(TAG, "Announced!");
-							// TODO(goto): moves this to the runner instead.
 							Intent intent = new Intent(context, MainActivity.class);
 							startActivity(intent);
 						}
@@ -116,16 +116,36 @@ public class BootActivity extends Activity {
 
 		Intent intent = new Intent(context, BackgroundService.class);
 		startService(intent);
+		
+		bind();
 
-		Intent i = new Intent(context, BackgroundService.class);
-		bindService(i, connection, Context.BIND_AUTO_CREATE);
 		Log.i(TAG, "Done");
 	}
+	
+	private void bind() {
+		Intent i = new Intent(context, BackgroundService.class);
+		bindService(i, connection, Context.BIND_AUTO_CREATE);
+	}
     
+	@Override
+	protected void onResume() {
+	    super.onResume();
+	    Log.d(TAG, "onResume");
+	    bind();
+	}
+
+	@Override
+	protected void onPause() {
+	    super.onPause();
+	    Log.d(TAG, "onPause");
+	    unbindService(connection);
+	}
+	
 	@Override
 	protected void onDestroy() {
 		Log.i(TAG, "Destroying the activity.");
 		unregisterReceiver(updateReceiver);
+		unbindService(connection);
 		super.onDestroy();
 	}
 }

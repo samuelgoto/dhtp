@@ -4,7 +4,12 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.io.MessageDispatcher.MessageDispatcherEvent;
@@ -46,6 +51,20 @@ public class BackgroundService extends Service {
 	@Inject private org.limewire.mojito.Context context = null;
 	private final Binder mBinder = new LocalBinder();
 
+	int corePoolSize = 60;
+	int maximumPoolSize = 80;
+	int keepAliveTime = 10;
+
+	// TODO(goto): figure out how to give this threadpool a higher priority.
+	// Adding more threads has substantially increased the performance of the DHT.
+	BlockingQueue<java.lang.Runnable> workQueue = new LinkedBlockingQueue<java.lang.Runnable>(maximumPoolSize);
+	Executor executor = new ThreadPoolExecutor(
+			corePoolSize,
+			maximumPoolSize,
+			keepAliveTime, 
+			TimeUnit.SECONDS, 
+			workQueue);
+	
 	public BackgroundService() {
 		super();
         Log.i(TAG, "Hash code: " + this.hashCode());
@@ -85,6 +104,7 @@ public class BackgroundService extends Service {
 			}
         });
         
+        Log.i(TAG, "Bootstraping.");
         bootstrap();
         
 		// If we get killed, after returning from here, restart
@@ -119,7 +139,7 @@ public class BackgroundService extends Service {
 				}
 				return null;
 			}
-		}.execute();
+		}.executeOnExecutor(executor);
 		return future;
 	}
 
@@ -143,7 +163,7 @@ public class BackgroundService extends Service {
 		return run(new Runnable<Boolean>() {
 			@Override
 			public Boolean run() throws ExecutionException {
-		        Log.i(TAG, "Starting DHT.");
+		        Log.i(TAG, "Starting the DHT.");
 		        
 				try {
 

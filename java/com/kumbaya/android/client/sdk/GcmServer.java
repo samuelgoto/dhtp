@@ -34,6 +34,7 @@ class GcmServer implements Server {
 		ServerUtilities.id = Optional.of(nodeId);
 
 		final String regId = GCMRegistrar.getRegistrationId(context);
+		// TODO(goto): figure out a solution to this problem.
 		// GCMRegistrar.unregister(context);
 		if (regId.equals("")) {
 	        Log.i(TAG, "Device is not registered locally. Registering.");

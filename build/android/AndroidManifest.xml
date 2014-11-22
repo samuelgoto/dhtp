@@ -83,6 +83,13 @@
             android:name="com.kumbaya.android.client.MainActivity"
             android:label="@string/app_name" >
         </activity>
+
+        <activity
+            android:name="com.kumbaya.android.client.DebugActivity"
+            android:theme="@style/BootTheme"
+            android:label="@string/app_name" >
+        </activity>
+        
         <!--
           BroadcastReceiver that will receive intents from GCM
           services and handle them to the custom IntentService.
