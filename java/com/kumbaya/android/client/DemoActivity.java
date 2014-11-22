@@ -58,6 +58,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.telephony.TelephonyManager;
 import android.telephony.cdma.CdmaCellLocation;
@@ -101,8 +104,25 @@ public class DemoActivity extends FragmentActivity {
 			service.get().waitForBootstrap().addListener(new Runnable() {
 				@Override
 				public void run() {
+					// Announcing ourselves to the network.
+					TelephonyManager manager = (TelephonyManager) getSystemService(
+							Context.TELEPHONY_SERVICE);
+					String phoneNumber = manager.getLine1Number();
+					String countryCode = manager.getSimCountryIso().toUpperCase();
+					phoneNumber = countryCode + " " + phoneNumber;
+					// TODO(goto): canonicalize the phone number serialization and
+					// store a different value here.
+					ListenableFuture<Void> result = service.get().put(
+							phoneNumber, phoneNumber);
 					Log.i(TAG, "Bootstraped!");
-					mViewPager.setCurrentItem(1);
+					bootFragment.setText("Bootstrapped! Now announcing ourselves...");
+					result.addListener(new Runnable() {
+						@Override
+						public void run() {
+							Log.i(TAG, "Announced!");
+							mViewPager.setCurrentItem(1);
+						}
+					}, executor);
 				}
 			}, executor);
 		}
@@ -119,6 +139,7 @@ public class DemoActivity extends FragmentActivity {
 	private CreateFragment createFragment;
 	private DebugFragment debugFragment;
 	private SearchFragment searchFragment;
+	private ContactsFragment contactsFragment;
 
 	private final BroadcastReceiver mHandleMessageReceiver =
 			new BroadcastReceiver() {
@@ -141,24 +162,24 @@ public class DemoActivity extends FragmentActivity {
 	static class Phone {
 		private final String owner;
 		private final String number;
-		
+
 		Phone(String number, String owner) {
 			this.owner = owner;
 			this.number = number;
 		}
-		
+
 		static Phone of(String number, String owner) {
 			return new Phone(number, owner);
 		}
-		
+
 		String owner() {
 			return owner;
 		}
-		
+
 		String number() {
 			return number;
 		}
-		
+
 		@Override
 		public String toString() {
 			return "Phone: " + number + ", owner: " + owner;
@@ -183,14 +204,14 @@ public class DemoActivity extends FragmentActivity {
 		searchFragment = new SearchFragment();
 		createFragment = new CreateFragment();
 		debugFragment = new DebugFragment();
+		contactsFragment = new ContactsFragment();
 
 		Fragment fragments[] = {
 				bootFragment,
 				searchFragment, 
 				createFragment,
-				debugFragment};
-
-		File f = context.getFilesDir();
+				debugFragment,
+				contactsFragment};
 
 		mDemoCollectionPagerAdapter =
 				new PagerAdapter(getSupportFragmentManager(), fragments);
@@ -207,111 +228,58 @@ public class DemoActivity extends FragmentActivity {
 				if (position == 0 && service.isPresent() && service.get().isBootstraped()) {
 					// mViewPager.setCurrentItem(1);
 				} else if (position == 3 && service.isPresent()) {
-					TelephonyManager manager = (TelephonyManager) getSystemService(
-							Context.TELEPHONY_SERVICE);
-					String mPhoneNumber = manager.getLine1Number();
-					String countryCode = manager.getSimCountryIso().toUpperCase();
-					
-					final String localAreaCode;
-					if (manager.getPhoneType() == TelephonyManager.PHONE_TYPE_GSM) {
-						GsmCellLocation cellLocation = (GsmCellLocation) manager.getCellLocation();
-						localAreaCode = String.valueOf(cellLocation.getLac());
-					} else if (manager.getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA) {
-						CdmaCellLocation cellLocation = (CdmaCellLocation) manager.getCellLocation();
-						localAreaCode = String.valueOf(cellLocation.toString());
-					} else {
-						localAreaCode = "UNKNOWN";
-					}
-					
-					ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+					/*
+					new AsyncTask<Void, Void, String>() {
+						@Override
+						protected String doInBackground(Void... params) {
+							TelephonyManager manager = (TelephonyManager) getSystemService(
+									Context.TELEPHONY_SERVICE);
+							String mPhoneNumber = manager.getLine1Number();
+							String countryCode = manager.getSimCountryIso().toUpperCase();
 
-					// NOTE(goto): this should always return false on emulators according to
-					// http://stackoverflow.com/questions/7876302/enabling-wifi-on-android-emulator
-					NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+							final String localAreaCode;
+							if (manager.getPhoneType() == TelephonyManager.PHONE_TYPE_GSM) {
+								GsmCellLocation cellLocation = (GsmCellLocation) manager.getCellLocation();
+								localAreaCode = String.valueOf(cellLocation.getLac());
+							} else if (manager.getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA) {
+								CdmaCellLocation cellLocation = (CdmaCellLocation) manager.getCellLocation();
+								localAreaCode = String.valueOf(cellLocation.toString());
+							} else {
+								localAreaCode = "UNKNOWN";
+							}
 
-					String result = "";
+							ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-					// NOTE(goto): this is the number I get in my
-					// emulator: 15555215554 for the phone number.
-					result += "Phone number: " + mPhoneNumber + "\n";
-					result += "Country code: " + countryCode + "\n";
-					result += "Area code: " + localAreaCode + "\n";
-					result += "Call log: " + getCallLog().size() + "\n";
-					result += "Contacts: " + readContacts().size() + "\n";
-					result += "Wifi connected: " + wifi.isConnected() + "\n";
-					
-					result += service.get().toString();
+							// NOTE(goto): this should always return false on emulators according to
+							// http://stackoverflow.com/questions/7876302/enabling-wifi-on-android-emulator
+							final NetworkInfo wifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+							// Do some of the heavy lifting asynchronously.
+							String result = "";
+							// NOTE(goto): this is the number I get in my
+							// emulator: 15555215554 for the phone number.
+							// I get something like 650394932 when I run this with 
+							// a real phone + the country code is correct.
+							result += "Phone number: " + mPhoneNumber + "\n";
+							result += "Country code: " + countryCode + "\n";
+							result += "Area code: " + localAreaCode + "\n";
+							result += "Call log: " + getCallLog().size() + "\n";
+							result += "Contacts: " + readContacts().size() + "\n";
+							result += "Wifi connected: " + wifi.isConnected() + "\n";
+							return result;
+						}
+
+					    protected void onPostExecute(String result) {
+							String current = debugFragment.getText();
+							debugFragment.setText(current + "\n" + result);
+					    }
+					}.execute();
+					 */
+
+					String result = service.get().toString();
 
 					debugFragment.setText(result);
 				}
-			}
-
-			private List<String> getCallLog() {
-				ImmutableList.Builder<String> result = ImmutableList.builder();
-		        StringBuffer sb = new StringBuffer();
-		        Cursor managedCursor = managedQuery(CallLog.Calls.CONTENT_URI, null,
-		                null, null, null);
-		        int number = managedCursor.getColumnIndex(CallLog.Calls.NUMBER);
-		        int type = managedCursor.getColumnIndex(CallLog.Calls.TYPE);
-		        int date = managedCursor.getColumnIndex(CallLog.Calls.DATE);
-		        int duration = managedCursor.getColumnIndex(CallLog.Calls.DURATION);
-		        sb.append("Call Details :");
-		        while (managedCursor.moveToNext()) {
-		            String phNumber = managedCursor.getString(number);
-		            String callType = managedCursor.getString(type);
-		            String callDate = managedCursor.getString(date);
-		            Date callDayTime = new Date(Long.valueOf(callDate));
-		            String callDuration = managedCursor.getString(duration);
-		            String dir = null;
-		            int dircode = Integer.parseInt(callType);
-		            switch (dircode) {
-		            case CallLog.Calls.OUTGOING_TYPE:
-		                dir = "OUTGOING";
-		                break;
-
-		            case CallLog.Calls.INCOMING_TYPE:
-		                dir = "INCOMING";
-		                break;
-
-		            case CallLog.Calls.MISSED_TYPE:
-		                dir = "MISSED";
-		                break;
-		            }
-		            result.add(phNumber);
-		        }
-		        managedCursor.close();
-		        return result.build();
-		    }
-			
-			public List<Phone> readContacts() {
-				ImmutableList.Builder<Phone> result = ImmutableList.builder();
-				
-				ContentResolver cr = getContentResolver();
-
-				Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
-						null, null, null, null);
-
-				if (cur.getCount() > 0) {
-					while (cur.moveToNext()) {
-						String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
-						String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-						if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-							// get the phone number
-							Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,
-									ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?",
-									new String[]{id}, null);
-
-							while (pCur.moveToNext()) {
-								String phone = pCur.getString(
-										pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-								result.add(Phone.of(phone, name));
-							}
-							pCur.close();
-						}
-					}
-				}
-				
-				return result.build();
 			}
 		});
 
@@ -455,12 +423,160 @@ public class DemoActivity extends FragmentActivity {
 
 		@Override
 		public int getCount() {
-			return 4;
+			return fragments.length;
 		}
 
 		@Override
 		public CharSequence getPageTitle(int position) {
 			return "OBJECT " + (position + 1);
+		}
+	}
+
+	public static class ContactsFragment extends Fragment implements 
+	LoaderCallbacks<Cursor> {
+		private static final String TAG = "ContactsFragment";
+		private static final int CALLS_LOG_LOADER = 1;
+		private static final int CONTACTS_LOADER = 2;
+
+		public void setText(int id, String text) {
+			if (getView() == null) {
+				Log.e(TAG, "View not available.");
+				return;
+			}
+
+			final int view;
+			switch (id) {
+			case CALLS_LOG_LOADER:
+				view = R.id.calls_log_view;
+				break;
+			case CONTACTS_LOADER:
+				view = R.id.contacts_view;
+				break;
+			default:
+				throw new UnsupportedOperationException("Invalid id" + id);
+			}
+			TextView textView = ((TextView) getView().findViewById(view));
+			textView.setText(text);
+		}
+
+		public String getText() {
+			if (getView() == null) {
+				Log.e(TAG, "View not available.");
+				return "";
+			}
+
+			TextView textView = ((TextView) getView().findViewById(
+					R.id.contacts_view));
+			return textView.getText().toString();
+		}
+
+		@Override
+		public View onCreateView(LayoutInflater inflater,
+				ViewGroup container, Bundle savedInstanceState) {
+			getLoaderManager().initLoader(CALLS_LOG_LOADER, null, this);
+			getLoaderManager().initLoader(CONTACTS_LOADER, null, this);
+			return inflater.inflate(
+					R.layout.contacts_fragment, container, false);
+		}
+
+		@Override
+		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+			switch (id) {
+			case CALLS_LOG_LOADER: {
+				return new CursorLoader(
+						getActivity(),
+						CallLog.Calls.CONTENT_URI,
+						null,
+						null,
+						null,
+						null);		
+			}
+			case CONTACTS_LOADER: {
+				String[] projection = new String[] {
+						ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+		                ContactsContract.CommonDataKinds.Phone.NUMBER};
+				
+				return new CursorLoader(
+						getActivity(),
+						ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+						projection,
+						null,
+						null,
+						null);
+			}
+			}
+			throw new UnsupportedOperationException("Can't create a loader of id: " + id);
+		}
+
+		public List<Phone> readContacts(Cursor cur) {
+			ImmutableList.Builder<Phone> result = ImmutableList.builder();
+
+			int nameColumn = cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+			int numberColumn = cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+
+			if (cur.getCount() > 0) {
+				while (cur.moveToNext()) {
+					String name   = cur.getString(nameColumn);
+					String number = cur.getString(numberColumn);
+					result.add(Phone.of(number, name));
+				}
+			}
+
+			return result.build();
+		}
+
+		private List<String> getCallLog(Cursor managedCursor) {
+			ImmutableList.Builder<String> result = ImmutableList.builder();
+			StringBuffer sb = new StringBuffer();
+			int number = managedCursor.getColumnIndex(CallLog.Calls.NUMBER);
+			int type = managedCursor.getColumnIndex(CallLog.Calls.TYPE);
+			int date = managedCursor.getColumnIndex(CallLog.Calls.DATE);
+			int duration = managedCursor.getColumnIndex(CallLog.Calls.DURATION);
+			sb.append("Call Details :");
+			while (managedCursor.moveToNext()) {
+				String phNumber = managedCursor.getString(number);
+				String callType = managedCursor.getString(type);
+				String callDate = managedCursor.getString(date);
+				Date callDayTime = new Date(Long.valueOf(callDate));
+				String callDuration = managedCursor.getString(duration);
+				String dir = null;
+				int dircode = Integer.parseInt(callType);
+				switch (dircode) {
+				case CallLog.Calls.OUTGOING_TYPE:
+					dir = "OUTGOING";
+					break;
+
+				case CallLog.Calls.INCOMING_TYPE:
+					dir = "INCOMING";
+					break;
+
+				case CallLog.Calls.MISSED_TYPE:
+					dir = "MISSED";
+					break;
+				}
+				result.add(phNumber);
+			}
+			return result.build();
+		}
+
+		@Override
+		public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+			switch (loader.getId()) {
+			case CALLS_LOG_LOADER: {
+				List<String> result = getCallLog(cursor);
+				setText(CALLS_LOG_LOADER, "Number of calls: " + result.size());
+				break;
+			}
+			case CONTACTS_LOADER: {
+				List<Phone> result = readContacts(cursor);
+				setText(CONTACTS_LOADER, "Number of contacts: " + result.size());
+				break;
+			}
+			}
+		}
+
+		@Override
+		public void onLoaderReset(Loader<Cursor> arg0) {
 		}
 	}
 
@@ -476,6 +592,17 @@ public class DemoActivity extends FragmentActivity {
 			TextView textView = ((TextView) getView().findViewById(
 					R.id.debug_log));
 			textView.setText(text);
+		}
+
+		public String getText() {
+			if (getView() == null) {
+				Log.e(TAG, "View not available.");
+				return "";
+			}
+
+			TextView textView = ((TextView) getView().findViewById(
+					R.id.debug_log));
+			return textView.getText().toString();
 		}
 
 		@Override
@@ -636,6 +763,16 @@ public class DemoActivity extends FragmentActivity {
 
 	public static class BootFragment extends Fragment {
 		private static final String TAG = "BootFragment";
+
+		public void setText(String text) {
+			if (getView() == null) {
+				Log.e(TAG, "View not available.");
+				return;
+			}
+			TextView mDisplay = (TextView) getView().findViewById(R.id.boot_status);
+			mDisplay.setText(text);
+		}
+
 		@Override
 		public View onCreateView(LayoutInflater inflater,
 				ViewGroup container, Bundle savedInstanceState) {
