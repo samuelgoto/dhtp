@@ -1,5 +1,7 @@
 package com.kumbaya.android.client;
 
+import java.util.concurrent.Executor;
+
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -20,10 +22,12 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Window;
 import android.widget.TextView;
 
 public class BootActivity extends Activity {
-	private static final String TAG = "DemoActivity";
+	private static final String TAG = "BootActivity";
+	private final Executor executor = Executors.mainLooperExecutor();
     private final Activity context = this;
 
 	private final ServiceConnection connection = new ServiceConnection() {
@@ -51,17 +55,17 @@ public class BootActivity extends Activity {
 							R.id.boot_status);
 					bootStatus.setText("Bootstrapped! Now announcing ourselves...");
 
-					// TODO(goto): moves this to the runner instead.
-					Intent intent = new Intent(context, DemoActivity.class);
-					startActivity(intent);
-
 					result.addListener(new Runnable() {
 						@Override
 						public void run() {
+							Log.i(TAG, "Announced!");
+							// TODO(goto): moves this to the runner instead.
+							Intent intent = new Intent(context, DemoActivity.class);
+							startActivity(intent);
 						}
-					}, MoreExecutors.sameThreadExecutor());
+					}, executor);
 				}
-			}, MoreExecutors.sameThreadExecutor());
+			}, executor);
 		}
 
 		@Override
@@ -88,18 +92,21 @@ public class BootActivity extends Activity {
 		}
 	};
 
-	
-    @Override
+	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
+        getActionBar().hide();
+        
         setContentView(R.layout.booting_fragment);
         
-		registerReceiver(updateReceiver,
-				new IntentFilter(BackgroundService.UPDATE_ACTION));
-        
-		new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
+				registerReceiver(updateReceiver,
+						new IntentFilter(BackgroundService.UPDATE_ACTION));
+
 				Intent intent = new Intent(context, BackgroundService.class);
 				startService(intent);
 
@@ -107,7 +114,7 @@ public class BootActivity extends Activity {
 				bindService(i, connection, Context.BIND_AUTO_CREATE);
 				return null;
 			}
-		}.execute();        
+        }.execute();
     }
     
 	@Override
