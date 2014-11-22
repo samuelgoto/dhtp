@@ -72,12 +72,12 @@ import android.widget.Toast;
 /**
  * Main UI for the demo app.
  */
-public class DemoActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity {
 	private static final String TAG = "DemoActivity";
 
 	private final Executor executor = Executors.mainLooperExecutor();
 
-	private final DemoActivity context = this;
+	private final MainActivity context = this;
 	
 	private final ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -278,7 +278,7 @@ public class DemoActivity extends FragmentActivity {
 
 		ListenableFuture<Void> result = service.get().put(key, value);
 
-		final DemoActivity context = this;
+		final MainActivity context = this;
 
 		Futures.addCallback(result, new FutureCallback<Void>() {
 			public void onSuccess(Void explosion) {
@@ -507,13 +507,13 @@ public class DemoActivity extends FragmentActivity {
 
 	public static class SearchFragment extends Fragment {
 		private static final String TAG = "SearchFragment";
-		private DemoActivity search;
+		private MainActivity search;
 
 		@Override
 		public void onAttach(Activity activity) {
 			super.onAttach(activity);
 
-			search = (DemoActivity) activity;
+			search = (MainActivity) activity;
 		}
 
 		@Override
@@ -585,7 +585,7 @@ public class DemoActivity extends FragmentActivity {
 
 	public static class CreateFragment extends Fragment {
 		private static final String TAG = "CreateFragment";
-		private DemoActivity creator;
+		private MainActivity creator;
 
 		@Override
 		public void setMenuVisibility(final boolean visible) {
@@ -628,7 +628,7 @@ public class DemoActivity extends FragmentActivity {
 		public void onAttach(Activity activity) {
 			super.onAttach(activity);
 
-			creator = (DemoActivity) activity;
+			creator = (MainActivity) activity;
 		}
 
 		@Override

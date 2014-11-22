@@ -57,7 +57,7 @@ public class BootActivity extends Activity {
 						public void run() {
 							Log.i(TAG, "Announced!");
 							// TODO(goto): moves this to the runner instead.
-							Intent intent = new Intent(context, DemoActivity.class);
+							Intent intent = new Intent(context, MainActivity.class);
 							startActivity(intent);
 						}
 					}, executor);
