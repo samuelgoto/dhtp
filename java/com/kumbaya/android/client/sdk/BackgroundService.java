@@ -17,6 +17,7 @@ import org.limewire.mojito.io.MessageDispatcher.MessageDispatcherListener;
 import org.limewire.mojito.messages.DHTMessage;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
@@ -33,6 +34,7 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 public class BackgroundService extends Service {
@@ -158,6 +160,16 @@ public class BackgroundService extends Service {
 			}
 		});
 	}
+
+	private Optional<String> getPhoneNumber() {
+		// TODO(goto):  canonicalize  the number and degrade gracefully
+		// on devices without sim card (e.g. tablets).
+		TelephonyManager manager = (TelephonyManager) getSystemService(
+				Context.TELEPHONY_SERVICE);
+		String phoneNumber = manager.getLine1Number();
+		String countryCode = manager.getSimCountryIso().toUpperCase();
+		return Optional.of(countryCode + " " + phoneNumber);
+	}
 	
 	public ListenableFuture<Boolean> bootstrap() {
 		return run(new Runnable<Boolean>() {
@@ -165,8 +177,18 @@ public class BackgroundService extends Service {
 			public Boolean run() throws ExecutionException {
 		        Log.i(TAG, "Starting the DHT.");
 		        
+		        Optional<String> id = getPhoneNumber();
+		        
+		        if (id.isPresent()) {
+		        	// Makes the id of the node stable, via associating the node
+		        	// that is running on this phone with its phone number.
+		        	// The phone number is hashed, so it is opaque to everybody.
+		        	// This helps not creating duplicates on restarts and
+		        	// should lead to a better replication strategy for neighbors.
+		        	dht.setId(id.get());
+		        }
+		        
 				try {
-
 					if (dht.isBound()) {
 				        Log.i(TAG, "Already bound..");
 					} else {

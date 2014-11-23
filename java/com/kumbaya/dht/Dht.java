@@ -58,6 +58,10 @@ public class Dht {
 	@Inject private Provider<MessageDispatcher> messageDispatcher;
 	@Inject(optional = true) private LocalDatabase localDb;
 
+	public void setId(String id) {
+		dht.getLocalNode().setNodeID(Keys.of(id));
+	}
+	
 	public StoreResult put(String key, String value) throws InterruptedException, ExecutionException {
 		return put(DHTValueEntity.createFromValue(dht, Keys.of(key), Values.of(value)));
 	}
