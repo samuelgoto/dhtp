@@ -115,7 +115,7 @@ public class MainActivity extends FragmentActivity {
 		}
 	};
 
-	static class Phone {
+	public static class Phone {
 		private final String owner;
 		private final String number;
 

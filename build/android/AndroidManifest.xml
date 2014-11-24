@@ -132,6 +132,14 @@
             android:name="com.kumbaya.android.client.sdk.GCMIntentService"
             android:enabled="true" />
         <service android:name="com.kumbaya.android.client.sdk.BackgroundService" />
+
+        <uses-library android:name="android.test.runner" />
+        
     </application>
 
+    <instrumentation 
+		android:name="android.test.InstrumentationTestRunner"
+    	android:targetPackage="com.kumbaya.android"
+    	android:label="your tests label" />
+    
 </manifest>

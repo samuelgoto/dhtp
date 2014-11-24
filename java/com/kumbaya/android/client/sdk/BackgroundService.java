@@ -32,7 +32,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Binder;
-import android.os.HandlerThread;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 import android.util.Log;

@@ -16,11 +16,9 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.provider.CallLog;
 import android.provider.ContactsContract;
@@ -30,7 +28,6 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -196,32 +193,40 @@ public class DebugActivity extends FragmentActivity {
 		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 			switch (id) {
 			case CALLS_LOG_LOADER: {
-				return new CursorLoader(
-						getActivity(),
-						CallLog.Calls.CONTENT_URI,
-						null,
-						null,
-						null,
-						null);		
+				return callsLogLoader(getActivity());
 			}
 			case CONTACTS_LOADER: {
-				String[] projection = new String[] {
-						ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-		                ContactsContract.CommonDataKinds.Phone.NUMBER};
-				
-				return new CursorLoader(
-						getActivity(),
-						ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-						projection,
-						null,
-						null,
-						null);
+				return contactsLoader(getActivity());
 			}
 			}
 			throw new UnsupportedOperationException("Can't create a loader of id: " + id);
 		}
 
-		public List<Phone> readContacts(Cursor cur) {
+		public static CursorLoader callsLogLoader(Context context) {
+			return new CursorLoader(
+					context,
+					CallLog.Calls.CONTENT_URI,
+					null,
+					null,
+					null,
+					null);		
+		}
+		
+		public static CursorLoader contactsLoader(Context context) {
+			String[] projection = new String[] {
+					ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+	                ContactsContract.CommonDataKinds.Phone.NUMBER};
+			
+			return new CursorLoader(
+					context,
+					ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+					projection,
+					null,
+					null,
+					null);
+		}
+		
+		public static List<Phone> readContacts(Cursor cur) {
 			ImmutableList.Builder<Phone> result = ImmutableList.builder();
 
 			int nameColumn = cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
@@ -238,7 +243,7 @@ public class DebugActivity extends FragmentActivity {
 			return result.build();
 		}
 
-		private List<String> getCallLog(Cursor managedCursor) {
+		public static List<String> getCallLog(Cursor managedCursor) {
 			ImmutableList.Builder<String> result = ImmutableList.builder();
 			StringBuffer sb = new StringBuffer();
 			int number = managedCursor.getColumnIndex(CallLog.Calls.NUMBER);
