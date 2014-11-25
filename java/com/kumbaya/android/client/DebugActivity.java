@@ -193,8 +193,11 @@ public class DebugActivity extends FragmentActivity {
 				}
 
 				try {
-					result.add(E164.normalize(localNumber.get().country(), 
-							localNumber.get().areaCode(), phoneNumber));
+					E164 normalized = E164.normalize(
+							localNumber.get().country(), 
+							localNumber.get().areaCode(), 
+							phoneNumber); 
+					result.add(normalized);
 				} catch (NumberParseException e) {
 					// Ignored.
 				}

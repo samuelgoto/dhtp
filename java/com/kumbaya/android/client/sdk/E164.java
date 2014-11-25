@@ -12,21 +12,25 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber.PhoneNumber;
 
 public class E164 {
-	private final String country;
-	private final String areaCode;
+	private static final PhoneNumberUtil phoneNumbers = 
+			PhoneNumberUtil.getInstance();
+
+	private final int country;
+	private final int areaCode;
 	private final String subscriber;
+
 	
-	E164(String country, String areaCode, String subscriber) {
+	E164(int country, int areaCode, String subscriber) {
 		this.country = country;
 		this.areaCode = areaCode;
 		this.subscriber = subscriber;
 	}
 	
-	public String country() {
+	public int country() {
 		return country;
 	}
 	
-	public String areaCode() {
+	public int areaCode() {
 		return areaCode;
 	}
 	
@@ -46,6 +50,24 @@ public class E164 {
 		return builder.toString();
 	}
 	
+	private static boolean isNumeric(String str) {
+	    for (char c : str.toCharArray()) {
+	        if (!Character.isDigit(c)) return false;
+	    }
+	    return true;
+	}
+	
+	public static E164 normalize(
+			int defaultCountry, 
+			int defaultAreaCode, 
+			String number) throws NumberParseException {
+		return normalize(
+				phoneNumbers.getRegionCodeForCountryCode(
+						Integer.valueOf(defaultCountry)),
+				String.valueOf(defaultAreaCode),
+				number);
+	}
+	
 	public static E164 normalize(
 			String defaultCountry, 
 			String defaultAreaCode, 
@@ -53,7 +75,11 @@ public class E164 {
 		Preconditions.checkArgument(
 				!Strings.isNullOrEmpty(defaultCountry));
 		
-		PhoneNumberUtil phoneNumbers = PhoneNumberUtil.getInstance();
+		// normalizes numeric country codes to the known enumeration.
+		if (isNumeric(defaultCountry)) {
+			defaultCountry = phoneNumbers.getRegionCodeForCountryCode(
+					Integer.valueOf(defaultCountry));
+		}
 		
 		final PhoneNumber result = phoneNumbers.parse(
 				number, defaultCountry);
@@ -81,7 +107,9 @@ public class E164 {
 		}
 
 		E164 normalized = new E164(
-				String.valueOf(result.getCountryCode()), areaCode, subscriber);
+				result.getCountryCode(), 
+				Integer.valueOf(areaCode), 
+				subscriber);
 		
 		// Preconditions.checkArgument(phoneNumbers.isValidNumber(
 		//		phoneNumbers.parse(normalized.toString(), defaultCountry)),
