@@ -6,11 +6,13 @@ import java.util.concurrent.Executor;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.i18n.phonenumbers.NumberParseException;
 import com.kumbaya.android.R;
 import com.kumbaya.android.client.MainActivity.PagerAdapter;
 import com.kumbaya.android.client.MainActivity.Phone;
 import com.kumbaya.android.client.sdk.BackgroundService;
 import com.kumbaya.android.client.sdk.BackgroundService.LocalBinder;
+import com.kumbaya.android.client.sdk.E164;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -28,6 +30,7 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -131,12 +134,118 @@ public class DebugActivity extends FragmentActivity {
 		}
 	}
 
+	interface AsyncDbLoader<K> {
+		CursorLoader load(Context context);
+		List<K> read(Cursor cursor);
+	}
+	
+	static class CallsLogLoader implements AsyncDbLoader<E164> {
+		private final Optional<E164> localNumber;
+		
+		CallsLogLoader(Context context) {
+			this.localNumber = E164.localNumber(context);
+		}
+		
+		@Override
+		public CursorLoader load(Context context) {
+			return new CursorLoader(
+					context,
+					CallLog.Calls.CONTENT_URI,
+					null,
+					null,
+					null,
+					null);		
+		}
 
+		@Override
+		public List<E164> read(Cursor managedCursor) {
+			if (!localNumber.isPresent()) {
+				return ImmutableList.of();
+			}
+			
+			ImmutableList.Builder<E164> result = ImmutableList.builder();
+			StringBuffer sb = new StringBuffer();
+			int number = managedCursor.getColumnIndex(CallLog.Calls.NUMBER);
+			int type = managedCursor.getColumnIndex(CallLog.Calls.TYPE);
+			int date = managedCursor.getColumnIndex(CallLog.Calls.DATE);
+			int duration = managedCursor.getColumnIndex(CallLog.Calls.DURATION);
+			sb.append("Call Details :");
+			while (managedCursor.moveToNext()) {
+				String phoneNumber = managedCursor.getString(number);
+				String callType = managedCursor.getString(type);
+				String callDate = managedCursor.getString(date);
+				Date callDayTime = new Date(Long.valueOf(callDate));
+				String callDuration = managedCursor.getString(duration);
+				String dir = null;
+				int dircode = Integer.parseInt(callType);
+				switch (dircode) {
+				case CallLog.Calls.OUTGOING_TYPE:
+					dir = "OUTGOING";
+					break;
+
+				case CallLog.Calls.INCOMING_TYPE:
+					dir = "INCOMING";
+					break;
+
+				case CallLog.Calls.MISSED_TYPE:
+					dir = "MISSED";
+					break;
+				}
+
+				try {
+					result.add(E164.normalize(localNumber.get().country(), 
+							localNumber.get().areaCode(), phoneNumber));
+				} catch (NumberParseException e) {
+					// Ignored.
+				}
+			}
+			return result.build();
+		}
+	}
+	
+	static class ContactsLoader implements AsyncDbLoader<Phone> {
+		@Override
+		public CursorLoader load(Context context) {
+			String[] projection = new String[] {
+					ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+	                ContactsContract.CommonDataKinds.Phone.NUMBER,
+	                ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER};
+			
+			return new CursorLoader(
+					context,
+					ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+					projection,
+					null,
+					null,
+					null);
+		}
+
+		@Override
+		public List<Phone> read(Cursor cur) {
+			ImmutableList.Builder<Phone> result = ImmutableList.builder();
+
+			int nameColumn = cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+			int numberColumn = cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+
+			if (cur.getCount() > 0) {
+				while (cur.moveToNext()) {
+					String name   = cur.getString(nameColumn);
+					String number = cur.getString(numberColumn);
+					result.add(Phone.of(number, name));
+				}
+			}
+
+			return result.build();
+		}
+	}
+	
 	public static class ContactsFragment extends Fragment implements 
 	LoaderCallbacks<Cursor> {
 		private static final String TAG = "ContactsFragment";
 		private static final int CALLS_LOG_LOADER = 1;
 		private static final int CONTACTS_LOADER = 2;
+		private final CallsLogLoader callsLogLoader = new CallsLogLoader(getActivity());
+		private final ContactsLoader contactsLoader = new ContactsLoader();
 
 		public void setText(int id, String text) {
 			if (getView() == null) {
@@ -183,101 +292,25 @@ public class DebugActivity extends FragmentActivity {
 		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 			switch (id) {
 			case CALLS_LOG_LOADER: {
-				return callsLogLoader(getActivity());
+				return callsLogLoader.load(getActivity());
 			}
 			case CONTACTS_LOADER: {
-				return contactsLoader(getActivity());
+				return contactsLoader.load(getActivity());
 			}
 			}
 			throw new UnsupportedOperationException("Can't create a loader of id: " + id);
-		}
-
-		public static CursorLoader callsLogLoader(Context context) {
-			return new CursorLoader(
-					context,
-					CallLog.Calls.CONTENT_URI,
-					null,
-					null,
-					null,
-					null);		
-		}
-		
-		public static CursorLoader contactsLoader(Context context) {
-			String[] projection = new String[] {
-					ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-	                ContactsContract.CommonDataKinds.Phone.NUMBER,
-	                ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER};
-			
-			return new CursorLoader(
-					context,
-					ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-					projection,
-					null,
-					null,
-					null);
-		}
-		
-		public static List<Phone> readContacts(Cursor cur) {
-			ImmutableList.Builder<Phone> result = ImmutableList.builder();
-
-			int nameColumn = cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
-			int numberColumn = cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-
-			if (cur.getCount() > 0) {
-				while (cur.moveToNext()) {
-					String name   = cur.getString(nameColumn);
-					String number = cur.getString(numberColumn);
-					result.add(Phone.of(number, name));
-				}
-			}
-
-			return result.build();
-		}
-
-		public static List<String> getCallLog(Cursor managedCursor) {
-			ImmutableList.Builder<String> result = ImmutableList.builder();
-			StringBuffer sb = new StringBuffer();
-			int number = managedCursor.getColumnIndex(CallLog.Calls.NUMBER);
-			int type = managedCursor.getColumnIndex(CallLog.Calls.TYPE);
-			int date = managedCursor.getColumnIndex(CallLog.Calls.DATE);
-			int duration = managedCursor.getColumnIndex(CallLog.Calls.DURATION);
-			sb.append("Call Details :");
-			while (managedCursor.moveToNext()) {
-				String phNumber = managedCursor.getString(number);
-				String callType = managedCursor.getString(type);
-				String callDate = managedCursor.getString(date);
-				Date callDayTime = new Date(Long.valueOf(callDate));
-				String callDuration = managedCursor.getString(duration);
-				String dir = null;
-				int dircode = Integer.parseInt(callType);
-				switch (dircode) {
-				case CallLog.Calls.OUTGOING_TYPE:
-					dir = "OUTGOING";
-					break;
-
-				case CallLog.Calls.INCOMING_TYPE:
-					dir = "INCOMING";
-					break;
-
-				case CallLog.Calls.MISSED_TYPE:
-					dir = "MISSED";
-					break;
-				}
-				result.add(phNumber);
-			}
-			return result.build();
 		}
 
 		@Override
 		public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
 			switch (loader.getId()) {
 			case CALLS_LOG_LOADER: {
-				List<String> result = getCallLog(cursor);
+				List<E164> result = callsLogLoader.read(cursor);
 				setText(CALLS_LOG_LOADER, "Number of calls: " + result.size());
 				break;
 			}
 			case CONTACTS_LOADER: {
-				List<Phone> result = readContacts(cursor);
+				List<Phone> result = contactsLoader.read(cursor);
 				setText(CONTACTS_LOADER, "Number of contacts: " + result.size());
 				break;
 			}

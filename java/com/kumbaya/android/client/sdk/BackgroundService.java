@@ -50,6 +50,7 @@ public class BackgroundService extends Service {
 	@Inject private Dht dht = null;
 	@Inject private AsyncMessageDispatcher dispatcher = null;
 	@Inject private org.limewire.mojito.Context context = null;
+	private Context wrapper = this;
 	private final Binder mBinder = new LocalBinder();
 
 	int corePoolSize = 60;
@@ -159,16 +160,6 @@ public class BackgroundService extends Service {
 			}
 		});
 	}
-
-	private Optional<String> getPhoneNumber() {
-		// TODO(goto):  canonicalize  the number and degrade gracefully
-		// on devices without sim card (e.g. tablets).
-		TelephonyManager manager = (TelephonyManager) getSystemService(
-				Context.TELEPHONY_SERVICE);
-		String phoneNumber = manager.getLine1Number();
-		String countryCode = manager.getSimCountryIso().toUpperCase();
-		return Optional.of(countryCode + " " + phoneNumber);
-	}
 	
 	public ListenableFuture<Boolean> bootstrap() {
 		return run(new Runnable<Boolean>() {
@@ -176,7 +167,7 @@ public class BackgroundService extends Service {
 			public Boolean run() throws ExecutionException {
 		        Log.i(TAG, "Starting the DHT.");
 		        
-		        Optional<String> id = getPhoneNumber();
+		        Optional<E164> id = E164.localNumber(wrapper);
 		        
 		        if (id.isPresent()) {
 		        	// Makes the id of the node stable, via associating the node
@@ -184,7 +175,7 @@ public class BackgroundService extends Service {
 		        	// The phone number is hashed, so it is opaque to everybody.
 		        	// This helps not creating duplicates on restarts and
 		        	// should lead to a better replication strategy for neighbors.
-		        	dht.setId(id.get());
+		        	dht.setId(id.get().toString());
 		        }
 		        
 				try {
