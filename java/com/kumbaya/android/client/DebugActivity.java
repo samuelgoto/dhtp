@@ -67,16 +67,6 @@ public class DebugActivity extends FragmentActivity {
 		mViewPager.setAdapter(mDemoCollectionPagerAdapter);
 		mViewPager.setCurrentItem(0);
 		mViewPager.setPageTransformer(true, new ZoomOutPageTransformer());
-		mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-			@Override
-			public void onPageSelected(int position) {
-				// TextView text = (TextView) context.findViewById(R.id.progress_status);
-				// text.setText("");
-			}
-		});
-
-		// if (service.isPresent()) {
-		// }
 		
 		Intent i = new Intent(context, BackgroundService.class);
 		bindService(i, connection, Context.BIND_AUTO_CREATE);
@@ -215,7 +205,8 @@ public class DebugActivity extends FragmentActivity {
 		public static CursorLoader contactsLoader(Context context) {
 			String[] projection = new String[] {
 					ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-	                ContactsContract.CommonDataKinds.Phone.NUMBER};
+	                ContactsContract.CommonDataKinds.Phone.NUMBER,
+	                ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER};
 			
 			return new CursorLoader(
 					context,
