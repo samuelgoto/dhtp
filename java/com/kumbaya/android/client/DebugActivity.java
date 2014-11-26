@@ -32,7 +32,6 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -147,7 +146,7 @@ public class DebugActivity extends FragmentActivity {
 	}
 
 	interface AsyncDbLoader<K> {
-		CursorLoader load(Context context);
+		CursorLoader load();
 		List<K> read(Cursor cursor);
 	}
 	
@@ -159,9 +158,9 @@ public class DebugActivity extends FragmentActivity {
 		}
 		
 		@Override
-		public CursorLoader load(Context context) {
+		public CursorLoader load() {
 			return new CursorLoader(
-					context,
+					context.get(),
 					CallLog.Calls.CONTENT_URI,
 					null,
 					null,
@@ -221,15 +220,21 @@ public class DebugActivity extends FragmentActivity {
 	}
 	
 	static class ContactsLoader implements AsyncDbLoader<Phone> {
+		private final Provider<Context> context;
+		
+		ContactsLoader(Provider<Context> context) {
+			this.context = context;
+		}
+
 		@Override
-		public CursorLoader load(Context context) {
+		public CursorLoader load() {
 			String[] projection = new String[] {
 					ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
 	                ContactsContract.CommonDataKinds.Phone.NUMBER,
 	                ContactsContract.CommonDataKinds.Phone.NORMALIZED_NUMBER};
 			
 			return new CursorLoader(
-					context,
+					context.get(),
 					ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
 					projection,
 					null,
@@ -239,6 +244,12 @@ public class DebugActivity extends FragmentActivity {
 
 		@Override
 		public List<Phone> read(Cursor cur) {
+			Optional<E164> localNumber = E164.localNumber(
+					context.get());
+			if (!localNumber.isPresent()) {
+				return ImmutableList.of();
+			}
+
 			ImmutableList.Builder<Phone> result = ImmutableList.builder();
 
 			int nameColumn = cur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
@@ -248,7 +259,15 @@ public class DebugActivity extends FragmentActivity {
 				while (cur.moveToNext()) {
 					String name   = cur.getString(nameColumn);
 					String number = cur.getString(numberColumn);
-					result.add(Phone.of(number, name));
+					try {
+						E164 normalized = E164.normalize(
+								localNumber.get().country(), 
+								localNumber.get().areaCode(), 
+								number);
+						result.add(Phone.of(normalized.toString(), name));
+					} catch (NumberParseException e) {
+						// Ignoring.
+					} 
 				}
 			}
 
@@ -272,7 +291,8 @@ public class DebugActivity extends FragmentActivity {
 		private static final int CONTACTS_LOADER = 2;
 		private final CallsLogLoader callsLogLoader = new CallsLogLoader(
 				context(this));
-		private final ContactsLoader contactsLoader = new ContactsLoader();
+		private final ContactsLoader contactsLoader = new ContactsLoader(
+				context(this));
 
 		public void setText(int id, String text) {
 			if (getView() == null) {
@@ -319,10 +339,10 @@ public class DebugActivity extends FragmentActivity {
 		public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 			switch (id) {
 			case CALLS_LOG_LOADER: {
-				return callsLogLoader.load(getActivity());
+				return callsLogLoader.load();
 			}
 			case CONTACTS_LOADER: {
-				return contactsLoader.load(getActivity());
+				return contactsLoader.load();
 			}
 			}
 			throw new UnsupportedOperationException("Can't create a loader of id: " + id);

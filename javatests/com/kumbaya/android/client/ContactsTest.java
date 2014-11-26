@@ -17,8 +17,9 @@ public class ContactsTest extends AndroidTestCase {
 	
 	@SmallTest
 	public void testReadContacts() {
-		ContactsLoader loader = new ContactsLoader();
-		Cursor cursor = loader.load(getContext()).loadInBackground();
+		ContactsLoader loader = new ContactsLoader(
+				Providers.of(getContext()));
+		Cursor cursor = loader.load().loadInBackground();
 		List<Phone> phones = loader.read(cursor);
 		System.out.println(phones);
 	}
@@ -27,7 +28,7 @@ public class ContactsTest extends AndroidTestCase {
 	public void testCallsLog() {
 		CallsLogLoader loader = new CallsLogLoader(
 				Providers.of(getContext()));
-		Cursor cursor = loader.load(getContext()).loadInBackground();
+		Cursor cursor = loader.load().loadInBackground();
 		List<E164> phones = loader.read(cursor);
 		System.out.println(phones);
 	}

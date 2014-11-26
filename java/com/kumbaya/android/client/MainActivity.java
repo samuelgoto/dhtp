@@ -101,11 +101,10 @@ public class MainActivity extends FragmentActivity {
 			new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context c, Intent intent) {
-			String message = intent.getExtras().getString("type");
-			String origin = intent.getExtras().getString("origin");
+			String message = intent.getExtras().getString("message");
 
 			final TextView text = (TextView) context.findViewById(R.id.progress_status);
-			text.setText(message + " from: " + origin);
+			text.setText(message);
 			new Handler().postDelayed(new Runnable() {
 				@Override
 				public void run() {

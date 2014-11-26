@@ -38,6 +38,7 @@ import android.util.Log;
 
 public class BackgroundService extends Service {
 	public static String UPDATE_ACTION = "com.kumbaya.android.client.sdk.UPDATE_ACTION";
+	public static String BOOTSTRAPED_ACTION = "com.kumbaya.android.client.sdk.BOOTSTRAPED_ACTION";
     private static final String TAG = "BackgroundService";
 	// NOTE(goto): you can set this to localhost while running appengine
 	// locally.
@@ -100,9 +101,10 @@ public class BackgroundService extends Service {
         dispatcher.addMessageDispatcherListener(new MessageDispatcherListener() {
 			@Override
 			public void handleMessageDispatcherEvent(MessageDispatcherEvent event) {
-				dispatchEvent(event.getMessage().getOpCode().toString(),
-						event.getSocketAddress() != null ? 
-								event.getSocketAddress().toString() : "");
+				String destination = event.getSocketAddress() != null ? 
+						event.getSocketAddress().toString() : ""; 
+				dispatchEvent(event.getMessage().getOpCode().toString() + 
+						" to: " + destination);
 			}
         });
         
@@ -165,6 +167,7 @@ public class BackgroundService extends Service {
 		return run(new Runnable<Boolean>() {
 			@Override
 			public Boolean run() throws ExecutionException {
+				dispatchEvent("Starting the DHT");
 		        Log.i(TAG, "Starting the DHT.");
 		        
 		        Optional<E164> id = E164.localNumber(wrapper);
@@ -178,6 +181,7 @@ public class BackgroundService extends Service {
 		        	dht.setId(id.get().toString());
 		        }
 		        
+				dispatchEvent("Binding server");
 				try {
 					if (dht.isBound()) {
 				        Log.i(TAG, "Already bound..");
@@ -185,6 +189,7 @@ public class BackgroundService extends Service {
 				        Log.i(TAG, "Binding to port.");
 				        dht.start(hostname, port, proxy);
 					}
+					dispatchEvent("Done. Bootstraping.");
 
 					if (dht.isBootstraped()) {
 				        Log.i(TAG, "Already bootstraped.");
@@ -194,6 +199,16 @@ public class BackgroundService extends Service {
 				        Log.i(TAG, "Done bootstraping.");
 					}
 
+			        Log.i(TAG, "Done. Bootstraped.");
+
+			        Intent intent = new Intent(BOOTSTRAPED_ACTION);
+			        sendBroadcast(intent);
+					
+			        if (id.isPresent()) {
+				        // We don't block necessarily on the announcement.
+						put(id.get().toString(), id.get().toString());
+					}
+					
 					return true;
 				} catch (IOException e) {
 			        Log.w(TAG, "IOException.", e);
@@ -258,7 +273,7 @@ public class BackgroundService extends Service {
 					", from: " + message.getContact().toString());
 
 			dispatchEvent(
-					message.getOpCode().toString(),
+					message.getOpCode().toString()  + " from: " + 
 					message.getContact().getContactAddress().toString());
 			
 			dispatcher.handleMessage(message);
@@ -268,10 +283,10 @@ public class BackgroundService extends Service {
 		}
 	}
 	
-	private void dispatchEvent(String type, String origin) {
+	private void dispatchEvent(String message) {
         Intent intent = new Intent(UPDATE_ACTION);
-        intent.putExtra("type", type);
-        intent.putExtra("origin", origin);
+        Log.i(TAG, message);
+        intent.putExtra("message", message);
         sendBroadcast(intent);
 	}
 }
