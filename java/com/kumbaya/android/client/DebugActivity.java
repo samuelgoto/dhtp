@@ -7,6 +7,7 @@ import java.util.concurrent.Executor;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.inject.Provider;
 import com.kumbaya.android.R;
 import com.kumbaya.android.client.MainActivity.PagerAdapter;
 import com.kumbaya.android.client.MainActivity.Phone;
@@ -20,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.CallLog;
@@ -94,13 +96,23 @@ public class DebugActivity extends FragmentActivity {
 		public void onServiceDisconnected(ComponentName name) {
 		}
 	};
+	
 
 	@Override
-	protected void onDestroy() {
-		Log.i(TAG, "Destroying the activity.");
-		super.onDestroy();
+	protected void onResume() {
+	    super.onResume();
+	    Log.d(TAG, "onResume");
+		Intent i = new Intent(context, BackgroundService.class);
+		bindService(i, connection, Context.BIND_AUTO_CREATE);
 	}
-	
+
+	@Override
+	protected void onPause() {
+	    super.onPause();
+	    Log.d(TAG, "onPause");
+	    unbindService(connection);
+	}
+
 	public static class DebugFragment extends Fragment {
 		private static final String TAG = "DebugFragment";
 
@@ -140,10 +152,10 @@ public class DebugActivity extends FragmentActivity {
 	}
 	
 	static class CallsLogLoader implements AsyncDbLoader<E164> {
-		private final Optional<E164> localNumber;
+		private final Provider<Context> context;
 		
-		CallsLogLoader(Context context) {
-			this.localNumber = E164.localNumber(context);
+		CallsLogLoader(Provider<Context> context) {
+			this.context = context;
 		}
 		
 		@Override
@@ -159,6 +171,8 @@ public class DebugActivity extends FragmentActivity {
 
 		@Override
 		public List<E164> read(Cursor managedCursor) {
+			Optional<E164> localNumber = E164.localNumber(
+					context.get());
 			if (!localNumber.isPresent()) {
 				return ImmutableList.of();
 			}
@@ -242,12 +256,22 @@ public class DebugActivity extends FragmentActivity {
 		}
 	}
 	
+	private static Provider<Context> context(final Fragment fragment) {
+		return new Provider<Context>() {
+			@Override
+			public Context get() {
+				return fragment.getActivity();
+			}
+		};
+	}
+	
 	public static class ContactsFragment extends Fragment implements 
 	LoaderCallbacks<Cursor> {
 		private static final String TAG = "ContactsFragment";
 		private static final int CALLS_LOG_LOADER = 1;
 		private static final int CONTACTS_LOADER = 2;
-		private final CallsLogLoader callsLogLoader = new CallsLogLoader(getActivity());
+		private final CallsLogLoader callsLogLoader = new CallsLogLoader(
+				context(this));
 		private final ContactsLoader contactsLoader = new ContactsLoader();
 
 		public void setText(int id, String text) {
@@ -305,16 +329,33 @@ public class DebugActivity extends FragmentActivity {
 		}
 
 		@Override
-		public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+		public void onLoadFinished(Loader<Cursor> loader, final Cursor cursor) {
 			switch (loader.getId()) {
 			case CALLS_LOG_LOADER: {
-				List<E164> result = callsLogLoader.read(cursor);
-				setText(CALLS_LOG_LOADER, "Number of calls: " + result.size());
+				new AsyncTask<Void, Void, List<E164>>() {
+					@Override
+					protected List<E164> doInBackground(Void... params) {
+						return callsLogLoader.read(cursor);
+					}
+					@Override
+				    protected void onPostExecute(List<E164> result) {
+						setText(CALLS_LOG_LOADER, "Number of calls: " + result.size());
+				    }
+				}.execute();
 				break;
 			}
 			case CONTACTS_LOADER: {
-				List<Phone> result = contactsLoader.read(cursor);
-				setText(CONTACTS_LOADER, "Number of contacts: " + result.size());
+				new AsyncTask<Void, Void, List<Phone>>() {
+					@Override
+					protected List<Phone> doInBackground(Void... params) {
+						return contactsLoader.read(cursor);
+					}
+					@Override
+				    protected void onPostExecute(List<Phone> result) {
+						setText(CONTACTS_LOADER, "Number of contacts: " + result.size());
+				    }
+				}.execute();
+
 				break;
 			}
 			}

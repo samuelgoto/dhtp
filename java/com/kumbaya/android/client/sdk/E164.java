@@ -18,7 +18,6 @@ public class E164 {
 	private final int country;
 	private final int areaCode;
 	private final String subscriber;
-
 	
 	E164(int country, int areaCode, String subscriber) {
 		this.country = country;

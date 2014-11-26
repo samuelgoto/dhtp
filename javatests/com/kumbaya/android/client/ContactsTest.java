@@ -2,9 +2,9 @@ package com.kumbaya.android.client;
 
 import java.util.List;
 
-import android.content.Context;
+import org.limewire.inject.Providers;
+
 import android.database.Cursor;
-import android.telephony.TelephonyManager;
 import android.test.AndroidTestCase;
 import android.test.suitebuilder.annotation.SmallTest;
 
@@ -25,7 +25,8 @@ public class ContactsTest extends AndroidTestCase {
 	
 	@SmallTest
 	public void testCallsLog() {
-		CallsLogLoader loader = new CallsLogLoader(getContext());
+		CallsLogLoader loader = new CallsLogLoader(
+				Providers.of(getContext()));
 		Cursor cursor = loader.load(getContext()).loadInBackground();
 		List<E164> phones = loader.read(cursor);
 		System.out.println(phones);
