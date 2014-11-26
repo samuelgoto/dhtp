@@ -34,22 +34,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.provider.CallLog;
-import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -90,27 +80,13 @@ public class MainActivity extends FragmentActivity {
 	};
 
 	private Optional<BackgroundService> service = Optional.absent();
-	PagerAdapter mDemoCollectionPagerAdapter;
-	ViewPager mViewPager;
+	private PagerAdapter mDemoCollectionPagerAdapter;
+	private ViewPager mViewPager;
 	private CreateFragment createFragment;
 	private SearchFragment searchFragment;
 
-	private final BroadcastReceiver mHandleMessageReceiver =
-			new BroadcastReceiver() {
-		@Override
-		public void onReceive(Context c, Intent intent) {
-			String message = intent.getExtras().getString("message");
-
-			final TextView text = (TextView) context.findViewById(R.id.progress_status);
-			text.setText(message);
-			new Handler().postDelayed(new Runnable() {
-				@Override
-				public void run() {
-					text.setText("");
-				}
-			}, 4000);
-		}
-	};
+	private final BroadcastReceiver updateReceiver =
+			BroadcastReceivers.updateReceiver(R.id.progress_status);
 
 	public static class Phone {
 		private final String owner;
@@ -170,17 +146,11 @@ public class MainActivity extends FragmentActivity {
 			}
 		});
 
-		registerReceiver(mHandleMessageReceiver,
+		registerReceiver(updateReceiver,
 				new IntentFilter(BackgroundService.UPDATE_ACTION));
 
-		new AsyncTask<Void, Void, Void>() {
-			@Override
-			protected Void doInBackground(Void... params) {
-				Intent i = new Intent(context, BackgroundService.class);
-				bindService(i, connection, Context.BIND_AUTO_CREATE);
-				return null;
-			}
-		}.execute();
+		Intent i = new Intent(context, BackgroundService.class);
+		bindService(i, connection, Context.BIND_AUTO_CREATE);
 	}
 
 	@Override
@@ -226,7 +196,6 @@ public class MainActivity extends FragmentActivity {
 
 	public void search(String query) {
 		mViewPager.setCurrentItem(0);
-
 		searchFragment.setQuery(query);
 
 		EditText queryEditText = (EditText) findViewById(R.id.query); 
@@ -285,33 +254,9 @@ public class MainActivity extends FragmentActivity {
 	@Override
 	protected void onDestroy() {
 		Log.i(TAG, "Destroying the activity.");
-		unregisterReceiver(mHandleMessageReceiver);
+		unregisterReceiver(updateReceiver);
 		unbindService(connection);
 		super.onDestroy();
-	}
-
-	static class PagerAdapter extends FragmentStatePagerAdapter {
-		private final Fragment fragments[];
-
-		public PagerAdapter(FragmentManager fm, Fragment fragments[]) {
-			super(fm);
-			this.fragments = fragments;
-		}
-
-		@Override
-		public Fragment getItem(int i) {
-			return fragments[i];
-		}
-
-		@Override
-		public int getCount() {
-			return fragments.length;
-		}
-
-		@Override
-		public CharSequence getPageTitle(int position) {
-			return "OBJECT " + (position + 1);
-		}
 	}
 
 	public static class SearchFragment extends Fragment {

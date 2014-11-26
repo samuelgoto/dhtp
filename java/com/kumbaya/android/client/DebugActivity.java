@@ -9,8 +9,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.inject.Provider;
 import com.kumbaya.android.R;
-import com.kumbaya.android.client.MainActivity.PagerAdapter;
 import com.kumbaya.android.client.MainActivity.Phone;
+import com.kumbaya.android.client.PagerAdapter;
 import com.kumbaya.android.client.sdk.BackgroundService;
 import com.kumbaya.android.client.sdk.BackgroundService.LocalBinder;
 import com.kumbaya.android.client.sdk.E164;
@@ -96,7 +96,6 @@ public class DebugActivity extends FragmentActivity {
 		}
 	};
 	
-
 	@Override
 	protected void onResume() {
 	    super.onResume();

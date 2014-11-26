@@ -15,6 +15,7 @@ import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.io.MessageDispatcher.MessageDispatcherEvent;
 import org.limewire.mojito.io.MessageDispatcher.MessageDispatcherListener;
 import org.limewire.mojito.messages.DHTMessage;
+import org.limewire.mojito.settings.LookupSettings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -98,6 +99,8 @@ public class BackgroundService extends Service {
 		super.onStartCommand(intent, flags, startId);
         Log.i(TAG, "Starting the service.");
 
+        LookupSettings.EXHAUSTIVE_VALUE_LOOKUP.setValue(false);
+        
         dispatcher.addMessageDispatcherListener(new MessageDispatcherListener() {
 			@Override
 			public void handleMessageDispatcherEvent(MessageDispatcherEvent event) {
