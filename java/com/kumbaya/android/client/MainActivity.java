@@ -15,12 +15,10 @@
  */
 package com.kumbaya.android.client;
 
-import java.sql.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
