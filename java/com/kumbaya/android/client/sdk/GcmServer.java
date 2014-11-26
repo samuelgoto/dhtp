@@ -49,7 +49,8 @@ class GcmServer implements Server {
 			try {
 				// Blocks until we are not registered on the server.
 		        Log.i(TAG, "Device is not registered on the server yet. Sleeping.");
-				Thread.sleep(1000);
+		        // TODO(goto): make this sleep on a Future instead.
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				throw new IOException("Failed to bind to GCM", e);
 			}

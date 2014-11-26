@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.os.Handler;
 import android.widget.TextView;
 
-import com.kumbaya.android.R;
-
 class BroadcastReceivers {
 	static BroadcastReceiver updateReceiver(final int viewId) {
 		return new BroadcastReceiver() {

@@ -1,16 +1,11 @@
 package com.kumbaya.android.client.sdk;
 
-import java.io.File;
-
 import org.limewire.mojito.MojitoFactory;
 import org.limewire.mojito.io.MessageDispatcher;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
 
 import android.content.Context;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
 import com.kumbaya.dht.AsyncMessageDispatcher;
 import com.kumbaya.dht.Server;
 

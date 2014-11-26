@@ -34,7 +34,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 public class BackgroundService extends Service {
@@ -138,6 +137,8 @@ public class BackgroundService extends Service {
 		new AsyncTask<Void, Void, Void>() {
 			@Override
 			protected Void doInBackground(Void... params) {
+				android.os.Process.setThreadPriority(
+						android.os.Process.THREAD_PRIORITY_FOREGROUND);
 				try {
 					K result = runnable.run();
 					future.set(result);
