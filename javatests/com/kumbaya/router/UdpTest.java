@@ -23,10 +23,10 @@ public class UdpTest extends TestCase {
         byte[] receiveData = new byte[1024];
         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
         serverSocket.receive(receivePacket);
-        Message message = Message.deserialize(receivePacket);
+        Packet message = Packet.of(receivePacket);
         String capitalizedSentence = new String(message.getData()).toUpperCase();
-        Message response = new Message(capitalizedSentence.getBytes(), message.getIPAddress(), message.getPort());
-        serverSocket.send(response.serialize());
+        Packet response = new Packet(capitalizedSentence.getBytes(), message.getIPAddress(), message.getPort());
+        serverSocket.send(response.datagram());
         serverSocket.close();
       } catch (SocketException e) {
       } catch (IOException e) {
@@ -34,27 +34,27 @@ public class UdpTest extends TestCase {
     }
   }
   
-  private static class Message {
+  private static class Packet {
     private final byte[] data;
     private final InetAddress IPAddress;
     private final int port;
     
-    Message(byte[] data, InetAddress IPAddress, int port) {
+    Packet(byte[] data, InetAddress IPAddress, int port) {
       this.data = data;
       this.IPAddress = IPAddress;
       this.port = port;
     }
     
-    DatagramPacket serialize() {
+    DatagramPacket datagram() {
       DatagramPacket sendPacket = new DatagramPacket(data, data.length, IPAddress, port);
       return sendPacket;
     }
     
-    static Message deserialize(DatagramPacket receivePacket) {
+    static Packet of(DatagramPacket receivePacket) {
       String modifiedSentence = new String(receivePacket.getData(), 0, receivePacket.getLength());
       InetAddress IPAddress = receivePacket.getAddress();
       int port = receivePacket.getPort();
-      return new Message(modifiedSentence.getBytes(), IPAddress, port);
+      return new Packet(modifiedSentence.getBytes(), IPAddress, port);
     }
     
     byte[] getData() {
@@ -79,14 +79,13 @@ public class UdpTest extends TestCase {
       this.port = port;
     }
     
-    
     public byte[] send(byte[] inFromUser) throws IOException {
       DatagramSocket clientSocket = new DatagramSocket();
-      clientSocket.send(new Message(inFromUser, IPAddress, port).serialize());
+      clientSocket.send(new Packet(inFromUser, IPAddress, port).datagram());
       byte[] receiveData = new byte[1024];
       DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
       clientSocket.receive(receivePacket);
-      Message received = Message.deserialize(receivePacket);
+      Packet received = Packet.of(receivePacket);
       clientSocket.close();
       return received.getData();
     }
