@@ -31,7 +31,7 @@ public class UdpTest extends TestCase {
           InterestPacket interest = (InterestPacket) message;
           String capitalizedSentence = new String(interest.getName()).toUpperCase();
           DataPacket response = new DataPacket(
-              capitalizedSentence,
+              interest.getName(),
               capitalizedSentence,
               message.getIPAddress(), 
               message.getPort());
@@ -47,7 +47,7 @@ public class UdpTest extends TestCase {
     }
   }
   
-  private abstract static class Packet {
+  private static class Packet {
     enum Type {
       INTEREST, DATA
     }
@@ -151,7 +151,15 @@ public class UdpTest extends TestCase {
       
       String content = "fake";
       
-      return new DataPacket(name, content, IPAddress, port);      
+      return new DataPacket(name, content, IPAddress, port);
+    }
+    
+    String getName() {
+      return name;
+    }
+    
+    String getContent() {
+      return content;
     }
   }
 
@@ -164,7 +172,7 @@ public class UdpTest extends TestCase {
       this.port = port;
     }
     
-    public byte[] send(String name) throws IOException {
+    public DataPacket send(String name) throws IOException {
       DatagramSocket clientSocket = new DatagramSocket();
       clientSocket.send(new InterestPacket(name, IPAddress, port).datagram());
       byte[] receiveData = new byte[1024];
@@ -172,7 +180,7 @@ public class UdpTest extends TestCase {
       clientSocket.receive(receivePacket);
       Packet received = Packet.of(receivePacket);
       clientSocket.close();
-      return received.getData();
+      return (DataPacket) received;
     }
   }
 
@@ -182,7 +190,10 @@ public class UdpTest extends TestCase {
     server.start();
 
     UdpClient client = new UdpClient(InetAddress.getByName("localhost"), 9876);
-    byte[] result = client.send("hello world");
-    assertEquals("HELLO WORLD", new String(result));
+    DataPacket result = client.send("hello world");
+    assertEquals("hello world", result.getName());
+    // TODO(goto): use type length value encoding to insert two strings into a byte array.
+    assertEquals("fake", result.getContent());
   }  
 }
+
