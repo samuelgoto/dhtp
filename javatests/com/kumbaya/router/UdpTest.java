@@ -1,8 +1,6 @@
 package com.kumbaya.router;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -18,41 +16,68 @@ public class UdpTest extends TestCase {
       try {
         DatagramSocket serverSocket = new DatagramSocket(9876);
         byte[] receiveData = new byte[1024];
-        byte[] sendData = new byte[1024];
         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
         serverSocket.receive(receivePacket);
-        String sentence = new String(receivePacket.getData(), 0, receivePacket.getLength());
-        System.out.println("RECEIVED: " + sentence);
-        InetAddress IPAddress = receivePacket.getAddress();
-        int port = receivePacket.getPort();
-        String capitalizedSentence = sentence.toUpperCase();
-        sendData = capitalizedSentence.getBytes();
-        DatagramPacket sendPacket =
-            new DatagramPacket(sendData, sendData.length, IPAddress, port);
-        serverSocket.send(sendPacket);
+        Message message = Message.deserialize(receivePacket);
+        String capitalizedSentence = message.getMessage().toUpperCase();
+        Message response = new Message(capitalizedSentence, message.getIPAddress(), message.getPort());
+        serverSocket.send(response.serialize());
         serverSocket.close();
       } catch (SocketException e) {
       } catch (IOException e) {
       }
     }
   }
+  
+  private static class Message {
+    private final String message;
+    private final InetAddress IPAddress;
+    private final int port;
+    
+    Message(String message, InetAddress IPAddress, int port) {
+      this.message = message;
+      this.IPAddress = IPAddress;
+      this.port = port;
+    }
+    
+    DatagramPacket serialize() {
+      byte[] sendData = new byte[1024];
+      String sentence = message;
+      sendData = sentence.getBytes();
+      DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+      return sendPacket;
+    }
+    
+    static Message deserialize(DatagramPacket receivePacket) {
+      String modifiedSentence = new String(receivePacket.getData(), 0, receivePacket.getLength());
+      InetAddress IPAddress = receivePacket.getAddress();
+      int port = receivePacket.getPort();
+      return new Message(modifiedSentence, IPAddress, port);
+    }
+    
+    String getMessage() {
+      return message;
+    }
+    
+    InetAddress getIPAddress() {
+      return IPAddress;
+    }
+    
+    int getPort() {
+      return port;
+    }
+  }
 
   private class UdpClient {    
-    public String send(BufferedReader inFromUser) throws IOException {
+    public String send(String inFromUser) throws IOException {
       DatagramSocket clientSocket = new DatagramSocket();
-      InetAddress IPAddress = InetAddress.getByName("localhost");
-      byte[] sendData = new byte[1024];
+      clientSocket.send(new Message(inFromUser, InetAddress.getByName("localhost"), 9876).serialize());
       byte[] receiveData = new byte[1024];
-      String sentence = inFromUser.readLine();
-      sendData = sentence.getBytes();
-      DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 9876);
-      clientSocket.send(sendPacket);
       DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
       clientSocket.receive(receivePacket);
-      String modifiedSentence = new String(receivePacket.getData(), 0, receivePacket.getLength());
-      System.out.println("FROM SERVER:" + modifiedSentence);
+      Message received = Message.deserialize(receivePacket);
       clientSocket.close();
-      return modifiedSentence;
+      return received.getMessage();
     }
   }
 
@@ -62,7 +87,7 @@ public class UdpTest extends TestCase {
     server.start();
 
     UdpClient client = new UdpClient();
-    String result = client.send(new BufferedReader(new StringReader("hello world")));
+    String result = client.send("hello world");
     assertEquals("HELLO WORLD", result);
   }  
 }
