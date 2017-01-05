@@ -1,7 +1,14 @@
 package com.kumbaya.router;
 
+import com.google.common.collect.ImmutableList;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TypeLengthValueTest extends TestCase {
@@ -31,6 +38,53 @@ public class TypeLengthValueTest extends TestCase {
       return buffer.array();
     }
   }
+  
+  private long decode(byte[] value) {
+    return decode(new ByteArrayInputStream(value));
+  }
+  
+  private long decode(ByteArrayInputStream value) {
+    int head = value.read();
+    if (head < 253) {
+      return head;
+    } else if (head == 253) {
+      return 
+          (((long) value.read()) << 8) | 
+          value.read();
+    } else if (head == 254) {
+      return
+          (((long) value.read()) << 24) | 
+          ((long) value.read()) << 16 |
+          ((long) value.read()) << 8  |
+          value.read();
+    } else {
+      return 
+          ((long) value.read()) << 56 |
+          ((long) value.read()) << 48 |
+          ((long) value.read()) << 40 |
+          ((long) value.read()) << 32 |
+          ((long) value.read()) << 24 |
+          ((long) value.read()) << 16 |
+          ((long) value.read()) << 8  |
+          value.read();
+    }
+  }
+  
+  
+  private static class TLV {
+    private final long type;
+    private final byte[] content;
+    
+    TLV(long type, byte[] content) {
+      this.type = type;
+      this.content = content;
+    }
+    
+    static TLV of(long type, byte[] content) {
+      return new TLV(type, content);
+    }
+  }
+  
   
   @Test
   public void testEncoding() {
@@ -155,4 +209,107 @@ public class TypeLengthValueTest extends TestCase {
     assertEquals((byte) 0x00, encode(0x100000000L)[7]);
     assertEquals((byte) 0x00, encode(0x100000000L)[8]);
   }
+  
+  public void testDecoding() {
+    // random values
+    assertEquals(0xAB, decode(encode(0xAB)));
+    assertEquals(0xABCD, decode(encode(0xABCD)));
+    assertEquals(0xABCDEF, decode(encode(0xABCDEF)));
+    assertEquals(0xABCDEF01, decode(encode(0xABCDEF01)));
+    assertEquals(0xABCDEF01CAFEBABEL, decode(encode(0xABCDEF01CAFEBABEL)));   
+    // min value
+    assertEquals(0, decode(encode(0)));
+    assertEquals(1, decode(encode(1)));
+    // max value
+    assertEquals(0xFFFFFFFFFFFFFFFFL, decode(encode(0xFFFFFFFFFFFFFFFFL)));
+    // Last number that fit into 2 bytes
+    assertEquals(0xFFFFL, decode(encode(0xFFFFL)));    
+    // First number that requires more than 2 bytes
+    assertEquals(0x10000L, decode(encode(0x10000L)));
+    // Last number that fit into 4 bytes
+    assertEquals(0xFFFFFFFFL, decode(encode(0xFFFFFFFFL)));
+    // First number that requires more than 4 bytes
+    assertEquals(0x100000000L, decode(encode(0x100000000L)));
+    // reserved values
+    assertEquals(253, decode(encode(253)));
+    assertEquals(254, decode(encode(254)));
+    assertEquals(255, decode(encode(255)));
+  }
+  
+  private byte[] marshall(List<TLV> data) throws IOException {
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    
+    for (TLV entry : data) {
+      byte[] typeTLV  = encode(entry.type); 
+      byte[] lengthTLV  = encode(entry.content.length);
+      
+      stream.write(typeTLV);
+      stream.write(lengthTLV);
+      stream.write(entry.content);
+    }
+    
+    
+    return stream.toByteArray();
+  }
+  
+  private List<TLV> unmarshall(byte[] stream) {
+    return unmarshall(new ByteArrayInputStream(stream));
+  }
+  
+  private List<TLV> unmarshall(ByteArrayInputStream stream) {
+    List<TLV> result = new ArrayList<TLV>();
+    while (stream.available() != 0) {
+      long type = decode(stream);
+      int length = (int) decode(stream);
+      ByteBuffer content = ByteBuffer.allocate(length);
+      stream.read(content.array(), 0, length);
+      result.add(TLV.of(type, content.array()));
+    }
+    
+    return result;
+  }
+  
+  
+  public void testMarshallingAndUnmarshalling() throws IOException {
+    TLV data = TLV.of(0xAB, "hello world".getBytes());    
+    List<TLV> result = unmarshall(marshall(ImmutableList.of(data)));
+    assertEquals(1, result.size());
+    assertEquals(data.type, result.get(0).type);
+    Assert.assertArrayEquals(data.content, result.get(0).content);   
+  }
+
+  public void testMarshallingAndUnmarshalling_multipleFields() throws IOException {
+    List<TLV> result = unmarshall(marshall(ImmutableList.of(
+        TLV.of(0xAB, "hello".getBytes()),
+        TLV.of(0xCD, "world".getBytes()))));
+    assertEquals(2, result.size());
+    assertEquals(0xAB, result.get(0).type);
+    Assert.assertArrayEquals("hello".getBytes(), result.get(0).content); 
+    assertEquals(0xCD, result.get(1).type);
+    Assert.assertArrayEquals("world".getBytes(), result.get(1).content); 
+  }
+
+  public void testMarshallingAndUnmarshalling_longText() throws IOException {
+    String text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse rhoncus, "
+        + "libero at congue varius, odio arcu rutrum velit, et laoreet arcu ligula sit amet dui. "
+        + "Suspendisse ornare nunc quis purus molestie, a finibus purus tempor. Donec id diam sed"
+        + " mi fermentum tempus eget et nisl. Vivamus vestibulum tristique nisi vitae dignissim. "
+        + "Nulla vehicula nisi nec est convallis aliquam. Sed commodo, nunc placerat posuere posu"
+        + "ere, enim nunc venenatis orci, id pellentesque leo nunc eu felis. Donec eu mi dapibus,"
+        + " rhoncus nisl varius, auctor felis. Aenean convallis, ligula eget bibendum tristique, "
+        + "erat justo feugiat nisi, eu porta nibh quam non neque. Nulla tempus placerat neque, et"
+        + " vestibulum eros molestie quis. Integer porttitor vestibulum facilisis. Vestibulum int"
+        + "erdum interdum tincidunt. Ut mauris ligula, pretium nec dui ac, convallis porta ipsum."
+        + " Proin blandit enim eget risus bibendum, vitae imperdiet magna iaculis. Nullam malesua"
+        + "da enim eget risus elementum, a malesuada magna commodo. Sed tempus porttitor leo. Pro"
+        + "in sollicitudin dictum nibh, sit amet dignissim diam commodo id.";
+    
+    TLV data = TLV.of(0xAB, text.getBytes());    
+    List<TLV> result = unmarshall(marshall(ImmutableList.of(data)));
+    assertEquals(1, result.size());
+    assertEquals(data.type, result.get(0).type);
+    Assert.assertArrayEquals(data.content, result.get(0).content);
+  }
 }
+
+
