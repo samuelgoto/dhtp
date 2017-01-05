@@ -194,6 +194,6 @@ public class UdpTest extends TestCase {
     assertEquals("hello world", result.getName());
     // TODO(goto): use type length value encoding to insert two strings into a byte array.
     assertEquals("fake", result.getContent());
-  }  
+  }
 }
 
