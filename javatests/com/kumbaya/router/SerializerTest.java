@@ -16,22 +16,6 @@ import java.util.List;
 import junit.framework.TestCase;
 
 public class SerializerTest extends TestCase {
-  static class TypeWithPrimitives {
-    @Field(1)
-    String hello;
-    @Field(2)
-    String world;
-    @Field(3)
-    int foo;
-    @Field(4)
-    long bar;
-  }
-  
-  static class TypeWithOptional {
-    @Field(1)
-    Optional<String> foo;
-  }
-  
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.FIELD)
   public @interface Field {
@@ -60,23 +44,18 @@ public class SerializerTest extends TestCase {
       
       final Class<?> type = optional ? 
           (Class<?>) ((ParameterizedType) (property.getGenericType())).getActualTypeArguments()[0] :
-            property.getType();
-          
+            property.getType();          
 
-      Object raw = property.get(object);
+      Object value = (optional ? ((Optional<?>) property.get(object)).get() : property.get(object));
       if (type.equals(String.class)) {
-        String value = (String) (optional ? ((Optional<?>) raw).get() : raw);
         Preconditions.checkNotNull(value, "Can't serialize null fields: " + property.getName());
-        values.add(TLV.of(field.value(), value.getBytes()));        
+        values.add(TLV.of(field.value(), ((String) value).getBytes()));        
       } else if (type.equals(int.class)) {
-        Integer value = (Integer) (optional ? ((Optional<?>) raw).get() : raw);
-        values.add(TLV.of(field.value(), ByteBuffer.allocate(4).putInt(value).array()));
+        values.add(TLV.of(field.value(), ByteBuffer.allocate(4).putInt((Integer) value).array()));
       } else if (type.equals(long.class)) {
-        Long value = (Long) (optional ? ((Optional<?>) raw).get() : raw);
-        values.add(TLV.of(field.value(), ByteBuffer.allocate(8).putLong(value).array()));
+        values.add(TLV.of(field.value(), ByteBuffer.allocate(8).putLong((Long) value).array()));
       } else {
-        throw new UnsupportedOperationException(
-            "Unsupported field type: " + property.getType());
+        values.add(TLV.of(field.value(), serialize(value)));
       }
     }
     
@@ -116,8 +95,8 @@ public class SerializerTest extends TestCase {
             long content = ByteBuffer.wrap(value.content).getLong();
             property.set(result, !optional ? content : Optional.of(content));
           } else {
-            throw new UnsupportedOperationException(
-                "Unsupported field type: " + property.getType());
+            Object content = unserialize(type, new ByteArrayInputStream(value.content));
+            property.set(result, !optional ? content : Optional.of(content));
           }
           
           found = true;
@@ -130,15 +109,26 @@ public class SerializerTest extends TestCase {
         if (optional) {
           property.set(result, Optional.absent());
         } else {
-          throw new UnsupportedOperationException("Non-optional field without a value");
+          throw new UnsupportedOperationException("Non-optional field without a value: " + property);
         }
       }
     }
     
     return result;
+  }  
+  
+  static class TypeWithPrimitives {
+    @Field(1)
+    String hello;
+    @Field(2)
+    String world;
+    @Field(3)
+    int foo;
+    @Field(4)
+    long bar;
   }
   
-  public void testReflection() throws Exception {
+  public void testPrimitives() throws Exception {
     TypeWithPrimitives foo = new TypeWithPrimitives();
     foo.hello = "hello";
     foo.world = "world";
@@ -148,6 +138,11 @@ public class SerializerTest extends TestCase {
     assertEquals(foo.world, bar.world);
     assertEquals(foo.foo, bar.foo);
     assertEquals(foo.bar, bar.bar);
+  }
+  
+  static class TypeWithOptional {
+    @Field(1)
+    Optional<String> foo;
   }
   
   public void testOptionalFields() throws Exception {
@@ -165,6 +160,27 @@ public class SerializerTest extends TestCase {
     byte[] serialized = serialize(foo);
     TypeWithOptional bar = unserialize(TypeWithOptional.class, new ByteArrayInputStream(serialized));
     assertFalse(bar.foo.isPresent());
-  }  
+  }
+  
+  static class TypeWithNesting {
+    @Field(1)
+    TypeBeingNested foo;
+  }
+  
+  static class TypeBeingNested {
+    @Field(2)
+    String hello;
+  }
+  
+  public void testNestedTypes() throws Exception {
+    TypeWithNesting foo = new TypeWithNesting();
+    TypeBeingNested bar = new TypeBeingNested();
+    foo.foo = bar;
+    bar.hello = "world";
+    byte[] serialized = serialize(foo);
+    TypeWithNesting result = unserialize(TypeWithNesting.class, new ByteArrayInputStream(
+        serialized));
+    assertEquals("world", result.foo.hello);
+  }
 }
 
