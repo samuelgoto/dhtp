@@ -2,7 +2,7 @@ package com.kumbaya.router;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.kumbaya.router.Marshall.TLV;
+import com.kumbaya.router.Marshaller.TLV;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
@@ -35,11 +35,14 @@ public class SerializerTest extends TestCase {
       
       // TODO(goto): we should probably assert somewhere that type ids are unique in the
       // object.
-
       boolean optional = property.getType().equals(Optional.class);
       // If this is an optional field and it is not present, just fully skip it.
-      if (optional && !((Optional<?>) property.get(object)).isPresent()) {
-        continue;
+      if (optional) {
+        // Optional properties are allowed to have nulls: it will be assumed to be absent.
+        if (property.get(object) == null ||
+            !((Optional<?>) property.get(object)).isPresent()) {
+          continue;
+        }
       }
       
       final Class<?> type = optional ? 
@@ -59,12 +62,18 @@ public class SerializerTest extends TestCase {
       }
     }
     
-    return Marshall.marshall(values);
+    return Marshaller.marshall(values);
   }
+  
+  private <T> T unserialize(Class<T> clazz, byte[] content) 
+      throws IllegalArgumentException, IllegalAccessException, InstantiationException {
+    return unserialize(clazz, new ByteArrayInputStream(content));
+  }
+  
   
   private <T> T unserialize(Class<T> clazz, ByteArrayInputStream stream) 
       throws IllegalArgumentException, IllegalAccessException, InstantiationException {
-    List<TLV> values = Marshall.unmarshall(stream);
+    List<TLV> values = Marshaller.unmarshall(stream);
     
     T result = clazz.newInstance();
     
@@ -133,13 +142,13 @@ public class SerializerTest extends TestCase {
     foo.hello = "hello";
     foo.world = "world";
     byte[] serialized = serialize(foo);
-    TypeWithPrimitives bar = unserialize(TypeWithPrimitives.class, new ByteArrayInputStream(serialized));
+    TypeWithPrimitives bar = unserialize(TypeWithPrimitives.class, serialized);
     assertEquals(foo.hello, bar.hello);
     assertEquals(foo.world, bar.world);
     assertEquals(foo.foo, bar.foo);
     assertEquals(foo.bar, bar.bar);
   }
-  
+
   static class TypeWithOptional {
     @Field(1)
     Optional<String> foo;
@@ -149,7 +158,7 @@ public class SerializerTest extends TestCase {
     TypeWithOptional foo = new TypeWithOptional();
     foo.foo = Optional.of("hello world");
     byte[] serialized = serialize(foo);
-    TypeWithOptional bar = unserialize(TypeWithOptional.class, new ByteArrayInputStream(serialized));
+    TypeWithOptional bar = unserialize(TypeWithOptional.class, serialized);
     assertTrue(bar.foo.isPresent());
     assertEquals("hello world", bar.foo.get());
   }
@@ -158,8 +167,14 @@ public class SerializerTest extends TestCase {
     TypeWithOptional foo = new TypeWithOptional();
     foo.foo = Optional.absent();
     byte[] serialized = serialize(foo);
-    TypeWithOptional bar = unserialize(TypeWithOptional.class, new ByteArrayInputStream(serialized));
+    TypeWithOptional bar = unserialize(TypeWithOptional.class, serialized);
     assertFalse(bar.foo.isPresent());
+  }
+  
+  public void testOptionalFields_emptyString() throws Exception {
+    TypeWithOptional data = new TypeWithOptional();
+    TypeWithOptional result = unserialize(TypeWithOptional.class, serialize(data));
+    assertFalse(result.foo.isPresent());
   }
   
   static class TypeWithNesting {
@@ -178,9 +193,78 @@ public class SerializerTest extends TestCase {
     foo.foo = bar;
     bar.hello = "world";
     byte[] serialized = serialize(foo);
-    TypeWithNesting result = unserialize(TypeWithNesting.class, new ByteArrayInputStream(
-        serialized));
+    TypeWithNesting result = unserialize(TypeWithNesting.class, serialized);
     assertEquals("world", result.foo.hello);
   }
+  
+  static class TwoOptionalFields {
+    @Field(1)
+    Optional<String> foo;
+    @Field(2)
+    Optional<String> bar;
+  }
+  
+  public void testTwoOptionalFields_bothAbsent() throws Exception {
+    TwoOptionalFields data = new TwoOptionalFields();
+    TwoOptionalFields result = unserialize(TwoOptionalFields.class, serialize(data));
+    assertFalse(result.foo.isPresent());
+    assertFalse(result.bar.isPresent());
+  }
+
+  public void testTwoOptionalFields_firstPresent() throws Exception {
+    TwoOptionalFields data = new TwoOptionalFields();
+    data.foo = Optional.of("hello world");
+    TwoOptionalFields result = unserialize(TwoOptionalFields.class, serialize(data));
+    assertTrue(result.foo.isPresent());
+    assertEquals(result.foo.get(), "hello world");
+    assertFalse(result.bar.isPresent());
+  }
+
+  public void testTwoOptionalFields_secondPresent() throws Exception {
+    TwoOptionalFields data = new TwoOptionalFields();
+    data.bar= Optional.of("hello world");
+    TwoOptionalFields result = unserialize(TwoOptionalFields.class, serialize(data));
+    assertFalse(result.foo.isPresent());
+    assertTrue(result.bar.isPresent());
+    assertEquals(result.bar.get(), "hello world");
+  }
+
+  public void testTwoOptionalFields_bothPresent() throws Exception {
+    TwoOptionalFields data = new TwoOptionalFields();
+    data.foo = Optional.of("hello");
+    data.bar= Optional.of("world");
+    TwoOptionalFields result = unserialize(TwoOptionalFields.class, serialize(data));
+    assertTrue(result.foo.isPresent());
+    assertEquals(result.foo.get(), "hello");
+    assertTrue(result.bar.isPresent());
+    assertEquals(result.bar.get(), "world");
+  }
+  
+  static class TwoOptionalNestedFields {
+    @Field(1)
+    Optional<TypeWithNesting> foo;
+    @Field(2)
+    Optional<TypeWithNesting> bar;
+  }
+  
+  public void testTwoOptionalNestedFields_bothAbsent() throws Exception {
+    TwoOptionalNestedFields data = new TwoOptionalNestedFields();
+    TwoOptionalNestedFields result = unserialize(TwoOptionalNestedFields.class, serialize(data));
+    assertFalse(result.foo.isPresent());
+    assertFalse(result.bar.isPresent());
+  }
+
+  public void testTwoOptionalNestedFields_firstPresent() throws Exception {
+    TwoOptionalNestedFields data = new TwoOptionalNestedFields();
+    TypeWithNesting nested = new TypeWithNesting();
+    TypeBeingNested leaf = new TypeBeingNested();
+    data.foo = Optional.of(nested);
+    nested.foo = leaf;
+    leaf.hello = "hello world";
+    TwoOptionalNestedFields result = unserialize(TwoOptionalNestedFields.class, serialize(data));
+    assertTrue(result.foo.isPresent());
+    assertEquals("hello world", result.foo.get().foo.hello);
+  }  
 }
+
 

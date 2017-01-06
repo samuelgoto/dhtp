@@ -1,16 +1,16 @@
 package com.kumbaya.router;
 
 import com.google.common.collect.ImmutableList;
-import com.kumbaya.router.Marshall.TLV;
+import com.kumbaya.router.Marshaller.TLV;
 import java.io.IOException;
 import java.util.List;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
-import static com.kumbaya.router.Marshall.marshall;
-import static com.kumbaya.router.Marshall.unmarshall;
+import static com.kumbaya.router.Marshaller.marshall;
+import static com.kumbaya.router.Marshaller.unmarshall;
 
-public class MarshallTest extends TestCase {
+public class MarshallerTest extends TestCase {
   
   public void testMarshallingAndUnmarshalling() throws IOException {
     TLV data = TLV.of(0xAB, "hello world".getBytes());    

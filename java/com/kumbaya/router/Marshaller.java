@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-class Marshall {
+class Marshaller {
 
   static byte[] marshall(List<TLV> data) throws IOException {
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
