@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.kumbaya.router.Marshaller.TLV;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -27,7 +28,7 @@ class Serializer {
     int value();
   }
 
-  static <T> byte[] serialize(T object) throws IllegalArgumentException, IllegalAccessException, IOException {
+  static <T> void serialize(ByteArrayOutputStream stream, T object) throws IllegalArgumentException, IllegalAccessException, IOException {
     // Type annotation = object.getClass().getAnnotation(Type.class);
     // Preconditions.checkNotNull(annotation, "Object being serialized isn't annotated with @Type: " + object.getClass());
     // int container = annotation.value();
@@ -67,11 +68,14 @@ class Serializer {
       } else if (type.equals(long.class)) {
         values.add(TLV.of(field.value(), ByteBuffer.allocate(8).putLong((Long) value).array()));
       } else {
-        values.add(TLV.of(field.value(), serialize(value)));
+        // NOTE(goto): perhaps there is a way to avoid the extra creation of the byte buffer here.
+        ByteArrayOutputStream nested = new ByteArrayOutputStream();
+        serialize(nested, value);
+        values.add(TLV.of(field.value(), nested.toByteArray()));
       }
     }
     
-    return Marshaller.marshall(values);
+    Marshaller.marshall(stream, values);
   }
   
   static <T> T unserialize(Class<T> clazz, byte[] content) 

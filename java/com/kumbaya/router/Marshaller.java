@@ -12,8 +12,8 @@ import java.util.List;
 
 class Marshaller {
 
-  static byte[] marshall(List<TLV> data) throws IOException {
-    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  static void marshall(ByteArrayOutputStream stream, List<TLV> data) throws IOException {
+    // ByteArrayOutputStream stream = new ByteArrayOutputStream();
     
     for (TLV entry : data) {
       byte[] typeTLV  = encode(entry.type); 
@@ -24,7 +24,7 @@ class Marshaller {
       stream.write(entry.content);
     }
     
-    return stream.toByteArray();
+    // return stream.toByteArray();
   }
   
   static List<TLV> unmarshall(byte[] stream) {

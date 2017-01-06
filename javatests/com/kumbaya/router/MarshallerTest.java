@@ -2,6 +2,7 @@ package com.kumbaya.router;
 
 import com.google.common.collect.ImmutableList;
 import com.kumbaya.router.Marshaller.TLV;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import junit.framework.TestCase;
@@ -13,17 +14,21 @@ import static com.kumbaya.router.Marshaller.unmarshall;
 public class MarshallerTest extends TestCase {
   
   public void testMarshallingAndUnmarshalling() throws IOException {
-    TLV data = TLV.of(0xAB, "hello world".getBytes());    
-    List<TLV> result = unmarshall(marshall(ImmutableList.of(data)));
+    TLV data = TLV.of(0xAB, "hello world".getBytes());
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    marshall(stream, ImmutableList.of(data));
+    List<TLV> result = unmarshall(stream.toByteArray());
     assertEquals(1, result.size());
     assertEquals(data.type, result.get(0).type);
     Assert.assertArrayEquals(data.content, result.get(0).content);   
   }
 
   public void testMarshallingAndUnmarshalling_multipleFields() throws IOException {
-    List<TLV> result = unmarshall(marshall(ImmutableList.of(
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    marshall(stream, ImmutableList.of(
         TLV.of(0xAB, "hello".getBytes()),
-        TLV.of(0xCD, "world".getBytes()))));
+        TLV.of(0xCD, "world".getBytes())));
+    List<TLV> result = unmarshall(stream.toByteArray());
     assertEquals(2, result.size());
     assertEquals(0xAB, result.get(0).type);
     Assert.assertArrayEquals("hello".getBytes(), result.get(0).content); 
@@ -46,8 +51,10 @@ public class MarshallerTest extends TestCase {
         + "da enim eget risus elementum, a malesuada magna commodo. Sed tempus porttitor leo. Pro"
         + "in sollicitudin dictum nibh, sit amet dignissim diam commodo id.";
     
-    TLV data = TLV.of(0xAB, text.getBytes());    
-    List<TLV> result = unmarshall(marshall(ImmutableList.of(data)));
+    TLV data = TLV.of(0xAB, text.getBytes());
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    marshall(stream, ImmutableList.of(data));
+    List<TLV> result = unmarshall(stream.toByteArray());
     assertEquals(1, result.size());
     assertEquals(data.type, result.get(0).type);
     Assert.assertArrayEquals(data.content, result.get(0).content);
