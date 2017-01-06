@@ -24,7 +24,6 @@ class Marshaller {
       stream.write(entry.content);
     }
     
-    
     return stream.toByteArray();
   }
   

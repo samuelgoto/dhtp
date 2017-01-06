@@ -2,6 +2,7 @@ package com.kumbaya.router;
 
 import com.google.common.base.Optional;
 import com.kumbaya.router.Serializer.Field;
+import com.kumbaya.router.Serializer.Type;
 import junit.framework.TestCase;
 
 public class SerializerTest extends TestCase {
@@ -145,7 +146,19 @@ public class SerializerTest extends TestCase {
         Serializer.serialize(data));
     assertTrue(result.foo.isPresent());
     assertEquals("hello world", result.foo.get().foo.hello);
-  }  
+  }
+
+  @Type(1)
+  static class SimplestType {
+    @Field(2)
+    String foo;
+  }
+  
+  public void testTypeWithContainer() throws Exception {
+    SimplestType data = new SimplestType();
+    data.foo = "bar";
+    SimplestType result = Serializer.unserialize(
+        SimplestType.class, Serializer.serialize(data));
+    assertEquals("bar", result.foo);
+  }
 }
-
-

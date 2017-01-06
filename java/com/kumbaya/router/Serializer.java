@@ -20,8 +20,18 @@ class Serializer {
   public @interface Field {
     int value();
   }
-  
-  static byte[] serialize(Object object) throws IllegalArgumentException, IllegalAccessException, IOException {
+
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target(ElementType.TYPE)
+  public @interface Type {
+    int value();
+  }
+
+  static <T> byte[] serialize(T object) throws IllegalArgumentException, IllegalAccessException, IOException {
+    // Type annotation = object.getClass().getAnnotation(Type.class);
+    // Preconditions.checkNotNull(annotation, "Object being serialized isn't annotated with @Type: " + object.getClass());
+    // int container = annotation.value();
+    
     List<TLV> values = new ArrayList<TLV>();
     
     for (java.lang.reflect.Field property : object.getClass().getDeclaredFields()) {
