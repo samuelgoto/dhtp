@@ -67,16 +67,18 @@ class Serializer {
 
 
       Object value = (optional ? ((Optional<?>) property.get(object)).get() : property.get(object));
-      if (type.equals(String.class)) {
+      if (type == String.class) {
         Preconditions.checkNotNull(value, "Can't serialize null fields: " + property.getName());
         Marshaller.marshall(content, TLV.of(field.value(), ((String) value).getBytes()));
-      } else if (type.equals(boolean.class)) {
+      } else if (type == boolean.class) {
         byte[] bool = ((boolean) value) ? new byte[] {(byte) 0x1} : new byte[] {};
         Marshaller.marshall(content, TLV.of(field.value(), bool));
-      } else if (type.equals(int.class)) {
+      } else if (type == int.class) {
         Marshaller.marshall(content, TLV.of(field.value(), ByteBuffer.allocate(4).putInt((Integer) value).array()));
-      } else if (type.equals(long.class)) {
+      } else if (type == long.class) {
         Marshaller.marshall(content, TLV.of(field.value(), ByteBuffer.allocate(8).putLong((Long) value).array()));
+      } else if (type.isArray() & type.getComponentType() == byte.class) {
+        Marshaller.marshall(content, TLV.of(field.value(), (byte[]) value));
       } else {
         // NOTE(goto): perhaps there is a way to avoid the extra creation of the byte buffer here.
         // ByteArrayOutputStream nested = new ByteArrayOutputStream();
@@ -162,6 +164,9 @@ class Serializer {
           property.set(result, !optional ? value : Optional.of(value));
         } else if (type == long.class) {
           long value = ByteBuffer.wrap(content).getLong();
+          property.set(result, !optional ? value : Optional.of(value));
+        } else if (type.isArray() & type.getComponentType() == byte.class) {
+          byte[] value = content;
           property.set(result, !optional ? value : Optional.of(value));
         } else {
           // This is probably highly inefficient, but we reconstruct the original frame around

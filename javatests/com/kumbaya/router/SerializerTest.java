@@ -5,6 +5,7 @@ import com.kumbaya.router.Serializer.Field;
 import com.kumbaya.router.Serializer.Type;
 import java.io.ByteArrayOutputStream;
 import junit.framework.TestCase;
+import org.junit.Assert;
 
 public class SerializerTest extends TestCase {
   
@@ -22,6 +23,8 @@ public class SerializerTest extends TestCase {
     boolean hi;
     @Field(6)
     boolean bye;
+    @Field(7)
+    byte[] content;
   }
   
   public void testPrimitives() throws Exception {
@@ -31,6 +34,7 @@ public class SerializerTest extends TestCase {
     foo.foo = 1;
     foo.bar = 2;
     foo.hi = true;
+    foo.content = "cafebabe".getBytes();
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, foo);
     TypeWithPrimitives bar = Serializer.unserialize(TypeWithPrimitives.class, stream.toByteArray());
@@ -40,6 +44,7 @@ public class SerializerTest extends TestCase {
     assertEquals(foo.bar, bar.bar);
     assertTrue(bar.hi);
     assertFalse(bar.bye);
+    Assert.assertArrayEquals("cafebabe".getBytes(), bar.content);
   }
 
   @Type(0)

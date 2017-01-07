@@ -10,7 +10,14 @@ public class PacketTest extends TestCase {
     public static final int NAME = 1;
     public static final int NAME_COMPONENT = 2;
     public static final int IMPLICIT_SHA256_DIGEST_COMPONENT = 3;
-    public static final int INTEREST = 4;
+    
+    public static final int INTEREST = 4;    
+    public static final int NONCE = 1;
+    public static final int INTEREST_LIFETIME = 1;
+    
+    public static final int DATA = 1;
+    public static final int META_INFO = 1;
+    public static final int FRESHNESS_PERIOD = 1;
   }
  
   @Type(Registry.NAME)
@@ -24,6 +31,22 @@ public class PacketTest extends TestCase {
   @Type(Registry.INTEREST)
   static class Interest {
     Name name;
+    @Field(Registry.NONCE)
+    long nonce;
+    @Field(Registry.INTEREST_LIFETIME)
+    int lifetime;
+  }
+  
+  @Type(Registry.DATA)
+  static class Data {
+    Name name;
+    MetaInfo metadata;
+  }
+  
+  @Type(Registry.META_INFO)
+  static class MetaInfo {
+    @Field(Registry.FRESHNESS_PERIOD)
+    int freshnessPeriod;
   }
   
   public void testSerializingPackets() throws Exception {
