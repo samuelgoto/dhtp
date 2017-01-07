@@ -2,6 +2,7 @@ package com.kumbaya.router;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.kumbaya.router.Marshaller.TLV;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,35 +29,6 @@ class Serializer {
     int value();
   }
 
-  private static void marshall(ByteArrayOutputStream stream, TLV data) throws IOException {
-    stream.write(encode(data.type));
-    stream.write(encode(data.content.length));
-    stream.write(data.content);
-  }
-
-  static class TLV {
-    final long type;
-    final byte[] content;
-
-    TLV(long type, byte[] content) {
-      this.type = type;
-      this.content = content;
-    }
-
-    static TLV of(long type, byte[] content) {
-      return new TLV(type, content);
-    }
-  }
-
-  private static TLV unmarshall(ByteArrayInputStream stream) {
-    long type = decode(stream);
-    int length = (int) decode(stream);
-
-    ByteBuffer content = ByteBuffer.allocate(length);
-    stream.read(content.array(), 0, length);
-
-    return TLV.of(type, content.array());
-  }
 
   static <T> void serialize(ByteArrayOutputStream stream, T object) throws IllegalArgumentException, IllegalAccessException, IOException {
     Type annotation = object.getClass().getAnnotation(Type.class);
@@ -97,25 +69,22 @@ class Serializer {
       Object value = (optional ? ((Optional<?>) property.get(object)).get() : property.get(object));
       if (type.equals(String.class)) {
         Preconditions.checkNotNull(value, "Can't serialize null fields: " + property.getName());
-        // values.add(TLV.of(field.value(), ((String) value).getBytes()));
-        marshall(content, TLV.of(field.value(), ((String) value).getBytes()));
+        Marshaller.marshall(content, TLV.of(field.value(), ((String) value).getBytes()));
+      } else if (type.equals(boolean.class)) {
+        byte[] bool = ((boolean) value) ? new byte[] {(byte) 0x1} : new byte[] {};
+        Marshaller.marshall(content, TLV.of(field.value(), bool));
       } else if (type.equals(int.class)) {
-        marshall(content, TLV.of(field.value(), ByteBuffer.allocate(4).putInt((Integer) value).array()));
-        // values.add(TLV.of(field.value(), ByteBuffer.allocate(4).putInt((Integer) value).array()));
+        Marshaller.marshall(content, TLV.of(field.value(), ByteBuffer.allocate(4).putInt((Integer) value).array()));
       } else if (type.equals(long.class)) {
-        marshall(content, TLV.of(field.value(), ByteBuffer.allocate(8).putLong((Long) value).array()));
-        // values.add(TLV.of(field.value(), ByteBuffer.allocate(8).putLong((Long) value).array()));
+        Marshaller.marshall(content, TLV.of(field.value(), ByteBuffer.allocate(8).putLong((Long) value).array()));
       } else {
         // NOTE(goto): perhaps there is a way to avoid the extra creation of the byte buffer here.
         // ByteArrayOutputStream nested = new ByteArrayOutputStream();
         serialize(content, value);
-        // values.add(TLV.of(field.value(), nested.toByteArray()));
       }
     }
 
-    marshall(stream, TLV.of(container, content.toByteArray()));
-
-    // Marshaller.marshall(stream, values);
+    Marshaller.marshall(stream, TLV.of(container, content.toByteArray()));
   }
 
   static <T> T unserialize(Class<T> clazz, byte[] content) 
@@ -128,10 +97,10 @@ class Serializer {
       throws IllegalArgumentException, IllegalAccessException, InstantiationException {
 
     Type annotation = clazz.getAnnotation(Type.class);
-    Preconditions.checkNotNull(annotation, "Object being serialized isn't annotated with @Type: " + clazz);
+    Preconditions.checkNotNull(annotation, "Object being unserialized isn't annotated with @Type: " + clazz);
     int container = annotation.value();
 
-    TLV data = unmarshall(stream);
+    TLV data = Marshaller.unmarshall(stream);
 
     Preconditions.checkArgument(data.type == container, 
         "Serialized data incompatible with the class type, got: " + data.type + ", expecting: " + container);
@@ -178,14 +147,15 @@ class Serializer {
                   "of a type of a Class that is annotated with @Type" + property);
         }
 
-
         if (match != id) {
           continue;
         }
 
-
         if (type == String.class) {
           String value = new String(content);
+          property.set(result, !optional ? value : Optional.of(value));
+        } else if (type == boolean.class) {
+          boolean value = content.length > 0;
           property.set(result, !optional ? value : Optional.of(value));
         } else if (type == int.class) {
           int value = ByteBuffer.wrap(content).getInt();

@@ -18,6 +18,10 @@ public class SerializerTest extends TestCase {
     int foo;
     @Field(4)
     long bar;
+    @Field(5)
+    boolean hi;
+    @Field(6)
+    boolean bye;
   }
   
   public void testPrimitives() throws Exception {
@@ -26,6 +30,7 @@ public class SerializerTest extends TestCase {
     foo.world = "world";
     foo.foo = 1;
     foo.bar = 2;
+    foo.hi = true;
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, foo);
     TypeWithPrimitives bar = Serializer.unserialize(TypeWithPrimitives.class, stream.toByteArray());
@@ -33,6 +38,8 @@ public class SerializerTest extends TestCase {
     assertEquals(foo.world, bar.world);
     assertEquals(foo.foo, bar.foo);
     assertEquals(foo.bar, bar.bar);
+    assertTrue(bar.hi);
+    assertFalse(bar.bye);
   }
 
   @Type(0)
