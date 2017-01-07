@@ -2,7 +2,6 @@ package com.kumbaya.router;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.kumbaya.router.Marshaller.TLV;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,8 +11,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.ParameterizedType;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+
+import static com.kumbaya.router.TypeLengthValues.encode;
+import static com.kumbaya.router.TypeLengthValues.decode;
 
 class Serializer {
   @Retention(RetentionPolicy.RUNTIME)
@@ -28,24 +28,62 @@ class Serializer {
     int value();
   }
 
+  private static void marshall(ByteArrayOutputStream stream, TLV data) throws IOException {
+    stream.write(encode(data.type));
+    stream.write(encode(data.content.length));
+    stream.write(data.content);
+  }
+
+  static class TLV {
+    final long type;
+    final byte[] content;
+
+    TLV(long type, byte[] content) {
+      this.type = type;
+      this.content = content;
+    }
+
+    static TLV of(long type, byte[] content) {
+      return new TLV(type, content);
+    }
+  }
+
+  private static TLV unmarshall(ByteArrayInputStream stream) {
+    long type = decode(stream);
+    int length = (int) decode(stream);
+
+    ByteBuffer content = ByteBuffer.allocate(length);
+    stream.read(content.array(), 0, length);
+
+    return TLV.of(type, content.array());
+  }
+
   static <T> void serialize(ByteArrayOutputStream stream, T object) throws IllegalArgumentException, IllegalAccessException, IOException {
-    // Type annotation = object.getClass().getAnnotation(Type.class);
-    // Preconditions.checkNotNull(annotation, "Object being serialized isn't annotated with @Type: " + object.getClass());
-    // int container = annotation.value();
-    
-    List<TLV> values = new ArrayList<TLV>();
-    
+    Type annotation = object.getClass().getAnnotation(Type.class);
+    Preconditions.checkNotNull(annotation, "Object being serialized isn't annotated with @Type: " + object.getClass());
+    int container = annotation.value();
+
+    ByteArrayOutputStream content = new ByteArrayOutputStream();
+
     for (java.lang.reflect.Field property : object.getClass().getDeclaredFields()) {
       Field field = property.getAnnotation(Field.class);
-      
+      boolean optional = property.getType().equals(Optional.class);
+      final Class<?> type = optional ? (Class<?>) ((ParameterizedType) (property.getGenericType())).getActualTypeArguments()[0] :
+        property.getType();          
+
       if (field == null) {
-        throw new UnsupportedOperationException(
-            "Can't serialize a class with fields that are not annotated with @Field");
+        if (type.getAnnotation(Type.class) == null) {
+          throw new UnsupportedOperationException(
+              "Can't serialize a class with fields that are not annotated with @Field" +
+              "or that are not of a class that is annotated with @Type: " + property);
+        }
+      } else if (type.getAnnotation(Type.class) != null) {
+        throw new UnsupportedOperationException("You can't set a @Field annotation in a property " +
+            "that has a type with a @Type annotation");        
       }
-      
+
       // TODO(goto): we should probably assert somewhere that type ids are unique in the
       // object.
-      boolean optional = property.getType().equals(Optional.class);
       // If this is an optional field and it is not present, just fully skip it.
       if (optional) {
         // Optional properties are allowed to have nulls: it will be assumed to be absent.
@@ -54,88 +92,123 @@ class Serializer {
           continue;
         }
       }
-      
-      final Class<?> type = optional ? 
-          (Class<?>) ((ParameterizedType) (property.getGenericType())).getActualTypeArguments()[0] :
-            property.getType();          
+
 
       Object value = (optional ? ((Optional<?>) property.get(object)).get() : property.get(object));
       if (type.equals(String.class)) {
         Preconditions.checkNotNull(value, "Can't serialize null fields: " + property.getName());
-        values.add(TLV.of(field.value(), ((String) value).getBytes()));        
+        // values.add(TLV.of(field.value(), ((String) value).getBytes()));
+        marshall(content, TLV.of(field.value(), ((String) value).getBytes()));
       } else if (type.equals(int.class)) {
-        values.add(TLV.of(field.value(), ByteBuffer.allocate(4).putInt((Integer) value).array()));
+        marshall(content, TLV.of(field.value(), ByteBuffer.allocate(4).putInt((Integer) value).array()));
+        // values.add(TLV.of(field.value(), ByteBuffer.allocate(4).putInt((Integer) value).array()));
       } else if (type.equals(long.class)) {
-        values.add(TLV.of(field.value(), ByteBuffer.allocate(8).putLong((Long) value).array()));
+        marshall(content, TLV.of(field.value(), ByteBuffer.allocate(8).putLong((Long) value).array()));
+        // values.add(TLV.of(field.value(), ByteBuffer.allocate(8).putLong((Long) value).array()));
       } else {
         // NOTE(goto): perhaps there is a way to avoid the extra creation of the byte buffer here.
-        ByteArrayOutputStream nested = new ByteArrayOutputStream();
-        serialize(nested, value);
-        values.add(TLV.of(field.value(), nested.toByteArray()));
+        // ByteArrayOutputStream nested = new ByteArrayOutputStream();
+        serialize(content, value);
+        // values.add(TLV.of(field.value(), nested.toByteArray()));
       }
     }
-    
-    Marshaller.marshall(stream, values);
+
+    marshall(stream, TLV.of(container, content.toByteArray()));
+
+    // Marshaller.marshall(stream, values);
   }
-  
+
   static <T> T unserialize(Class<T> clazz, byte[] content) 
       throws IllegalArgumentException, IllegalAccessException, InstantiationException {
     return unserialize(clazz, new ByteArrayInputStream(content));
   }
-  
-  
+
+
   static <T> T unserialize(Class<T> clazz, ByteArrayInputStream stream) 
       throws IllegalArgumentException, IllegalAccessException, InstantiationException {
-    List<TLV> values = Marshaller.unmarshall(stream);
-    
-    T result = clazz.newInstance();
-    
-    for (java.lang.reflect.Field property : result.getClass().getDeclaredFields()) {
-      Field field = property.getAnnotation(Field.class);
-      
-      if (field == null) {
-        throw new UnsupportedOperationException(
-            "Can't serialize a class with fields that are not annotated with @Field");
-      }
 
-      boolean optional = (property.getType() == Optional.class);
-      boolean found = false;
-      
-      for (TLV value : values) {
-        if (value.type == field.value()) {
-          final Class<?> type = optional ? 
-              (Class<?>) ((ParameterizedType) (property.getGenericType())).getActualTypeArguments()[0] :
-                property.getType();
-              
-          if (type == String.class) {
-            String content = new String(value.content);
-            property.set(result, !optional ? content : Optional.of(content));
-          } else if (type == int.class) {
-            int content = ByteBuffer.wrap(value.content).getInt();
-            property.set(result, !optional ? content : Optional.of(content));
-          } else if (type == long.class) {
-            long content = ByteBuffer.wrap(value.content).getLong();
-            property.set(result, !optional ? content : Optional.of(content));
-          } else {
-            Object content = unserialize(type, new ByteArrayInputStream(value.content));
-            property.set(result, !optional ? content : Optional.of(content));
-          }
-          
-          found = true;
-          
-          break;
-        }
+    Type annotation = clazz.getAnnotation(Type.class);
+    Preconditions.checkNotNull(annotation, "Object being serialized isn't annotated with @Type: " + clazz);
+    int container = annotation.value();
+
+    TLV data = unmarshall(stream);
+
+    Preconditions.checkArgument(data.type == container, 
+        "Serialized data incompatible with the class type, got: " + data.type + ", expecting: " + container);
+
+    T result = clazz.newInstance();
+
+    ByteArrayInputStream body = new ByteArrayInputStream(data.content);
+
+    for (java.lang.reflect.Field property : result.getClass().getDeclaredFields()) {
+      boolean optional = property.getType().equals(Optional.class);
+      if (optional) {
+        // Sets by default optional fields as absents.
+        property.set(result, Optional.absent());
       }
-      
-      if (!found) {
-        if (optional) {
-          property.set(result, Optional.absent());
+    }
+
+    while (body.available() != 0) {
+      long id = decode(body);
+      int length = (int) decode(body);
+      ByteBuffer buffer = ByteBuffer.allocate(length);
+      body.read(buffer.array(), 0, length);
+      byte[] content = buffer.array();
+
+      for (java.lang.reflect.Field property : result.getClass().getDeclaredFields()) {
+        int match;
+
+        Field field = property.getAnnotation(Field.class);
+
+        boolean optional = property.getType().equals(Optional.class);
+
+        Class<?> type = optional ? (Class<?>) ((ParameterizedType) (property.getGenericType())).getActualTypeArguments()[0] :
+          property.getType();          
+
+
+        if (field != null) {
+          match = field.value();
+          Preconditions.checkArgument(property.getType().getAnnotation(Type.class) == null,
+              "You can't have @Field annotations in non-primitive types");          
+        } else if (type != null) {
+          match = type.getAnnotation(Type.class).value();
         } else {
-          throw new UnsupportedOperationException("Non-optional field without a value: " + property);
+          throw new UnsupportedOperationException(
+              "Can't unserialize a class with fields that are not annotated with @Field or" + 
+                  "of a type of a Class that is annotated with @Type" + property);
+        }
+
+
+        if (match != id) {
+          continue;
+        }
+
+
+        if (type == String.class) {
+          String value = new String(content);
+          property.set(result, !optional ? value : Optional.of(value));
+        } else if (type == int.class) {
+          int value = ByteBuffer.wrap(content).getInt();
+          property.set(result, !optional ? value : Optional.of(value));
+        } else if (type == long.class) {
+          long value = ByteBuffer.wrap(content).getLong();
+          property.set(result, !optional ? value : Optional.of(value));
+        } else {
+          // This is probably highly inefficient, but we reconstruct the original frame around
+          // the content to enable the recursion to be agnostic of nested fields.
+          byte[] header1 = encode(id);
+          byte[] header2 = encode(length);
+          ByteBuffer buf = ByteBuffer.allocate(header1.length + header2.length + content.length);
+          buf.put(header1);
+          buf.put(header2);
+          buf.put(content);
+          Object value = unserialize(type, new ByteArrayInputStream(buf.array()));
+          property.set(result, !optional ? value : Optional.of(value));
         }
       }
     }
-    
+
+
     return result;
   }
 }

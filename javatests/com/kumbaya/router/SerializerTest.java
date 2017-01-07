@@ -7,6 +7,8 @@ import java.io.ByteArrayOutputStream;
 import junit.framework.TestCase;
 
 public class SerializerTest extends TestCase {
+  
+  @Type(0)
   static class TypeWithPrimitives {
     @Field(1)
     String hello;
@@ -22,6 +24,8 @@ public class SerializerTest extends TestCase {
     TypeWithPrimitives foo = new TypeWithPrimitives();
     foo.hello = "hello";
     foo.world = "world";
+    foo.foo = 1;
+    foo.bar = 2;
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, foo);
     TypeWithPrimitives bar = Serializer.unserialize(TypeWithPrimitives.class, stream.toByteArray());
@@ -31,6 +35,7 @@ public class SerializerTest extends TestCase {
     assertEquals(foo.bar, bar.bar);
   }
 
+  @Type(0)
   static class TypeWithOptional {
     @Field(1)
     Optional<String> foo;
@@ -63,11 +68,12 @@ public class SerializerTest extends TestCase {
     assertFalse(result.foo.isPresent());
   }
   
+  @Type(0)
   static class TypeWithNesting {
-    @Field(1)
     TypeBeingNested foo;
   }
   
+  @Type(1)
   static class TypeBeingNested {
     @Field(2)
     String hello;
@@ -84,6 +90,7 @@ public class SerializerTest extends TestCase {
     assertEquals("world", result.foo.hello);
   }
   
+  @Type(0)
   static class TwoOptionalFields {
     @Field(1)
     Optional<String> foo;
@@ -135,11 +142,10 @@ public class SerializerTest extends TestCase {
     assertEquals(result.bar.get(), "world");
   }
   
+  @Type(0)
   static class TwoOptionalNestedFields {
-    @Field(1)
     Optional<TypeWithNesting> foo;
-    @Field(2)
-    Optional<TypeWithNesting> bar;
+    Optional<TypeWithPrimitives> bar;
   }
   
   public void testTwoOptionalNestedFields_bothAbsent() throws Exception {
