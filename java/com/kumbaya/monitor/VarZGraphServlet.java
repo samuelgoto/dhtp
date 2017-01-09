@@ -1,4 +1,4 @@
-package com.kumbaya.www;
+package com.kumbaya.monitor;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.kumbaya.monitor.Sampler;
 import com.kumbaya.monitor.Sampler.Sample;
 
 @SuppressWarnings("serial")

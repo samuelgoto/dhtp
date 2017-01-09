@@ -1,4 +1,4 @@
-package com.kumbaya.www;
+package com.kumbaya.monitor;
 
 import java.io.IOException;
 import java.io.PrintWriter;

@@ -1,4 +1,4 @@
-package com.kumbaya.dht;
+package com.kumbaya.common;
 
 import java.io.IOException;
 import java.net.SocketAddress;
