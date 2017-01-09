@@ -6,6 +6,8 @@ import com.kumbaya.router.Marshaller.TLV;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -40,7 +42,7 @@ class Serializer {
     long value();
   }
 
-  static <T> void serialize(ByteArrayOutputStream stream, T object) throws IllegalArgumentException, IllegalAccessException, IOException {
+  static <T> void serialize(OutputStream stream, T object) throws IllegalArgumentException, IllegalAccessException, IOException {
     Type annotation = object.getClass().getAnnotation(Type.class);
     Preconditions.checkNotNull(annotation, "Object being serialized isn't annotated with @Type: " + object.getClass());
     long container = annotation.value();
@@ -97,16 +99,20 @@ class Serializer {
 
     Marshaller.marshall(stream, TLV.of(container, content.toByteArray()));
   }
+  
+  static <T> T unserialize(InputStream stream)
+      throws IllegalArgumentException, IllegalAccessException, InstantiationException, IOException {
+    return unserialize(null, stream);
+  }
 
-  static <T> T unserialize(byte[] content) 
-      throws IllegalArgumentException, IllegalAccessException, InstantiationException {
+  static <T> T unserialize(byte[] content)
+      throws IllegalArgumentException, IllegalAccessException, InstantiationException, IOException {
     return unserialize(null, new ByteArrayInputStream(content));
   }
 
   @SuppressWarnings("unchecked")
-  private static <T> T unserialize(Class<T> clazz, ByteArrayInputStream stream) 
-      throws IllegalArgumentException, IllegalAccessException, InstantiationException {
-
+  private static <T> T unserialize(Class<T> clazz, InputStream stream) 
+      throws IllegalArgumentException, IllegalAccessException, InstantiationException, IOException {
 
     TLV data = Marshaller.unmarshall(stream);
 

@@ -4,6 +4,9 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import static com.kumbaya.router.TypeLengthValues.encode;
+
+import java.io.IOException;
+
 import static com.kumbaya.router.TypeLengthValues.decode;
 
 public class TypeLengthValuesTest extends TestCase {
@@ -131,7 +134,7 @@ public class TypeLengthValuesTest extends TestCase {
     assertEquals((byte) 0x00, encode(0x100000000L)[8]);
   }
   
-  public void testDecoding() {
+  public void testDecoding() throws IOException {
     // random values
     assertEquals(0xAB, decode(encode(0xAB)));
     assertEquals(0xABCD, decode(encode(0xABCD)));

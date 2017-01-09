@@ -1,9 +1,9 @@
 package com.kumbaya.router;
 
-import java.io.BufferedReader;
+import com.kumbaya.router.Packets.Data;
+import com.kumbaya.router.Packets.Interest;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -20,45 +20,47 @@ public class TcpTest extends TestCase {
     
     @Override
     public void run() {
-      String clientSentence;
-      String capitalizedSentence;
-
       while(true) {
         try {
           Socket connectionSocket = welcomeSocket.accept();
-          BufferedReader inFromClient =
-              new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+           Interest request = Serializer.unserialize(connectionSocket.getInputStream());
            DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-           clientSentence = inFromClient.readLine();
-           capitalizedSentence = clientSentence.toUpperCase() + '\n';
-           outToClient.writeBytes(capitalizedSentence);
-        } catch (IOException e) {
+           Data response = new Data();
+           response.name = request.name;
+           response.metadata.freshnessPeriod = 2;
+           response.content = "hello world".getBytes();
+
+           Serializer.serialize(outToClient, response);
+        } catch (IOException | IllegalArgumentException | IllegalAccessException | InstantiationException e) {
         }
       }
     }
   }
   
   private static class TcpClient {
-    String send(String sentence) throws UnknownHostException, IOException {
-      String modifiedSentence;
+    <T> T send(Object packet) throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
       Socket clientSocket = new Socket("localhost", 6789);
       DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-      BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-      outToServer.writeBytes(sentence + '\n');
-      modifiedSentence = inFromServer.readLine();
+      Serializer.serialize(outToServer, packet);
+      T result = Serializer.unserialize(clientSocket.getInputStream());
       clientSocket.close();
-      return modifiedSentence;
+      return result;
     }
   }
   
-  public void testPacket() throws IOException {
+  public void testPacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
     Thread server = new Thread(new TcpServer(6789));
     server.start();
 
     TcpClient client = new TcpClient();
     
-    String result = client.send("hello world");
+    Interest interest = new Interest();
+    interest.name.name = "foo";
+    interest.name.sha256 = "bar";
+    Data result = client.send(interest);
     
-    assertEquals("HELLO WORLD", result);
+    assertEquals("foo", result.name.name);
+    assertEquals(2, result.metadata.freshnessPeriod);
+    assertEquals("hello world", new String(result.content));
   }
 }

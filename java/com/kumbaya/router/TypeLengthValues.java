@@ -1,6 +1,8 @@
 package com.kumbaya.router;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 class TypeLengthValues {
@@ -31,11 +33,11 @@ class TypeLengthValues {
     }
   }
   
-  static long decode(byte[] value) {
+  static long decode(byte[] value) throws IOException {
     return decode(new ByteArrayInputStream(value));
   }
   
-  static long decode(ByteArrayInputStream value) {
+  static long decode(InputStream value) throws IOException {
     int head = value.read();
     if (head < 253) {
       return head;
