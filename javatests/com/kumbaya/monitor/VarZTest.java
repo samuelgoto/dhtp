@@ -89,7 +89,7 @@ public class VarZTest {
 	}
 
 	private Injector create() {
-		return Guice.createInjector(new VarZModule(), new AbstractModule() {
+		return Guice.createInjector(new MonitoringModule(), new AbstractModule() {
 			@Override
 			protected void configure() {
 				bind(Clock.class).toInstance(clock);

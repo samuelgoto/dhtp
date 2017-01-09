@@ -45,7 +45,5 @@ public class Router {
 			proxy = port;
 			hostname = "localhost";
 		}
-		
-		// Injector injector = Guice.createInjector(new ServletModule());
 	}
 }

@@ -6,7 +6,7 @@ import com.google.inject.multibindings.MapBinder;
 import com.kumbaya.annotations.VarZ;
 import javax.servlet.http.HttpServlet;
 
-public class VarZModule extends AbstractModule {
+public class MonitoringModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		VarZInterceptor interceptor = new VarZInterceptor();
