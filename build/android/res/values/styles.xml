@@ -1,9 +1,0 @@
-<resources>
-  <color name="boot_theme_color">#259b24</color>
-  <style name="BootTheme" parent="android:Theme.Light">
-      <item name="android:windowBackground">@color/boot_theme_color</item>
-      <item name="android:colorBackground">@color/boot_theme_color</item>
-      <item name="android:windowTitleSize">0dp</item>
-      <item name="android:windowActionBar">false</item>
-  </style>
-</resources>
