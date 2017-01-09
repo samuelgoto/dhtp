@@ -5,7 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.MapBinder;
 import com.kumbaya.common.Server;
-import com.kumbaya.monitor.MonitoringModule;
+import com.kumbaya.common.monitor.MonitoringModule;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import javax.servlet.ServletException;

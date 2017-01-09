@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.kumbaya.common.Server;
-import com.kumbaya.monitor.VarZLogger;
+import com.kumbaya.common.monitor.VarZLogger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

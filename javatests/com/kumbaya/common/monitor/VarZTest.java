@@ -1,30 +1,20 @@
-package com.kumbaya.monitor;
+package com.kumbaya.common.monitor;
 
 import static org.junit.Assert.*;
 
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Provider;
-import com.google.inject.Singleton;
-import com.google.inject.matcher.Matchers;
-import com.kumbaya.monitor.Sampler.Clock;
-import com.kumbaya.annotations.VarZ;
+import com.kumbaya.common.annotations.VarZ;
+import com.kumbaya.common.monitor.Sampler.Clock;
 
 public class VarZTest {
 	private IMocksControl control = EasyMock.createControl();

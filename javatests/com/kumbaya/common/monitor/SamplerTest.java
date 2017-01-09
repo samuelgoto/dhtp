@@ -1,4 +1,4 @@
-package com.kumbaya.monitor;
+package com.kumbaya.common.monitor;
 
 import java.util.Date;
 import java.util.List;
@@ -10,8 +10,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.kumbaya.monitor.Sampler.Clock;
-import com.kumbaya.monitor.Sampler.Sample;
+import com.kumbaya.common.monitor.Sampler.Clock;
+import com.kumbaya.common.monitor.Sampler.Sample;
 
 import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;

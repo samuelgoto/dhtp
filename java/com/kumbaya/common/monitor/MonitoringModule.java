@@ -1,9 +1,9 @@
-package com.kumbaya.monitor;
+package com.kumbaya.common.monitor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
-import com.kumbaya.annotations.VarZ;
+import com.kumbaya.common.annotations.VarZ;
 import javax.servlet.http.HttpServlet;
 
 public class MonitoringModule extends AbstractModule {

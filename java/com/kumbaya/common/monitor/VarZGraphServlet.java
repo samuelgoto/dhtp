@@ -1,4 +1,4 @@
-package com.kumbaya.monitor;
+package com.kumbaya.common.monitor;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.kumbaya.monitor.Sampler.Sample;
+import com.kumbaya.common.monitor.Sampler.Sample;
 
 @SuppressWarnings("serial")
 class VarZGraphServlet extends HttpServlet {
