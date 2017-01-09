@@ -103,6 +103,7 @@ class Serializer {
     return unserialize(null, new ByteArrayInputStream(content));
   }
 
+  @SuppressWarnings("unchecked")
   private static <T> T unserialize(Class<T> clazz, ByteArrayInputStream stream) 
       throws IllegalArgumentException, IllegalAccessException, InstantiationException {
 

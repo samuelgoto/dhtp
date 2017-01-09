@@ -94,6 +94,7 @@ public class UdpTest extends TestCase {
       return type;
     }
     
+    @SuppressWarnings("unused")
     byte[] getData() {
       return data;
     }
