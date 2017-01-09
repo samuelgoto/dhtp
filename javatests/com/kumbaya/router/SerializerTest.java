@@ -37,7 +37,8 @@ public class SerializerTest extends TestCase {
     foo.content = "cafebabe".getBytes();
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, foo);
-    TypeWithPrimitives bar = Serializer.unserialize(TypeWithPrimitives.class, stream.toByteArray());
+    Serializer.register(TypeWithPrimitives.class);
+    TypeWithPrimitives bar = Serializer.unserialize(stream.toByteArray());
     assertEquals(foo.hello, bar.hello);
     assertEquals(foo.world, bar.world);
     assertEquals(foo.foo, bar.foo);
@@ -58,7 +59,8 @@ public class SerializerTest extends TestCase {
     foo.foo = Optional.of("hello world");
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, foo);
-    TypeWithOptional bar = Serializer.unserialize(TypeWithOptional.class, stream.toByteArray());
+    Serializer.register(TypeWithOptional.class);
+    TypeWithOptional bar = Serializer.unserialize(stream.toByteArray());
     assertTrue(bar.foo.isPresent());
     assertEquals("hello world", bar.foo.get());
   }
@@ -68,7 +70,8 @@ public class SerializerTest extends TestCase {
     foo.foo = Optional.absent();
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, foo);
-    TypeWithOptional bar = Serializer.unserialize(TypeWithOptional.class, stream.toByteArray());
+    Serializer.register(TypeWithOptional.class);
+    TypeWithOptional bar = Serializer.unserialize(stream.toByteArray());
     assertFalse(bar.foo.isPresent());
   }
   
@@ -76,7 +79,8 @@ public class SerializerTest extends TestCase {
     TypeWithOptional data = new TypeWithOptional();
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, data);
-    TypeWithOptional result = Serializer.unserialize(TypeWithOptional.class, stream.toByteArray());
+    Serializer.register(TypeWithOptional.class);
+    TypeWithOptional result = Serializer.unserialize(stream.toByteArray());
     assertFalse(result.foo.isPresent());
   }
   
@@ -98,7 +102,8 @@ public class SerializerTest extends TestCase {
     bar.hello = "world";
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, foo);
-    TypeWithNesting result = Serializer.unserialize(TypeWithNesting.class, stream.toByteArray());
+    Serializer.register(TypeWithNesting.class);
+    TypeWithNesting result = Serializer.unserialize(stream.toByteArray());
     assertEquals("world", result.foo.hello);
   }
   
@@ -114,7 +119,8 @@ public class SerializerTest extends TestCase {
     TwoOptionalFields data = new TwoOptionalFields();
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, data);
-    TwoOptionalFields result = Serializer.unserialize(TwoOptionalFields.class, stream.toByteArray());
+    Serializer.register(TwoOptionalFields.class);
+    TwoOptionalFields result = Serializer.unserialize(stream.toByteArray());
     assertFalse(result.foo.isPresent());
     assertFalse(result.bar.isPresent());
   }
@@ -124,7 +130,8 @@ public class SerializerTest extends TestCase {
     data.foo = Optional.of("hello world");
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, data);
-    TwoOptionalFields result = Serializer.unserialize(TwoOptionalFields.class, stream.toByteArray());
+    Serializer.register(TwoOptionalFields.class);
+    TwoOptionalFields result = Serializer.unserialize(stream.toByteArray());
     assertTrue(result.foo.isPresent());
     assertEquals(result.foo.get(), "hello world");
     assertFalse(result.bar.isPresent());
@@ -135,7 +142,8 @@ public class SerializerTest extends TestCase {
     data.bar= Optional.of("hello world");
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, data);
-    TwoOptionalFields result = Serializer.unserialize(TwoOptionalFields.class, stream.toByteArray());
+    Serializer.register(TwoOptionalFields.class);
+    TwoOptionalFields result = Serializer.unserialize(stream.toByteArray());
     assertFalse(result.foo.isPresent());
     assertTrue(result.bar.isPresent());
     assertEquals(result.bar.get(), "hello world");
@@ -147,7 +155,8 @@ public class SerializerTest extends TestCase {
     data.bar= Optional.of("world");
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, data);
-    TwoOptionalFields result = Serializer.unserialize(TwoOptionalFields.class, stream.toByteArray());
+    Serializer.register(TwoOptionalFields.class);
+    TwoOptionalFields result = Serializer.unserialize(stream.toByteArray());
     assertTrue(result.foo.isPresent());
     assertEquals(result.foo.get(), "hello");
     assertTrue(result.bar.isPresent());
@@ -164,7 +173,8 @@ public class SerializerTest extends TestCase {
     TwoOptionalNestedFields data = new TwoOptionalNestedFields();
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, data);
-    TwoOptionalNestedFields result = Serializer.unserialize(TwoOptionalNestedFields.class, 
+    Serializer.register(TwoOptionalNestedFields.class);
+    TwoOptionalNestedFields result = Serializer.unserialize(
         stream.toByteArray());
     assertFalse(result.foo.isPresent());
     assertFalse(result.bar.isPresent());
@@ -179,7 +189,8 @@ public class SerializerTest extends TestCase {
     leaf.hello = "hello world";
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, data);
-    TwoOptionalNestedFields result = Serializer.unserialize(TwoOptionalNestedFields.class, 
+    Serializer.register(TwoOptionalNestedFields.class);
+    TwoOptionalNestedFields result = Serializer.unserialize(
         stream.toByteArray());
     assertTrue(result.foo.isPresent());
     assertEquals("hello world", result.foo.get().foo.hello);
@@ -196,8 +207,8 @@ public class SerializerTest extends TestCase {
     data.foo = "bar";
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, data);
-    SimplestType result = Serializer.unserialize(
-        SimplestType.class, stream.toByteArray());
+    Serializer.register(SimplestType.class);
+    SimplestType result = Serializer.unserialize(stream.toByteArray());
     assertEquals("bar", result.foo);
   }
 }

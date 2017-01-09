@@ -12,28 +12,38 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.ParameterizedType;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.kumbaya.router.TypeLengthValues.encode;
 import static com.kumbaya.router.TypeLengthValues.decode;
 
 class Serializer {
+  private static final Map<Long, Class<?>> registry = new HashMap<Long, Class<?>>();
+  
+  static void register(Class<?> clazz) {
+    Type annotation = clazz.getAnnotation(Type.class);
+    Preconditions.checkNotNull(annotation, "Object being registered isn't annotated with @Type: " + clazz);
+    long container = annotation.value();
+    registry.put(container, clazz);
+  }
+  
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.FIELD)
   public @interface Field {
-    int value();
+    long value();
   }
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target(ElementType.TYPE)
   public @interface Type {
-    int value();
+    long value();
   }
-
 
   static <T> void serialize(ByteArrayOutputStream stream, T object) throws IllegalArgumentException, IllegalAccessException, IOException {
     Type annotation = object.getClass().getAnnotation(Type.class);
     Preconditions.checkNotNull(annotation, "Object being serialized isn't annotated with @Type: " + object.getClass());
-    int container = annotation.value();
+    long container = annotation.value();
 
     ByteArrayOutputStream content = new ByteArrayOutputStream();
 
@@ -65,7 +75,6 @@ class Serializer {
         }
       }
 
-
       Object value = (optional ? ((Optional<?>) property.get(object)).get() : property.get(object));
       if (type == String.class) {
         Preconditions.checkNotNull(value, "Can't serialize null fields: " + property.getName());
@@ -89,23 +98,26 @@ class Serializer {
     Marshaller.marshall(stream, TLV.of(container, content.toByteArray()));
   }
 
-  static <T> T unserialize(Class<T> clazz, byte[] content) 
+  static <T> T unserialize(byte[] content) 
       throws IllegalArgumentException, IllegalAccessException, InstantiationException {
-    return unserialize(clazz, new ByteArrayInputStream(content));
+    return unserialize(null, new ByteArrayInputStream(content));
   }
 
-
-  static <T> T unserialize(Class<T> clazz, ByteArrayInputStream stream) 
+  private static <T> T unserialize(Class<T> clazz, ByteArrayInputStream stream) 
       throws IllegalArgumentException, IllegalAccessException, InstantiationException {
 
-    Type annotation = clazz.getAnnotation(Type.class);
-    Preconditions.checkNotNull(annotation, "Object being unserialized isn't annotated with @Type: " + clazz);
-    int container = annotation.value();
 
     TLV data = Marshaller.unmarshall(stream);
 
-    Preconditions.checkArgument(data.type == container, 
-        "Serialized data incompatible with the class type, got: " + data.type + ", expecting: " + container);
+    if (clazz == null) {
+      clazz = (Class<T>) registry.get(data.type);
+    } else {
+      Type annotation = clazz.getAnnotation(Type.class);
+      Preconditions.checkNotNull(annotation, "Object being unserialized isn't annotated with @Type: " + clazz);
+      long container = annotation.value();
+      Preconditions.checkArgument(data.type == container, 
+          "Serialized data incompatible with the class type, got: " + data.type + ", expecting: " + container);
+    }
 
     T result = clazz.newInstance();
 
@@ -127,7 +139,7 @@ class Serializer {
       byte[] content = buffer.array();
 
       for (java.lang.reflect.Field property : result.getClass().getDeclaredFields()) {
-        int match;
+        long match;
 
         Field field = property.getAnnotation(Field.class);
 
