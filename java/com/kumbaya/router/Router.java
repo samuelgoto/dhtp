@@ -1,6 +1,7 @@
 package com.kumbaya.router;
 
 import com.google.common.base.Optional;
+import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.kumbaya.common.Server;
 import com.kumbaya.router.Packets.Data;
@@ -26,6 +27,19 @@ public class Router implements Server {
   Router(TcpServer server) {
     this.server = server;
     this.thread = new Thread(server);
+  }
+  
+  public static class Module extends AbstractModule {
+    private final InetSocketAddress forwardingRouter;
+    
+    public Module(InetSocketAddress forwardingRouter) {
+      this.forwardingRouter = forwardingRouter;
+    }
+    
+    @Override
+    protected void configure() {
+      bind(InetSocketAddress.class).toInstance(forwardingRouter);
+    }
   }
   
   static class InterestHandler implements Handler<Interest> {

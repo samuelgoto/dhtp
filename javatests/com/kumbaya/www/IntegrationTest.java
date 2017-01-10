@@ -5,17 +5,12 @@ import com.google.inject.Guice;
 import com.google.inject.multibindings.MapBinder;
 import com.kumbaya.common.Server;
 import com.kumbaya.router.Router;
+import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.JettyServer;
 import com.kumbaya.www.proxy.Proxy;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.SocketAddress;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Scanner;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -33,26 +28,6 @@ public class IntegrationTest extends TestCase {
     }
   }
 
-  private String get(SocketAddress proxy, String url) throws MalformedURLException, IOException {
-    java.net.Proxy p = new java.net.Proxy(java.net.Proxy.Type.HTTP, proxy);
-    HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection(p);
-    connection.setDoOutput(true);
-    connection.setDoInput(true);
-    connection.setRequestProperty("Content-type", "text/xml");
-    connection.setRequestProperty("Accept", "text/xml, application/xml");
-    connection.setRequestMethod("GET");
-
-    return read(connection);
-  }
-
-  private String read(URLConnection connection) throws IOException {
-    Scanner scanner = new Scanner(connection.getInputStream());
-    scanner.useDelimiter("\\Z");
-    String result = scanner.next();
-    scanner.close();
-    return result;
-  }
-
   Server server() {
     return Guice.createInjector(new AbstractModule() {
       @Override
@@ -68,7 +43,7 @@ public class IntegrationTest extends TestCase {
   public void testHttpServer() throws IOException {
     Server server = server();
     server.bind(new InetSocketAddress("localhost", 8181));
-    String result = read(new URL("http://localhost:8181/helloworld").openConnection());
+    String result = WorldWideWeb.get("http://localhost:8181/helloworld");
     assertEquals("hello world", result);
     server.close();
   }
@@ -79,12 +54,8 @@ public class IntegrationTest extends TestCase {
         ).getInstance(Proxy.class);
     proxy.bind(new InetSocketAddress("localhost", 8080));
 
-    Router router = Guice.createInjector(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(InetSocketAddress.class).toInstance(new InetSocketAddress("localhost", 7070));
-      }
-    }).getInstance(Router.class);
+    Router router = Guice.createInjector(new Router.Module(new InetSocketAddress("localhost", 7070)))
+        .getInstance(Router.class);
     router.bind(new InetSocketAddress("localhost", 9090));
 
     Gateway gateway = Guice.createInjector().getInstance(Gateway.class);
@@ -93,7 +64,7 @@ public class IntegrationTest extends TestCase {
     Server www = server();
     www.bind(new InetSocketAddress("localhost", 6060));
 
-    String result = get(
+    String result = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
         "http://localhost:6060/helloworld");
 
