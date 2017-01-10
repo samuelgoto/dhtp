@@ -2,6 +2,9 @@ package com.kumbaya.router;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.kumbaya.common.Server;
+import java.io.IOException;
+import java.net.SocketAddress;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
@@ -10,7 +13,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.PatternLayout;
 
-public class Router {
+public class Router implements Server {
 	public static void main(String[] args) throws Exception {
 		BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
 				"[%-5p] %d %c - %m%n")));
@@ -46,4 +49,12 @@ public class Router {
 			hostname = "localhost";
 		}
 	}
+
+  @Override
+  public void bind(SocketAddress address) throws IOException {
+  }
+
+  @Override
+  public void close() {
+  }
 }
