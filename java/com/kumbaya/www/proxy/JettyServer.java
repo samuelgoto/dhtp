@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 import com.kumbaya.common.Server;
 import com.kumbaya.common.monitor.VarZLogger;
 import com.kumbaya.www.IntegrationTest;
-import com.kumbaya.www.IntegrationTest.MyProxyServlet;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -34,8 +33,7 @@ public class JettyServer implements Server {
 
   @Override
   public void bind(InetSocketAddress address) throws IOException {
-    server = new org.eclipse.jetty.server.Server(((InetSocketAddress) address)
-        .getPort());
+    server = new org.eclipse.jetty.server.Server(address.getPort());
 
     ServletContextHandler servlet = new ServletContextHandler(ServletContextHandler.SESSIONS);
     servlet.setContextPath("/");
@@ -43,17 +41,9 @@ public class JettyServer implements Server {
     for (Map.Entry<String, Servlet> entry : servlets.entrySet()) {
       servlet.addServlet(new ServletHolder(entry.getValue()), entry.getKey());
     }
-
-    
-    // TODO(goto): figure out how to move this to the multibinding map.
-    //ServletHolder proxy = new ServletHolder(IntegrationTest.MyProxyServlet.class);    
-    //proxy.setInitParameter("ProxyTo", "http://foobar.com");
-    //proxy.setInitParameter("Prefix", "/foo");
-    //servlet.addServlet(proxy, "/foo");
     
     server.setHandler(servlet);
-    
-    
+
     try {
       server.start();
     } catch (InterruptedException e) {

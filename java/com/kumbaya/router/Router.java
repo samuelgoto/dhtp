@@ -29,13 +29,27 @@ public class Router implements Server {
   }
   
   static class InterestHandler implements Handler<Interest> {
+    private final Client client;
+    
+    @Inject
+    InterestHandler(Client client) {
+      this.client = client;
+    }
+    
     @Override
     public Optional<Object> handle(Interest request) {
-      Data response = new Data();
-      response.setName(request.getName());
-      response.getMetadata().setFreshnessPeriod(2);
-      response.setContent("hello world".getBytes());
-      return Optional.of(response);
+      
+      try {
+        // Forwards the interest to the next hop.
+        Optional<Data> response = client.send(request);
+        if (response.isPresent()) {
+          return Optional.of(response.get());
+        }
+      } catch (IllegalArgumentException | IllegalAccessException | InstantiationException
+          | IOException e) {
+      }
+      
+      return Optional.absent();
     }
   }
   

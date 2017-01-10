@@ -10,15 +10,15 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
-class TcpServer implements Runnable, Server {
+public class TcpServer implements Runnable, Server {
   private final Map<Class<?>, Handler<?>> handlers = new HashMap<Class<?>, Handler<?>>();
   private ServerSocket welcomeSocket;
 
-  <I> void register(Class<I> clazz, Handler<I> handler) {
+  public <I> void register(Class<I> clazz, Handler<I> handler) {
     handlers.put(clazz, handler);
   }
 
-  interface Handler<I> {
+  public interface Handler<I> {
     Optional<Object> handle(I request);
   }
   

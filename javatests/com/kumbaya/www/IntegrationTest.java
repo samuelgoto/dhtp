@@ -1,14 +1,9 @@
 package com.kumbaya.www;
 
-import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.multibindings.MapBinder;
 import com.kumbaya.common.Server;
-import com.kumbaya.router.Client;
-import com.kumbaya.router.Packets;
-import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Router;
 import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.JettyServer;
@@ -22,16 +17,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Scanner;
 import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import junit.framework.TestCase;
-import org.eclipse.jetty.http.HttpURI;
-import org.eclipse.jetty.servlets.ProxyServlet;
 
 public class IntegrationTest extends TestCase {
 
@@ -43,48 +33,9 @@ public class IntegrationTest extends TestCase {
     }
   }
 
-  public static class MyProxyServlet extends ProxyServlet.Transparent {
-    private final InetSocketAddress entrypoint;
-
-    @Inject
-    MyProxyServlet(InetSocketAddress entrypoint) {
-      this.entrypoint = entrypoint;
-    }
-
-    @Override
-    public void init(ServletConfig config) throws ServletException {
-    }
-
-    @Override
-    public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
-      Client client = new Client(entrypoint.getHostName(), entrypoint.getPort());
-      Packets.Interest interest = new Packets.Interest();
-      HttpServletRequest request = (HttpServletRequest) req;
-      HttpServletResponse response = (HttpServletResponse) res;
-      interest.getName().setName(request.getRequestURL().toString());
-      try {
-        Optional<Data> result = client.send(interest);
-        if (result.isPresent()) {
-          response.getOutputStream().write(result.get().getContent());
-        } else {
-          response.sendError(404);
-        }
-      } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
-        response.sendError(500);
-      }
-    }
-
-    @Override
-    protected HttpURI proxyHttpURI(String scheme,
-        String serverName, int serverPort, String uri)
-            throws MalformedURLException {
-      return new HttpURI();
-    }
-  }
-
   private String get(SocketAddress proxy, String url) throws MalformedURLException, IOException {
     java.net.Proxy p = new java.net.Proxy(java.net.Proxy.Type.HTTP, proxy);
-    HttpURLConnection connection =(HttpURLConnection)new URL(url).openConnection(p);
+    HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection(p);
     connection.setDoOutput(true);
     connection.setDoInput(true);
     connection.setRequestProperty("Content-type", "text/xml");
@@ -124,18 +75,16 @@ public class IntegrationTest extends TestCase {
 
   public void testAll() throws IOException {
     Proxy proxy = Guice.createInjector(
-        new Proxy.Module(new InetSocketAddress("localhost", 9090)), 
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            MapBinder<String, Servlet> mapbinder
-            = MapBinder.newMapBinder(binder(), String.class, Servlet.class);
-            mapbinder.addBinding("/foo").to(MyProxyServlet.class);
-          }
-        }).getInstance(Proxy.class);
+        new Proxy.Module(new InetSocketAddress("localhost", 9090)) 
+        ).getInstance(Proxy.class);
     proxy.bind(new InetSocketAddress("localhost", 8080));
 
-    Router router = Guice.createInjector().getInstance(Router.class);
+    Router router = Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(InetSocketAddress.class).toInstance(new InetSocketAddress("localhost", 7070));
+      }
+    }).getInstance(Router.class);
     router.bind(new InetSocketAddress("localhost", 9090));
 
     Gateway gateway = Guice.createInjector().getInstance(Gateway.class);

@@ -26,7 +26,7 @@ public class TcpServerTest extends TestCase {
     Thread thread = new Thread(server);
     thread.start();
 
-    Client client = new Client("localhost", 6789);
+    Client client = new Client(new InetSocketAddress("localhost", 6789));
 
     Interest interest = new Interest();
     interest.getName().setName("foo");
