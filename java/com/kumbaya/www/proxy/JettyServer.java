@@ -33,7 +33,7 @@ public class JettyServer implements Server {
   }
 
   @Override
-  public void bind(SocketAddress address) throws IOException {
+  public void bind(InetSocketAddress address) throws IOException {
     server = new org.eclipse.jetty.server.Server(((InetSocketAddress) address)
         .getPort());
 

@@ -12,20 +12,17 @@ public class PacketsTest extends TestCase {
   public void testSerializingInterest() throws Exception {
     Interest packet = new Interest();
     packet.getName().setName("foo");
-    packet.getName().setSha256("bar");
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, packet);
     Interest result = Serializer.unserialize(stream.toByteArray());
     
     assertEquals("foo", result.getName().getName());
-    assertEquals("bar", result.getName().getSha256());
   }
 
   public void testSerializingData() throws Exception {
     Data packet = new Data();
     packet.getName().setName("foo");
-    packet.getName().setSha256("bar");
     packet.getMetadata().setFreshnessPeriod(2);
     packet.setContent("hello world".getBytes());
 
@@ -34,7 +31,6 @@ public class PacketsTest extends TestCase {
     Data result = Serializer.unserialize(stream.toByteArray());
     
     assertEquals("foo", result.getName().getName());
-    assertEquals("bar", result.getName().getSha256());
     assertEquals(2, result.getMetadata().getFreshnessPeriod());
     Assert.assertArrayEquals("hello world".getBytes(), result.getContent());
   }
@@ -42,7 +38,6 @@ public class PacketsTest extends TestCase {
   public void testStreamOfPackets() throws Exception {
     Data packet = new Data();
     packet.getName().setName("foo");
-    packet.getName().setSha256("bar");
     packet.getMetadata().setFreshnessPeriod(2);
     packet.setContent("hello world".getBytes());
 
@@ -52,7 +47,6 @@ public class PacketsTest extends TestCase {
     
     assertTrue(result instanceof Data);
     assertEquals("foo", ((Data) result).getName().getName());
-    assertEquals("bar", ((Data) result).getName().getSha256());
     assertEquals(2, ((Data) result).getMetadata().getFreshnessPeriod());
     Assert.assertArrayEquals("hello world".getBytes(), ((Data) result).getContent());
   }

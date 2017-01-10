@@ -69,7 +69,6 @@ public class IntegrationTest extends TestCase {
         } else {
           response.sendError(404);
         }
-        res.getWriter().println("hello world");
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
         response.sendError(500);
       }

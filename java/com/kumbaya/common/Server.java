@@ -1,9 +1,9 @@
 package com.kumbaya.common;
 
 import java.io.IOException;
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 
 public interface Server {
-	public void bind(SocketAddress address) throws IOException;
+	public void bind(InetSocketAddress address) throws IOException;
 	void close();
 }

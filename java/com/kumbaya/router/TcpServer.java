@@ -1,22 +1,19 @@
 package com.kumbaya.router;
 
 import com.google.common.base.Optional;
+import com.kumbaya.common.Server;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
-class TcpServer implements Runnable {
+class TcpServer implements Runnable, Server {
   private final Map<Class<?>, Handler<?>> handlers = new HashMap<Class<?>, Handler<?>>();
-  private final ServerSocket welcomeSocket;
+  private ServerSocket welcomeSocket;
 
-  TcpServer(int port) throws IOException {
-    this.welcomeSocket = new ServerSocket(port);
-  }
-  
   <I> void register(Class<I> clazz, Handler<I> handler) {
     handlers.put(clazz, handler);
   }
@@ -50,5 +47,16 @@ class TcpServer implements Runnable {
         throw new RuntimeException("Unexpected error", e);
       }
     }
+  }
+
+  @Override
+  public void bind(InetSocketAddress address) throws IOException {
+    this.welcomeSocket = new ServerSocket(address.getPort());
+  }
+
+  @Override
+  public void close() {
+    // TODO(goto): Auto-generated method stub
+    
   }
 }

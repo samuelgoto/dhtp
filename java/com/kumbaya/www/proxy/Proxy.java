@@ -8,7 +8,6 @@ import com.kumbaya.common.Server;
 import com.kumbaya.common.monitor.MonitoringModule;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 
 public class Proxy implements Server {
   private final JettyServer http;
@@ -42,7 +41,7 @@ public class Proxy implements Server {
   }
 
   @Override
-  public void bind(SocketAddress address) throws IOException {
+  public void bind(InetSocketAddress address) throws IOException {
     http.bind(address);
   }
 

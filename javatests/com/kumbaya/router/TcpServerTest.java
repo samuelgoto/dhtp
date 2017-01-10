@@ -5,12 +5,14 @@ import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import junit.framework.TestCase;
 
-public class TcpTest extends TestCase {
+public class TcpServerTest extends TestCase {
 
   public void testPacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
-    TcpServer server = new TcpServer(6789);
+    TcpServer server = new TcpServer();
+    server.bind(new InetSocketAddress("localhost", 6789));
     server.register(Interest.class, new TcpServer.Handler<Interest>() {
       @Override
       public Optional<Object> handle(Interest request) {
@@ -28,7 +30,6 @@ public class TcpTest extends TestCase {
 
     Interest interest = new Interest();
     interest.getName().setName("foo");
-    interest.getName().setSha256("bar");
     Optional<Data> result = client.send(interest);
 
     assertTrue(result.isPresent());

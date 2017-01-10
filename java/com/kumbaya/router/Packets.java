@@ -24,8 +24,6 @@ public class Packets {
   public static class Name {
     @Field(Registry.NAME_COMPONENT)
     String name;
-    @Field(Registry.IMPLICIT_SHA256_DIGEST_COMPONENT)
-    String sha256;
     
     public Name setName(String name) {
       this.name = name;
@@ -34,15 +32,6 @@ public class Packets {
     
     public String getName() {
       return this.name;
-    }
-
-    public Name setSha256(String sha256) {
-      this.sha256 = sha256;
-      return this;
-    }
-    
-    public String getSha256() {
-      return this.sha256;
     }
   }
   

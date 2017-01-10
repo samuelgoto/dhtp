@@ -2,11 +2,11 @@ package com.kumbaya.www.gateway;
 
 import com.kumbaya.common.Server;
 import java.io.IOException;
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 
 public class Gateway implements Server {
   @Override
-  public void bind(SocketAddress address) throws IOException {
+  public void bind(InetSocketAddress address) throws IOException {
   }
 
   @Override
