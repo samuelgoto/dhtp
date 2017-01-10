@@ -68,10 +68,13 @@ public class IntegrationTest extends TestCase {
 
     Gateway gateway = Guice.createInjector().getInstance(Gateway.class);
     gateway.bind(new InetSocketAddress("localhost", 7070));
+    
+    Server www = server();
 
     proxy.close();
     router.close();
     gateway.close();
+    www.close();
   }
 
 
