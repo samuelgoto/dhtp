@@ -21,28 +21,62 @@ public class Packets {
   }
  
   @Type(Registry.NAME)
-  static class Name {
+  public static class Name {
     @Field(Registry.NAME_COMPONENT)
     String name;
     @Field(Registry.IMPLICIT_SHA256_DIGEST_COMPONENT)
     String sha256;
+    
+    public Name setName(String name) {
+      this.name = name;
+      return this;
+    }
+    
+    public String getName() {
+      return this.name;
+    }
+
+    public Name setSha256(String sha256) {
+      this.sha256 = sha256;
+      return this;
+    }
+    
+    public String getSha256() {
+      return this.sha256;
+    }
   }
   
   @Type(Registry.INTEREST)
-  static class Interest {
+  public static class Interest {
     static {
       Serializer.register(Interest.class);
     }
 
     Name name = new Name();
-    @Field(Registry.NONCE)
-    long nonce;
     @Field(Registry.INTEREST_LIFETIME)
     int lifetime;
+    
+    public Interest setName(Name name) {
+      this.name = name;
+      return this;
+    }
+    
+    public Name getName() {
+      return this.name;
+    }
+
+    public Interest setLifetime(int lifetime) {
+      this.lifetime = lifetime;
+      return this;
+    }
+    
+    public int getLifetime() {
+      return this.lifetime;
+    }
   }
   
   @Type(Registry.DATA)
-  static class Data {
+  public static class Data {
     static {
       Serializer.register(Data.class);
     }
@@ -51,11 +85,47 @@ public class Packets {
     MetaInfo metadata = new MetaInfo();
     @Field(Registry.CONTENT)
     byte[] content;
+
+    public Name getName() {
+      return name;
+    }
+    
+    public Data setName(Name name) {
+      this.name = name;
+      return this;
+    }
+    
+    public MetaInfo getMetadata() {
+      return metadata;
+    }
+    
+    public Data setMetadata(MetaInfo metadata) {
+      this.metadata = metadata;
+      return this;
+    }
+    
+    public byte[] getContent() {
+      return content;
+    }
+    
+    public Data setContent(byte[] content) {
+      this.content = content;
+      return this;
+    }
   }
   
   @Type(Registry.META_INFO)
-  static class MetaInfo {
+  public static class MetaInfo {
     @Field(Registry.FRESHNESS_PERIOD)
     int freshnessPeriod;
+
+    public int getFreshnessPeriod() {
+      return freshnessPeriod;
+    }
+
+    public MetaInfo setFreshnessPeriod(int freshnessPeriod) {
+      this.freshnessPeriod = freshnessPeriod;
+      return this;
+    }
   }
 }

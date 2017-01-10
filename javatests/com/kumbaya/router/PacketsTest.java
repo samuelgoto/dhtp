@@ -11,50 +11,50 @@ public class PacketsTest extends TestCase {
   
   public void testSerializingInterest() throws Exception {
     Interest packet = new Interest();
-    packet.name.name = "foo";
-    packet.name.sha256 = "bar";
+    packet.getName().setName("foo");
+    packet.getName().setSha256("bar");
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, packet);
     Interest result = Serializer.unserialize(stream.toByteArray());
     
-    assertEquals("foo", result.name.name);
-    assertEquals("bar", result.name.sha256);
+    assertEquals("foo", result.getName().getName());
+    assertEquals("bar", result.getName().getSha256());
   }
 
   public void testSerializingData() throws Exception {
     Data packet = new Data();
-    packet.name.name = "foo";
-    packet.name.sha256 = "bar";
-    packet.metadata.freshnessPeriod = 2;
-    packet.content = "hello world".getBytes();
+    packet.getName().setName("foo");
+    packet.getName().setSha256("bar");
+    packet.getMetadata().setFreshnessPeriod(2);
+    packet.setContent("hello world".getBytes());
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, packet);
     Data result = Serializer.unserialize(stream.toByteArray());
     
-    assertEquals("foo", result.name.name);
-    assertEquals("bar", result.name.sha256);
-    assertEquals(2, result.metadata.freshnessPeriod);
-    Assert.assertArrayEquals("hello world".getBytes(), result.content);
+    assertEquals("foo", result.getName().getName());
+    assertEquals("bar", result.getName().getSha256());
+    assertEquals(2, result.getMetadata().getFreshnessPeriod());
+    Assert.assertArrayEquals("hello world".getBytes(), result.getContent());
   }
   
   public void testStreamOfPackets() throws Exception {
     Data packet = new Data();
-    packet.name.name = "foo";
-    packet.name.sha256 = "bar";
-    packet.metadata.freshnessPeriod = 2;
-    packet.content = "hello world".getBytes();
+    packet.getName().setName("foo");
+    packet.getName().setSha256("bar");
+    packet.getMetadata().setFreshnessPeriod(2);
+    packet.setContent("hello world".getBytes());
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
     Serializer.serialize(stream, packet);
     Object result = Serializer.unserialize(stream.toByteArray());
     
     assertTrue(result instanceof Data);
-    assertEquals("foo", ((Data) result).name.name);
-    assertEquals("bar", ((Data) result).name.sha256);
-    assertEquals(2, ((Data) result).metadata.freshnessPeriod);
-    Assert.assertArrayEquals("hello world".getBytes(), ((Data) result).content);
+    assertEquals("foo", ((Data) result).getName().getName());
+    assertEquals("bar", ((Data) result).getName().getSha256());
+    assertEquals(2, ((Data) result).getMetadata().getFreshnessPeriod());
+    Assert.assertArrayEquals("hello world".getBytes(), ((Data) result).getContent());
   }
 
 }

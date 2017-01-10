@@ -5,12 +5,13 @@ import com.google.inject.Singleton;
 
 import com.kumbaya.common.Server;
 import com.kumbaya.common.monitor.VarZLogger;
-
+import com.kumbaya.www.IntegrationTest;
+import com.kumbaya.www.IntegrationTest.MyProxyServlet;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Map;
-
+import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 
 import org.apache.commons.logging.Log;
@@ -22,11 +23,11 @@ import org.eclipse.jetty.servlet.ServletHolder;
 public class JettyServer implements Server {
   private static final Log logger = LogFactory.getLog(JettyServer.class);
   private org.eclipse.jetty.server.Server server;
-  private final Map<String, HttpServlet> servlets;
+  private final Map<String, Servlet> servlets;
 
   @Inject
   JettyServer(
-      Map<String, HttpServlet> servlets,
+      Map<String, Servlet> servlets,
       VarZLogger varZ) {
     this.servlets = servlets;
   }
@@ -39,12 +40,20 @@ public class JettyServer implements Server {
     ServletContextHandler servlet = new ServletContextHandler(ServletContextHandler.SESSIONS);
     servlet.setContextPath("/");
 
-    for (Map.Entry<String, HttpServlet> entry : servlets.entrySet()) {
+    for (Map.Entry<String, Servlet> entry : servlets.entrySet()) {
       servlet.addServlet(new ServletHolder(entry.getValue()), entry.getKey());
     }
 
+    
+    // TODO(goto): figure out how to move this to the multibinding map.
+    //ServletHolder proxy = new ServletHolder(IntegrationTest.MyProxyServlet.class);    
+    //proxy.setInitParameter("ProxyTo", "http://foobar.com");
+    //proxy.setInitParameter("Prefix", "/foo");
+    //servlet.addServlet(proxy, "/foo");
+    
     server.setHandler(servlet);
-
+    
+    
     try {
       server.start();
     } catch (InterruptedException e) {

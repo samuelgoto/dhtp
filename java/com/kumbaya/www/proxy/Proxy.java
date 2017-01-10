@@ -19,15 +19,23 @@ public class Proxy implements Server {
   }  
 
   public static class Module extends AbstractModule {
+    private final InetSocketAddress entrypoint;
+    public Module(InetSocketAddress entrypoint) {
+      this.entrypoint = entrypoint;
+    }
+    
     @Override
     protected void configure() {
       install(new ServletModule()); 
       install(new MonitoringModule());
+      
+      bind(InetSocketAddress.class).toInstance(entrypoint);
     }
   }
   
   public static void main(String[] args) throws Exception {
-    Injector injector = Guice.createInjector(new Module());
+    Injector injector = Guice.createInjector(
+        new Module(new InetSocketAddress("localhost", 8081)));
 
     Server server = injector.getInstance(Proxy.class);
     server.bind(new InetSocketAddress("localhost", 8080));

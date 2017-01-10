@@ -51,21 +51,4 @@ class TcpServer implements Runnable {
       }
     }
   }
-
-  static class Client {
-    private final String hostname;
-    private final int port;
-    Client(String hostname, int port) {
-      this.hostname = hostname;
-      this.port = port;
-    }
-    <T> Optional<T> send(Object packet) throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
-      Socket clientSocket = new Socket(hostname, port);
-      DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
-      Serializer.serialize(outToServer, packet);
-      T result = Serializer.unserialize(clientSocket.getInputStream());
-      clientSocket.close();
-      return Optional.of(result);
-    }
-  }
 }

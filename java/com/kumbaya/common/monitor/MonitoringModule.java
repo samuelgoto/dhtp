@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
 import com.kumbaya.common.annotations.VarZ;
-import javax.servlet.http.HttpServlet;
+import javax.servlet.Servlet;
 
 public class MonitoringModule extends AbstractModule {
 	@Override
@@ -16,8 +16,8 @@ public class MonitoringModule extends AbstractModule {
 		requestInjection(interceptor);
 		
 		
-		MapBinder<String, HttpServlet> mapbinder
-          = MapBinder.newMapBinder(binder(), String.class, HttpServlet.class);
+		MapBinder<String, Servlet> mapbinder
+          = MapBinder.newMapBinder(binder(), String.class, Servlet.class);
 
         mapbinder.addBinding("/varz/*").to(VarZGraphServlet.class);
         mapbinder.addBinding("/varz").to(VarZServlet.class);
