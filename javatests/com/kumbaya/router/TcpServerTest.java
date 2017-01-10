@@ -5,6 +5,7 @@ import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import junit.framework.TestCase;
 
@@ -15,12 +16,12 @@ public class TcpServerTest extends TestCase {
     server.bind(new InetSocketAddress("localhost", 6789));
     server.register(Interest.class, new TcpServer.Handler<Interest>() {
       @Override
-      public Optional<Object> handle(Interest request) {
-        Data response = new Data();
-        response.setName(request.getName());
-        response.getMetadata().setFreshnessPeriod(2);
-        response.setContent("hello world".getBytes());
-        return Optional.of(response);
+      public void handle(Interest request, OutputStream response) throws IOException {
+        Data result = new Data();
+        result.setName(request.getName());
+        result.getMetadata().setFreshnessPeriod(2);
+        result.setContent("hello world".getBytes());
+        Serializer.serialize(response, result);
       }
     });
     Thread thread = new Thread(server);

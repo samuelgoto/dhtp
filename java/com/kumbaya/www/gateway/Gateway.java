@@ -5,10 +5,12 @@ import com.google.inject.Inject;
 import com.kumbaya.common.Server;
 import com.kumbaya.router.TcpServer;
 import com.kumbaya.router.Packets;
+import com.kumbaya.router.Serializer;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Handler;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -41,20 +43,12 @@ public class Gateway implements Server {
     }
     
     @Override
-    public Optional<Object> handle(Interest request) {
+    public void handle(Interest request, OutputStream response) throws IOException {
       Packets.Data data = new Packets.Data();
       data.getName().setName(request.getName().getName());
       data.getMetadata().setFreshnessPeriod(2);
-      try {
-        data.setContent(get(request.getName().getName()).getBytes());
-        return Optional.of(data);
-      } catch (FileNotFoundException e) {
-        // We got a 404 from the server.
-        // TODO(goto): there is probably a nack that we should send.
-        return Optional.absent();
-      } catch (IOException e) {
-        return Optional.absent();
-      }
+      data.setContent(get(request.getName().getName()).getBytes());
+      Serializer.serialize(response, data);
     }
   }
   

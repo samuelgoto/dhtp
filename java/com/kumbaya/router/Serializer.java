@@ -20,7 +20,7 @@ import java.util.Map;
 import static com.kumbaya.router.TypeLengthValues.encode;
 import static com.kumbaya.router.TypeLengthValues.decode;
 
-class Serializer {
+public class Serializer {
   private static final Map<Long, Class<?>> registry = new HashMap<Long, Class<?>>();
   
   static void register(Class<?> clazz) {
@@ -42,7 +42,7 @@ class Serializer {
     long value();
   }
 
-  static <T> void serialize(OutputStream stream, T object) throws IllegalArgumentException, IllegalAccessException, IOException {
+  public static <T> void serialize(OutputStream stream, T object) throws IOException {
     Type annotation = object.getClass().getAnnotation(Type.class);
     Preconditions.checkNotNull(annotation, "Object being serialized isn't annotated with @Type: " + object.getClass());
     long container = annotation.value();
@@ -69,15 +69,21 @@ class Serializer {
       // TODO(goto): we should probably assert somewhere that type ids are unique in the
       // object.
       // If this is an optional field and it is not present, just fully skip it.
+      final Object p;
+      try {
+        p = property.get(object);
+      } catch (IllegalArgumentException | IllegalAccessException e) {
+        throw new RuntimeException("Can't serialize object", e);
+      }
+      
       if (optional) {
         // Optional properties are allowed to have nulls: it will be assumed to be absent.
-        if (property.get(object) == null ||
-            !((Optional<?>) property.get(object)).isPresent()) {
+        if (p == null || !((Optional<?>) p).isPresent()) {
           continue;
         }
       }
 
-      Object value = (optional ? ((Optional<?>) property.get(object)).get() : property.get(object));
+      Object value = (optional ? ((Optional<?>) p).get() : p);
       if (type == String.class) {
         Preconditions.checkNotNull(value, "Can't serialize null fields: " + property.getName());
         Marshaller.marshall(content, TLV.of(field.value(), ((String) value).getBytes()));

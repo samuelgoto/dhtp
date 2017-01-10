@@ -8,6 +8,7 @@ import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Handler;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -51,19 +52,17 @@ public class Router implements Server {
     }
     
     @Override
-    public Optional<Object> handle(Interest request) {
-      
+    public void handle(Interest request, OutputStream response) {
       try {
         // Forwards the interest to the next hop.
-        Optional<Data> response = client.send(request);
-        if (response.isPresent()) {
-          return Optional.of(response.get());
+        Optional<Data> result = client.send(request);
+        
+        if (result.isPresent()) {
+          Serializer.serialize(response, result.get());
         }
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException
           | IOException e) {
       }
-      
-      return Optional.absent();
     }
   }
   

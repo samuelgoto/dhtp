@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.kumbaya.common.Server;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -19,12 +20,12 @@ public class TcpServer implements Runnable, Server {
   }
 
   public interface Handler<I> {
-    Optional<Object> handle(I request);
+    void handle(I request, OutputStream response) throws IOException;
   }
   
   @SuppressWarnings({"unchecked", "cast"})
-  private <I> Optional<Object> handle(Handler<I> handler, Object request) {
-    return handler.handle((I) request);
+  private <I> void handle(Handler<I> handler, Object request, OutputStream response) throws IOException {
+    handler.handle((I) request, response);
   }
   
   @Override
@@ -39,10 +40,7 @@ public class TcpServer implements Runnable, Server {
           // Unknown packet type.
           throw new RuntimeException("Unexpected packet type " + request.getClass());
         }
-        Optional<Object> response = handle(handler, request);
-        if (response.isPresent()) {
-          Serializer.serialize(outToClient, response.get());
-        }
+        handle(handler, request, outToClient);
       } catch (IOException | IllegalArgumentException | IllegalAccessException | InstantiationException e) {
         throw new RuntimeException("Unexpected error", e);
       }
