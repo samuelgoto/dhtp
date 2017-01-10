@@ -46,7 +46,7 @@ public class Proxy implements Server {
         protected void configure() {
           MapBinder<String, Servlet> mapbinder
           = MapBinder.newMapBinder(binder(), String.class, Servlet.class);
-          mapbinder.addBinding("/foo").to(MyProxyServlet.class);
+          mapbinder.addBinding("/*").to(MyProxyServlet.class);
         }
       });
       

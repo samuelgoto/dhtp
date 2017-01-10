@@ -7,8 +7,13 @@ import com.kumbaya.router.TcpServer;
 import com.kumbaya.router.Packets;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Handler;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Scanner;
 
 public class Gateway implements Server {
   private final TcpServer server;
@@ -26,15 +31,30 @@ public class Gateway implements Server {
     InterestHandler() {
     }
     
+    private String get(String url) throws MalformedURLException, IOException {
+      HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+      Scanner scanner = new Scanner(connection.getInputStream());
+      scanner.useDelimiter("\\Z");
+      String result = scanner.next();
+      scanner.close();
+      return result;
+    }
+    
     @Override
     public Optional<Object> handle(Interest request) {
-      // TODO(goto): implement the network <-> web interface
       Packets.Data data = new Packets.Data();
       data.getName().setName(request.getName().getName());
-      data.setContent("hello world".getBytes());
       data.getMetadata().setFreshnessPeriod(2);
-      
-      return Optional.of(data);
+      try {
+        data.setContent(get(request.getName().getName()).getBytes());
+        return Optional.of(data);
+      } catch (FileNotFoundException e) {
+        // We got a 404 from the server.
+        // TODO(goto): there is probably a nack that we should send.
+        return Optional.absent();
+      } catch (IOException e) {
+        return Optional.absent();
+      }
     }
   }
   

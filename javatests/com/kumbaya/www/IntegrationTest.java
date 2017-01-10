@@ -95,7 +95,7 @@ public class IntegrationTest extends TestCase {
 
     String result = get(
         new InetSocketAddress("localhost", 8080), 
-        "http://localhost:6060/foo");
+        "http://localhost:6060/helloworld");
 
     assertEquals("hello world", result);
 
