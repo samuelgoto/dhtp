@@ -1,6 +1,7 @@
 package com.kumbaya.router;
 
 import java.io.ByteArrayInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -39,6 +40,9 @@ class TypeLengthValues {
   
   static long decode(InputStream value) throws IOException {
     int head = value.read();
+    if (head == -1) {
+      throw new EOFException("End of stream");
+    }
     if (head < 253) {
       return head;
     } else if (head == 253) {

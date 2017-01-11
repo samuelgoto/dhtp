@@ -63,6 +63,7 @@ public class TcpServer implements Runnable, Server {
           throw new RuntimeException("Unexpected packet type " + request.getClass());
         }
         handle(handler, request, out);
+        connection.close();
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
         throw new RuntimeException("Failed to serialize payload", e);
       } catch (SocketException e) {

@@ -119,7 +119,7 @@ class Serializer {
   @SuppressWarnings("unchecked")
   private static <T> T unserialize(Class<T> clazz, InputStream stream) 
       throws IllegalArgumentException, IllegalAccessException, InstantiationException, IOException {
-
+    
     TLV data = Marshaller.unmarshall(stream);
 
     if (clazz == null) {

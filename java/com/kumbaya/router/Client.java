@@ -3,6 +3,7 @@ package com.kumbaya.router;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -20,8 +21,13 @@ public class Client {
     Socket clientSocket = new Socket(host.getHostName(), host.getPort());
     DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
     Serializer.serialize(outToServer, packet);
-    T result = Serializer.unserialize(clientSocket.getInputStream());
-    clientSocket.close();
-    return Optional.of(result);
+    try {
+      T result = Serializer.unserialize(clientSocket.getInputStream());
+      return Optional.of(result);
+    } catch (EOFException e) {
+      return Optional.absent();
+    } finally {
+      clientSocket.close();
+    }
   }
 }

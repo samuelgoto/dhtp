@@ -113,22 +113,34 @@ public class IntegrationTest extends TestCase {
   private final Supplier<Server> www = new Supplier<Server>() {
     @Override
     Server build() {
-      return server();    
+      return server();
     }
   };
   
   public void testHittingHttpServerDirectly() throws IOException {
-    String result = WorldWideWeb.get("http://localhost:6060/helloworld");
-    assertEquals("hello world", result);
+    Optional<String> result = WorldWideWeb.get("http://localhost:6060/helloworld");
+    assertTrue(result.isPresent());
+    assertEquals("hello world", result.get());
   }
 
   public void testHittingHttpServerThroughNetwork() throws IOException {
-    String result = WorldWideWeb.get(
+    Optional<String> result = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
         "http://localhost:6060/helloworld");
-
-    assertEquals("hello world", result);
-
+    assertTrue(result.isPresent());
+    assertEquals("hello world", result.get());
   }
+  
+  public void test404s() throws IOException {
+    // Straight to the server
+    Optional<String> result = WorldWideWeb.get("http://localhost:6060/doesntexist");
+    assertFalse(result.isPresent());
+    
+    // Through the network
+    Optional<String> proxied = WorldWideWeb.get(
+        new InetSocketAddress("localhost", 8080), 
+        "http://localhost:6060/doesntexist");
+    assertFalse(proxied.isPresent());
+  }  
 }
 

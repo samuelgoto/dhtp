@@ -11,8 +11,10 @@ import com.kumbaya.common.monitor.MonitoringModule;
 import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets;
 import com.kumbaya.router.Packets.Data;
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -24,7 +26,7 @@ import org.eclipse.jetty.servlets.ProxyServlet;
 
 public class Proxy implements Server {
   private final JettyServer http;
-  
+
   @Inject
   Proxy(JettyServer http) {
     this.http = http;
@@ -35,12 +37,12 @@ public class Proxy implements Server {
     public Module(InetSocketAddress entrypoint) {
       this.entrypoint = entrypoint;
     }
-    
+
     @Override
     protected void configure() {
       install(new ServletModule()); 
       install(new MonitoringModule());
-      
+
       install(new AbstractModule() {
         @Override
         protected void configure() {
@@ -49,11 +51,11 @@ public class Proxy implements Server {
           mapbinder.addBinding("/*").to(MyProxyServlet.class);
         }
       });
-      
+
       bind(InetSocketAddress.class).toInstance(entrypoint);
     }
   }
-  
+
   public static void main(String[] args) throws Exception {
     Injector injector = Guice.createInjector(
         new Module(new InetSocketAddress("localhost", 8081)));
@@ -71,7 +73,6 @@ public class Proxy implements Server {
   public void close() {
     http.close();
   }
-  
 
   private static class MyProxyServlet extends ProxyServlet.Transparent {
     private final InetSocketAddress entrypoint;
@@ -100,6 +101,7 @@ public class Proxy implements Server {
           response.sendError(404);
         }
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
+        e.printStackTrace();        
         response.sendError(500);
       }
     }
