@@ -25,6 +25,7 @@ public class Client {
       T result = Serializer.unserialize(clientSocket.getInputStream());
       return Optional.of(result);
     } catch (EOFException e) {
+      // If no response was sent back, return an absent content.
       return Optional.absent();
     } finally {
       clientSocket.close();

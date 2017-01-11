@@ -6,6 +6,7 @@ import com.kumbaya.common.Server;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -66,9 +67,12 @@ public class TcpServer implements Runnable, Server {
         connection.close();
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
         throw new RuntimeException("Failed to serialize payload", e);
+      } catch (ConnectException e) {
+        e.printStackTrace();
       } catch (SocketException e) {
+        // e.printStackTrace();
         Preconditions.checkArgument(!running.get(), "Socket closed but server is still running");
-      } catch (IOException e) {        
+      } catch (IOException e) {
         e.printStackTrace();
       }
     }

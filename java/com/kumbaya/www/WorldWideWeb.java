@@ -3,11 +3,11 @@ package com.kumbaya.www;
 import com.google.common.base.Optional;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketAddress;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.Scanner;
 
 public class WorldWideWeb {
@@ -24,10 +24,10 @@ public class WorldWideWeb {
   }
 
   public static Optional<String> get(String url) throws MalformedURLException, IOException {
-    return read(new URL(url).openConnection());
+    return read((HttpURLConnection) new URL(url).openConnection());
   }
 
-  private static Optional<String> read(URLConnection connection) throws IOException {
+  private static Optional<String> read(HttpURLConnection connection) throws IOException {
     try {
       Scanner scanner = new Scanner(connection.getInputStream());
       scanner.useDelimiter("\\Z");
@@ -35,6 +35,10 @@ public class WorldWideWeb {
       scanner.close();
       return Optional.of(result);
     } catch (FileNotFoundException e) {
+      // Server responded but said nothing is there.
+      return Optional.absent();
+    } catch (ConnectException e) {
+      // DNS fails or the server isn't responding.
       return Optional.absent();
     }
   }

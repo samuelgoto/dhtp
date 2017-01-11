@@ -29,16 +29,19 @@ public class Gateway implements Server {
     @Override
     public void handle(Interest request, Queue response) throws IOException {
       // Fetches the content of the page.
-      Optional<String> content = WorldWideWeb.get(request.getName().getName());
-      
-      // If the content is available, return it.
-      if (content.isPresent()) {
-        Packets.Data data = new Packets.Data();
-        data.getName().setName(request.getName().getName());
-        data.getMetadata().setFreshnessPeriod(2);
-        data.setContent(content.get().getBytes());
-        response.push(data);
-      }      
+      try {
+        Optional<String> content = WorldWideWeb.get(request.getName().getName());
+        // If the content is available, return it.
+        if (content.isPresent()) {
+          Packets.Data data = new Packets.Data();
+          data.getName().setName(request.getName().getName());
+          data.getMetadata().setFreshnessPeriod(2);
+          data.setContent(content.get().getBytes());
+          response.push(data);
+        }      
+      } catch (IOException e) {
+        // Ignores 500s, assumes content isn't available. 
+      }
     }
   }
   

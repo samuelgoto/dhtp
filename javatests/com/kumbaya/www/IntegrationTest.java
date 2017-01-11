@@ -22,64 +22,6 @@ import javax.servlet.http.HttpServletResponse;
 import junit.framework.TestCase;
 
 public class IntegrationTest extends TestCase {
-
-  private static class TestServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws IOException, ServletException {
-      response.getWriter().println("hello world");
-    }
-  }
-
-  Server server() {
-    return Guice.createInjector(new AbstractModule() {
-      @Override
-      protected void configure() {
-        MapBinder<String, Servlet> mapbinder
-        = MapBinder.newMapBinder(binder(), String.class, Servlet.class);
-
-        mapbinder.addBinding("/helloworld").to(TestServlet.class);
-      }
-    }).getInstance(JettyServer.class);
-  }
-
-
-  @Override
-  public void setUp() throws IOException {
-    proxy.clear().get().bind(new InetSocketAddress("localhost", 8080));
-    router.clear().get().bind(new InetSocketAddress("localhost", 9090));
-    gateway.clear().get().bind(new InetSocketAddress("localhost", 7070));
-    www.clear().get().bind(new InetSocketAddress("localhost", 6060));
-  }
-  
-  @Override
-  public void tearDown() throws IOException {
-    proxy.get().close();
-    router.get().close();
-    gateway.get().close();
-    www.get().close();
-  }
-  
-  static abstract class Supplier<T> {
-    private Optional<T> instance = Optional.absent();
-    
-    T get() {
-      if (instance.isPresent()) {
-        return instance.get();
-      } else {
-        instance = Optional.of(build());
-        return instance.get();
-      }      
-    }
-    
-    Supplier<T> clear() {
-      this.instance = Optional.absent();
-      return this;
-    }
-    
-    abstract T build();
-  }
-  
   private final Supplier<Proxy> proxy = new Supplier<Proxy>() {
     @Override
     Proxy build() {
@@ -116,11 +58,34 @@ public class IntegrationTest extends TestCase {
       return server();
     }
   };
+
+  @Override
+  public void setUp() throws IOException {
+    proxy.clear().get().bind(new InetSocketAddress("localhost", 8080));
+    router.clear().get().bind(new InetSocketAddress("localhost", 9090));
+    gateway.clear().get().bind(new InetSocketAddress("localhost", 7070));
+    www.clear().get().bind(new InetSocketAddress("localhost", 6060));
+  }
+  
+  @Override
+  public void tearDown() throws IOException {
+    proxy.get().close();
+    router.get().close();
+    gateway.get().close();
+    www.get().close();
+  }
+  
   
   public void testHittingHttpServerDirectly() throws IOException {
     Optional<String> result = WorldWideWeb.get("http://localhost:6060/helloworld");
     assertTrue(result.isPresent());
     assertEquals("hello world", result.get());
+  }
+ 
+  public void test404s_directly() throws IOException {
+    // Straight to the server
+    Optional<String> result = WorldWideWeb.get("http://localhost:6060/doesntexist");
+    assertFalse(result.isPresent());
   }
 
   public void testHittingHttpServerThroughNetwork() throws IOException {
@@ -131,16 +96,78 @@ public class IntegrationTest extends TestCase {
     assertEquals("hello world", result.get());
   }
   
-  public void test404s() throws IOException {
-    // Straight to the server
-    Optional<String> result = WorldWideWeb.get("http://localhost:6060/doesntexist");
-    assertFalse(result.isPresent());
-    
+  public void test404s_throughNetwork() throws Exception {
     // Through the network
     Optional<String> proxied = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
         "http://localhost:6060/doesntexist");
     assertFalse(proxied.isPresent());
-  }  
+  }
+
+  public void test404s_throughNetworkDnsDoesntExist() throws Exception {
+    // Through the network
+    Optional<String> proxied = WorldWideWeb.get(
+        new InetSocketAddress("localhost", 8080),
+        "http://localhost:9999/doesntexist");
+    assertFalse(proxied.isPresent());
+  }
+  
+  public void test500s_throughNetwork() throws Exception {
+    // Through the network
+    Optional<String> proxied = WorldWideWeb.get(
+        new InetSocketAddress("localhost", 8080), 
+        "http://localhost:6060/error");
+    assertFalse(proxied.isPresent());
+  }
+  
+
+  private static class HelloWorldServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws IOException, ServletException {
+      response.getWriter().println("hello world");
+    }
+  }
+
+  private static class ServerErrorServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws IOException, ServletException {
+      response.sendError(500);
+    }
+  }
+
+  Server server() {
+    return Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        MapBinder<String, Servlet> mapbinder
+        = MapBinder.newMapBinder(binder(), String.class, Servlet.class);
+
+        mapbinder.addBinding("/helloworld").to(HelloWorldServlet.class);
+        mapbinder.addBinding("/error").to(ServerErrorServlet.class);
+      }
+    }).getInstance(JettyServer.class);
+  }
+  
+  static abstract class Supplier<T> {
+    private Optional<T> instance = Optional.absent();
+    
+    T get() {
+      if (instance.isPresent()) {
+        return instance.get();
+      } else {
+        instance = Optional.of(build());
+        return instance.get();
+      }      
+    }
+    
+    Supplier<T> clear() {
+      this.instance = Optional.absent();
+      return this;
+    }
+    
+    abstract T build();
+  }
 }
 
