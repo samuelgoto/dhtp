@@ -5,5 +5,5 @@ import java.net.InetSocketAddress;
 
 public interface Server {
 	public void bind(InetSocketAddress address) throws IOException;
-	void close();
+	void close() throws IOException;
 }

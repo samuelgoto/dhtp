@@ -20,7 +20,7 @@ import java.util.Map;
 import static com.kumbaya.router.TypeLengthValues.encode;
 import static com.kumbaya.router.TypeLengthValues.decode;
 
-public class Serializer {
+class Serializer {
   private static final Map<Long, Class<?>> registry = new HashMap<Long, Class<?>>();
   
   static void register(Class<?> clazz) {
@@ -42,7 +42,7 @@ public class Serializer {
     long value();
   }
 
-  public static <T> void serialize(OutputStream stream, T object) throws IOException {
+  static <T> void serialize(OutputStream stream, T object) throws IOException {
     Type annotation = object.getClass().getAnnotation(Type.class);
     Preconditions.checkNotNull(annotation, "Object being serialized isn't annotated with @Type: " + object.getClass());
     long container = annotation.value();

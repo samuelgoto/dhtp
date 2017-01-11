@@ -4,24 +4,25 @@ import com.google.common.base.Optional;
 import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
+import com.kumbaya.router.TcpServer.Queue;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 import junit.framework.TestCase;
 
 public class TcpServerTest extends TestCase {
 
   public void testPacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
-    TcpServer server = new TcpServer();
+    TcpServer server = new TcpServer(Executors.newFixedThreadPool(1));
     server.bind(new InetSocketAddress("localhost", 6789));
     server.register(Interest.class, new TcpServer.Handler<Interest>() {
       @Override
-      public void handle(Interest request, OutputStream response) throws IOException {
+      public void handle(Interest request, Queue response) throws IOException {
         Data result = new Data();
         result.setName(request.getName());
         result.getMetadata().setFreshnessPeriod(2);
         result.setContent("hello world".getBytes());
-        Serializer.serialize(response, result);
+        response.push(result);
       }
     });
     Thread thread = new Thread(server);
