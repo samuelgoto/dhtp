@@ -12,6 +12,7 @@ import com.kumbaya.www.proxy.JettyServer;
 import com.kumbaya.www.proxy.Proxy;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.servlet.Servlet;
@@ -61,10 +62,10 @@ public class IntegrationTest extends TestCase {
 
   @Override
   public void setUp() throws IOException {
-    proxy.clear().get().bind(new InetSocketAddress("localhost", 8080));
-    router.clear().get().bind(new InetSocketAddress("localhost", 9090));
-    gateway.clear().get().bind(new InetSocketAddress("localhost", 7070));
-    www.clear().get().bind(new InetSocketAddress("localhost", 6060));
+    proxy.clear().get().bind(new InetSocketAddress("127.0.0.1", 8080));
+    router.clear().get().bind(new InetSocketAddress("127.0.0.1", 9090));
+    gateway.clear().get().bind(new InetSocketAddress("127.0.0.1", 7070));
+    www.clear().get().bind(new InetSocketAddress("127.0.0.1", 6060));
   }
   
   @Override
@@ -73,10 +74,9 @@ public class IntegrationTest extends TestCase {
     router.get().close();
     gateway.get().close();
     www.get().close();
-  }
+  }  
   
-  
-  public void testHittingHttpServerDirectly() throws IOException {
+  public void test200_direclty() throws IOException {
     Optional<String> result = WorldWideWeb.get("http://localhost:6060/helloworld");
     assertTrue(result.isPresent());
     assertEquals("hello world", result.get());
@@ -88,7 +88,7 @@ public class IntegrationTest extends TestCase {
     assertFalse(result.isPresent());
   }
 
-  public void testHittingHttpServerThroughNetwork() throws IOException {
+  public void test200_throughNetwork() throws IOException {
     Optional<String> result = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
         "http://localhost:6060/helloworld");
@@ -120,7 +120,24 @@ public class IntegrationTest extends TestCase {
     assertFalse(proxied.isPresent());
   }
   
+  // TODO(goto): tests for loops in the network! Just ran into one right now.
 
+  public void test200_throughNetwork_notProxied() throws IOException {
+    // This test requires you to add the following line to your /etc/host file.
+    try {
+      Optional<String> result = WorldWideWeb.get("http://localhost-6060.example.com:8080/helloworld");
+      assertTrue(result.isPresent());
+      assertEquals("hello world", result.get());
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+      System.out.println("===================================================================");
+      System.out.println("DNS set up failure: ignoring this test.");
+      System.out.println("This test requires you to add the following line to /etc/host");
+      System.out.println("127.0.0.1     localhost.6060.example.com");
+      System.out.println("===================================================================");
+    }
+  }
+  
   private static class HelloWorldServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
