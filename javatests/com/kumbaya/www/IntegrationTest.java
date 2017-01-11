@@ -43,22 +43,21 @@ public class IntegrationTest extends TestCase {
     }).getInstance(JettyServer.class);
   }
 
-  public void testHttpServer() throws IOException {
-    Server server = server();
-    server.bind(new InetSocketAddress("localhost", 8181));
-    String result = WorldWideWeb.get("http://localhost:8181/helloworld");
-    assertEquals("hello world", result);
-    server.close();
-  }
 
   @Override
-  public void setUp() {
-    
+  public void setUp() throws IOException {
+    proxy.clear().get().bind(new InetSocketAddress("localhost", 8080));
+    router.clear().get().bind(new InetSocketAddress("localhost", 9090));
+    gateway.clear().get().bind(new InetSocketAddress("localhost", 7070));
+    www.clear().get().bind(new InetSocketAddress("localhost", 6060));
   }
   
   @Override
-  public void tearDown() {
-    
+  public void tearDown() throws IOException {
+    proxy.get().close();
+    router.get().close();
+    gateway.get().close();
+    www.get().close();
   }
   
   static abstract class Supplier<T> {
@@ -117,23 +116,19 @@ public class IntegrationTest extends TestCase {
       return server();    
     }
   };
+  
+  public void testHittingHttpServerDirectly() throws IOException {
+    String result = WorldWideWeb.get("http://localhost:6060/helloworld");
+    assertEquals("hello world", result);
+  }
 
-  public void testAll() throws IOException {
-    proxy.get().bind(new InetSocketAddress("localhost", 8080));
-    router.get().bind(new InetSocketAddress("localhost", 9090));
-    gateway.get().bind(new InetSocketAddress("localhost", 7070));
-    www.get().bind(new InetSocketAddress("localhost", 6060));
-
+  public void testHittingHttpServerThroughNetwork() throws IOException {
     String result = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
         "http://localhost:6060/helloworld");
 
     assertEquals("hello world", result);
 
-    proxy.get().close();
-    router.get().close();
-    gateway.get().close();
-    www.get().close();
   }
 }
 
