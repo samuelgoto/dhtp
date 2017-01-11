@@ -11,7 +11,12 @@ import java.util.concurrent.Executors;
 import junit.framework.TestCase;
 
 public class TcpServerTest extends TestCase {
-
+  public void testStartingStopping() throws Exception {
+    TcpServer server = new TcpServer(Executors.newFixedThreadPool(1));
+    server.bind(new InetSocketAddress("localhost", 8080));
+    server.close();
+  }
+  
   public void testPacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
     TcpServer server = new TcpServer(Executors.newFixedThreadPool(1));
     server.bind(new InetSocketAddress("localhost", 6789));

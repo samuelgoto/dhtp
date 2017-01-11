@@ -53,7 +53,7 @@ public class TcpServer implements Runnable, Server {
   
   @Override
   public void run() {
-    while(running.get()) {
+    while (running.get()) {
       try {
         Socket connection = socket.accept();
         DataOutputStream out = new DataOutputStream(connection.getOutputStream());
@@ -70,7 +70,6 @@ public class TcpServer implements Runnable, Server {
       } catch (ConnectException e) {
         e.printStackTrace();
       } catch (SocketException e) {
-        // e.printStackTrace();
         Preconditions.checkArgument(!running.get(), "Socket closed but server is still running");
       } catch (IOException e) {
         e.printStackTrace();
@@ -80,14 +79,15 @@ public class TcpServer implements Runnable, Server {
 
   @Override
   public void bind(InetSocketAddress address) throws IOException {
+    running.set(true);
     socket = new ServerSocket(address.getPort());
     executor.execute(this);
-    running.set(true);
   }
 
   @Override
   public void close() throws IOException {
     socket.close();
     running.set(false);
+    executor.shutdown();
   }
 }
