@@ -1,21 +1,28 @@
 package com.kumbaya.www.proxy;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.MapBinder;
+import com.kumbaya.common.Flags;
+import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.Server;
+import com.kumbaya.common.Flags.Flag;
 import com.kumbaya.common.monitor.MonitoringModule;
 import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets;
+import com.kumbaya.router.Router;
 import com.kumbaya.router.Packets.Data;
+import com.kumbaya.router.Router.Module;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Set;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -23,6 +30,9 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.PatternLayout;
 import org.eclipse.jetty.servlets.ProxyServlet;
 
 public class Proxy implements Server {
@@ -55,14 +65,6 @@ public class Proxy implements Server {
 
       bind(InetSocketAddress.class).toInstance(entrypoint);
     }
-  }
-
-  public static void main(String[] args) throws Exception {
-    Injector injector = Guice.createInjector(
-        new Module(new InetSocketAddress("localhost", 8081)));
-
-    Server server = injector.getInstance(Proxy.class);
-    server.bind(new InetSocketAddress("localhost", 8080));
   }
 
   @Override
@@ -140,4 +142,26 @@ public class Proxy implements Server {
       }
     }
   }  
+  
+
+  public static void main(String[] args) throws Exception {
+    BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
+        "[%-5p] %d %c - %m%n")));
+
+    Set<Flag<?>> options = ImmutableSet.of(
+        Flag.of("host", "The external hostname", true, "localhost"),
+        Flag.of("port", "The external hostname", true, 8080),
+        Flag.of("entrypoint", "The external ip/port of the network entrypoint", true, "localhost:9090")
+        );
+
+    Flags flags = Flags.parse(options, args);
+    final String host = flags.get("host");
+    final int port = flags.get("port");
+    final String entrypoint = flags.get("entrypoint");
+    
+    Proxy proxy = Guice.createInjector(
+        new Module(InetSocketAddresses.parse(entrypoint)))
+        .getInstance(Proxy.class);
+    proxy.bind(new InetSocketAddress(host, port));
+  }
 }

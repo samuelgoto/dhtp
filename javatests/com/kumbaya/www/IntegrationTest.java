@@ -6,10 +6,12 @@ import com.google.inject.Guice;
 import com.google.inject.multibindings.MapBinder;
 import com.kumbaya.common.Server;
 import com.kumbaya.router.Router;
+import com.kumbaya.router.Router.Module;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.JettyServer;
 import com.kumbaya.www.proxy.Proxy;
+import com.kumbaya.www.testing.WorldWideWebServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -44,19 +46,14 @@ public class IntegrationTest extends TestCase {
   private final Supplier<Gateway> gateway = new Supplier<Gateway>() {
     @Override
     Gateway build() {
-      return Guice.createInjector(new AbstractModule() {
-        @Override
-        protected void configure() {
-          bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(1));
-        }
-      }).getInstance(Gateway.class);    
+      return Guice.createInjector(new Gateway.Module()).getInstance(Gateway.class);    
     }
   };
   
   private final Supplier<Server> www = new Supplier<Server>() {
     @Override
     Server build() {
-      return server();
+      return WorldWideWebServer.server();
     }
   };
 
@@ -136,35 +133,6 @@ public class IntegrationTest extends TestCase {
       System.out.println("127.0.0.1     localhost.6060.example.com");
       System.out.println("===================================================================");
     }
-  }
-  
-  private static class HelloWorldServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws IOException, ServletException {
-      response.getWriter().println("hello world");
-    }
-  }
-
-  private static class ServerErrorServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws IOException, ServletException {
-      response.sendError(500);
-    }
-  }
-
-  Server server() {
-    return Guice.createInjector(new AbstractModule() {
-      @Override
-      protected void configure() {
-        MapBinder<String, Servlet> mapbinder
-        = MapBinder.newMapBinder(binder(), String.class, Servlet.class);
-
-        mapbinder.addBinding("/helloworld").to(HelloWorldServlet.class);
-        mapbinder.addBinding("/error").to(ServerErrorServlet.class);
-      }
-    }).getInstance(JettyServer.class);
   }
   
   static abstract class Supplier<T> {
