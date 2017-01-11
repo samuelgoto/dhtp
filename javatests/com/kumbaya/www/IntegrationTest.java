@@ -135,6 +135,23 @@ public class IntegrationTest extends TestCase {
     }
   }
   
+  public void test200_throughNetwork_publicNetwork() throws IOException {
+    // This test requires you to add the following line to your /etc/host file.
+    try {
+      Optional<String> result = WorldWideWeb.get("http://sgo.to.example.com:8080/google6986897775888699.html");
+      assertTrue(result.isPresent());
+      assertEquals( 
+          "google-site-verification: google6986897775888699.html", result.get());
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+      System.out.println("===================================================================");
+      System.out.println("DNS set up failure: ignoring this test.");
+      System.out.println("This test requires you to add the following line to /etc/host");
+      System.out.println("127.0.0.1     sgo.to.example.com");
+      System.out.println("===================================================================");
+    }
+  }
+  
   static abstract class Supplier<T> {
     private Optional<T> instance = Optional.absent();
     

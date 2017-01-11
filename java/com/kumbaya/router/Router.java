@@ -75,6 +75,7 @@ public class Router implements Server {
 
   @Override
   public void bind(InetSocketAddress address) throws IOException {
+    Packets.register();
     server.register(Interest.class, handler);
     server.bind(address);
   }
@@ -92,8 +93,8 @@ public class Router implements Server {
 
     Set<Flag<?>> options = ImmutableSet.of(
         Flag.of("host", "The external hostname", true, "localhost"),
-        Flag.of("port", "The external hostname", true, 8080),
-        Flag.of("forwarding", "The external ip/port of the forwarding table", true, "localhost:9090")
+        Flag.of("port", "The external hostname", true, 8082),
+        Flag.of("forwarding", "The external ip/port of the forwarding table", true, "localhost:8081")
         );
 
     Flags flags = Flags.parse(options, args);

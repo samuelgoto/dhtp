@@ -8,7 +8,6 @@ import org.junit.Assert;
 
 public class PacketsTest extends TestCase {
   
-  
   public void testSerializingInterest() throws Exception {
     Interest packet = new Interest();
     packet.getName().setName("foo");

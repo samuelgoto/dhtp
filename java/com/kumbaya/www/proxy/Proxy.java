@@ -79,11 +79,11 @@ public class Proxy implements Server {
   }
   
   static class MyProxyServlet extends ProxyServlet.Transparent {
-    private final InetSocketAddress entrypoint;
+    private final Client client;
 
     @Inject
-    MyProxyServlet(InetSocketAddress entrypoint) {
-      this.entrypoint = entrypoint;
+    MyProxyServlet(Client client) {
+      this.client = client;
     }
 
     @Override
@@ -124,7 +124,6 @@ public class Proxy implements Server {
       // - through HTTP proxying, which sets the entire request with an absolute url.
       // - through DNS proxying, which requires the proxy to dissamble the url and reconstruct it.
       
-      Client client = new Client(entrypoint);
       Packets.Interest interest = new Packets.Interest();
       HttpServletRequest request = (HttpServletRequest) req;
       HttpServletResponse response = (HttpServletResponse) res;
@@ -153,8 +152,8 @@ public class Proxy implements Server {
     
     Set<Flag<?>> options = ImmutableSet.of(
         Flag.of("host", "The external hostname", true, "localhost"),
-        Flag.of("port", "The external hostname", true, 8080),
-        Flag.of("entrypoint", "The external ip/port of the network entrypoint", true, "localhost:9090")
+        Flag.of("port", "The external hostname", true, 8083),
+        Flag.of("entrypoint", "The external ip/port of the network entrypoint", true, "localhost:8082")
         );
 
     Flags flags = Flags.parse(options, args);

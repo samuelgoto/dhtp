@@ -19,7 +19,13 @@ public class Packets {
     public static final int FRESHNESS_PERIOD = 9;
     public static final int CONTENT = 10;
   }
- 
+  
+  // TODO(goto): figure out a more foolproof way to get this done. Not ideal.
+  public static void register() {
+    Serializer.register(Interest.class);
+    Serializer.register(Data.class);
+  }
+  
   @Type(Registry.NAME)
   public static class Name {
     @Field(Registry.NAME_COMPONENT)

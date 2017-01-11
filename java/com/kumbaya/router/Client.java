@@ -14,6 +14,7 @@ public class Client {
   
   @Inject
   public Client(InetSocketAddress host) {
+    Packets.register();
     this.host = host;
   }
 

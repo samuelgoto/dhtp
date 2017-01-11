@@ -69,6 +69,7 @@ public class Gateway implements Server {
   
   @Override
   public void bind(InetSocketAddress address) throws IOException {
+    Packets.register();
     server.register(Interest.class, handler);
     server.bind(address);
   }

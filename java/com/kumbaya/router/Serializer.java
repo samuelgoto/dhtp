@@ -122,8 +122,10 @@ class Serializer {
     
     TLV data = Marshaller.unmarshall(stream);
 
-    if (clazz == null) {
+    if (clazz == null) {      
       clazz = (Class<T>) registry.get(data.type);
+      
+      Preconditions.checkNotNull(clazz, "The packet type must be registered previously: " + data.type);
     } else {
       Type annotation = clazz.getAnnotation(Type.class);
       Preconditions.checkNotNull(annotation, "Object being unserialized isn't annotated with @Type: " + clazz);
