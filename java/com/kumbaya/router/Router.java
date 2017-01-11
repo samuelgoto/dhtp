@@ -18,11 +18,15 @@ import java.net.InetSocketAddress;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.PatternLayout;
 
 public class Router implements Server {
+  private static final Log logger = LogFactory.getLog(Router.class);
+
   private final TcpServer server;
   @Inject
   private InterestHandler handler;
@@ -83,6 +87,8 @@ public class Router implements Server {
   public static void main(String[] args) throws Exception {
     BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
         "[%-5p] %d %c - %m%n")));
+    
+    logger.info("Running the Kumbaya Router");
 
     Set<Flag<?>> options = ImmutableSet.of(
         Flag.of("host", "The external hostname", true, "localhost"),

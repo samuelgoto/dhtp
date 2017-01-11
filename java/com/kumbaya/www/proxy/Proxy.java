@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.multibindings.MapBinder;
 import com.kumbaya.common.Flags;
 import com.kumbaya.common.InetSocketAddresses;
@@ -14,9 +13,7 @@ import com.kumbaya.common.Flags.Flag;
 import com.kumbaya.common.monitor.MonitoringModule;
 import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets;
-import com.kumbaya.router.Router;
 import com.kumbaya.router.Packets.Data;
-import com.kumbaya.router.Router.Module;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -30,12 +27,16 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.PatternLayout;
 import org.eclipse.jetty.servlets.ProxyServlet;
 
 public class Proxy implements Server {
+  private static final Log logger = LogFactory.getLog(Proxy.class);
+
   private final JettyServer http;
 
   @Inject
@@ -148,6 +149,8 @@ public class Proxy implements Server {
     BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
         "[%-5p] %d %c - %m%n")));
 
+    logger.info("Running the Kumbaya Proxy");
+    
     Set<Flag<?>> options = ImmutableSet.of(
         Flag.of("host", "The external hostname", true, "localhost"),
         Flag.of("port", "The external hostname", true, 8080),

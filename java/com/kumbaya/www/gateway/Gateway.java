@@ -6,14 +6,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.kumbaya.common.Flags;
-import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.Server;
 import com.kumbaya.common.Flags.Flag;
 import com.kumbaya.router.TcpServer;
 import com.kumbaya.router.Packets;
-import com.kumbaya.router.Router;
 import com.kumbaya.router.Packets.Interest;
-import com.kumbaya.router.Router.Module;
 import com.kumbaya.router.TcpServer.Handler;
 import com.kumbaya.router.TcpServer.Queue;
 import com.kumbaya.www.WorldWideWeb;
@@ -22,11 +19,15 @@ import java.net.InetSocketAddress;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.PatternLayout;
 
 public class Gateway implements Server {
+  private static final Log logger = LogFactory.getLog(Gateway.class);
+
   private final TcpServer server;
   @Inject private InterestHandler handler;
   
@@ -80,6 +81,8 @@ public class Gateway implements Server {
   public static void main(String[] args) throws Exception {
     BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
         "[%-5p] %d %c - %m%n")));
+    
+    logger.info("Running the Kumbaya Gateway");
 
     Set<Flag<?>> options = ImmutableSet.of(
         Flag.of("host", "The external hostname", true, "localhost"),
