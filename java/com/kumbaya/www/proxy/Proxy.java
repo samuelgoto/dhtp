@@ -79,6 +79,8 @@ public class Proxy implements Server {
   }
   
   static class MyProxyServlet extends ProxyServlet.Transparent {
+    private static final Log logger = LogFactory.getLog(MyProxyServlet.class);
+
     private final Client client;
 
     @Inject
@@ -128,7 +130,11 @@ public class Proxy implements Server {
       HttpServletRequest request = (HttpServletRequest) req;
       HttpServletResponse response = (HttpServletResponse) res;
       
-      interest.getName().setName(assemble(request.getRequestURL().toString()));
+      String url = assemble(request.getRequestURL().toString());
+
+      logger.info("Got a request: " + url);
+
+      interest.getName().setName(url);
       try {
         Optional<Data> result = client.send(interest);
         if (result.isPresent()) {
@@ -137,7 +143,7 @@ public class Proxy implements Server {
           response.sendError(404);
         }
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
-        e.printStackTrace();        
+        logger.error(e);
         response.sendError(500);
       }
     }

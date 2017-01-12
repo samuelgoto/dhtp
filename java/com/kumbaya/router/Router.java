@@ -60,11 +60,13 @@ public class Router implements Server {
 
     @Override
     public void handle(Interest request, Queue response) {
+      logger.info("Handling a request: " + request.getName().getName());
       try {
         // Forwards the interest to the next hop.
         Optional<Data> result = client.send(request);
 
         if (result.isPresent()) {
+          logger.info("Got a Data packet response, responding.");
           response.push(result.get());
         }
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException

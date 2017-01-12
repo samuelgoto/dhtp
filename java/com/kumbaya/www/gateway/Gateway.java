@@ -51,6 +51,7 @@ public class Gateway implements Server {
     @Override
     public void handle(Interest request, Queue response) throws IOException {
       // Fetches the content of the page.
+      logger.info("Got a request to fetch " + request.getName().getName());
       try {
         Optional<String> content = WorldWideWeb.get(request.getName().getName());
         // If the content is available, return it.
@@ -62,6 +63,7 @@ public class Gateway implements Server {
           response.push(data);
         }      
       } catch (IOException e) {
+        logger.error("Got an unexpected error: ", e);
         // Ignores 500s, assumes content isn't available. 
       }
     }

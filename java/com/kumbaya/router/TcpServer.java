@@ -15,8 +15,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class TcpServer implements Runnable, Server {
+  private static final Log logger = LogFactory.getLog(TcpServer.class);
   private final ExecutorService executor;
   private final Map<Class<?>, Handler<?>> handlers = new HashMap<Class<?>, Handler<?>>();
   private ServerSocket socket;
@@ -56,6 +59,7 @@ public class TcpServer implements Runnable, Server {
     while (running.get()) {
       try {
         Socket connection = socket.accept();
+        logger.info("Starting a connection");
         DataOutputStream out = new DataOutputStream(connection.getOutputStream());
         Object request = Serializer.unserialize(connection.getInputStream());
         Handler<?> handler = handlers.get(request.getClass());
@@ -65,6 +69,7 @@ public class TcpServer implements Runnable, Server {
         }
         handle(handler, request, out);
         connection.close();
+        logger.info("Ended a connection");       
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
         throw new RuntimeException("Failed to serialize payload", e);
       } catch (ConnectException e) {
