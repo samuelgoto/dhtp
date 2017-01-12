@@ -122,7 +122,7 @@ public class IntegrationTest extends TestCase {
   public void test200_throughNetwork_notProxied() throws IOException {
     // This test requires you to add the following line to your /etc/host file.
     try {
-      Optional<String> result = WorldWideWeb.get("http://localhost-6060.example.com:8080/helloworld");
+      Optional<String> result = WorldWideWeb.get("http://localhost-6060.kumbaya.io:8080/helloworld");
       assertTrue(result.isPresent());
       assertEquals("hello world", result.get());
     } catch (UnknownHostException e) {
@@ -130,7 +130,7 @@ public class IntegrationTest extends TestCase {
       System.out.println("===================================================================");
       System.out.println("DNS set up failure: ignoring this test.");
       System.out.println("This test requires you to add the following line to /etc/host");
-      System.out.println("127.0.0.1     localhost.6060.example.com");
+      System.out.println("127.0.0.1     localhost.6060.kumbaya.io");
       System.out.println("===================================================================");
     }
   }
@@ -138,7 +138,7 @@ public class IntegrationTest extends TestCase {
   public void test200_throughNetwork_publicNetwork() throws IOException {
     // This test requires you to add the following line to your /etc/host file.
     try {
-      Optional<String> result = WorldWideWeb.get("http://sgo.to.example.com:8080/google6986897775888699.html");
+      Optional<String> result = WorldWideWeb.get("http://sgo.to.kumbaya.io:8080/google6986897775888699.html");
       assertTrue(result.isPresent());
       assertEquals( 
           "google-site-verification: google6986897775888699.html", result.get());
@@ -147,7 +147,7 @@ public class IntegrationTest extends TestCase {
       System.out.println("===================================================================");
       System.out.println("DNS set up failure: ignoring this test.");
       System.out.println("This test requires you to add the following line to /etc/host");
-      System.out.println("127.0.0.1     sgo.to.example.com");
+      System.out.println("127.0.0.1     sgo.to.kumbaya.io");
       System.out.println("===================================================================");
     }
   }

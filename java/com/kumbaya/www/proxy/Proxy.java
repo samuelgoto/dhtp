@@ -96,8 +96,8 @@ public class Proxy implements Server {
       URL result = new URL(url);
       String[] parts = result.getHost().split("\\.");
       if (parts.length > 2 &&
-          parts[parts.length - 2].equals("example") &&
-          parts[parts.length - 1].equals("com")
+          parts[parts.length - 2].equals("kumbaya") &&
+          parts[parts.length - 1].equals("io")
           ) {
         
         String[] domain = parts[parts.length - 3].split("-");
