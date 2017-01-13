@@ -5,9 +5,12 @@ import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Queue;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.util.concurrent.Executors;
+
 import junit.framework.TestCase;
 
 public class TcpServerTest extends TestCase {
@@ -19,7 +22,7 @@ public class TcpServerTest extends TestCase {
   
   public void testPacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
     TcpServer server = new TcpServer(Executors.newFixedThreadPool(1));
-    server.bind(new InetSocketAddress("localhost", 6789));
+    server.bind(new InetSocketAddress("localhost", 8081));
     server.register(Interest.class, new TcpServer.Handler<Interest>() {
       @Override
       public void handle(Interest request, Queue response) throws IOException {
@@ -33,7 +36,7 @@ public class TcpServerTest extends TestCase {
     Thread thread = new Thread(server);
     thread.start();
 
-    Client client = new Client(new InetSocketAddress("localhost", 6789));
+    Client client = new Client(new InetSocketAddress("localhost", 8081));
 
     Interest interest = new Interest();
     interest.getName().setName("foo");
@@ -43,6 +46,44 @@ public class TcpServerTest extends TestCase {
     assertEquals("foo", result.get().getName().getName());
     assertEquals(2, result.get().getMetadata().getFreshnessPeriod());
     assertEquals("hello world", new String(result.get().getContent()));
+    
+    server.close();
+  }
+  
+  public void testLargePacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
+    TcpServer server = new TcpServer(Executors.newFixedThreadPool(1));
+    server.bind(new InetSocketAddress("localhost", 8080));
+    server.register(Interest.class, new TcpServer.Handler<Interest>() {
+      @Override
+      public void handle(Interest request, Queue response) throws IOException {
+        Data result = new Data();
+        result.setName(request.getName());
+        result.getMetadata().setFreshnessPeriod(2);
+        byte[] content = new byte[10 * 1000 * 1000];
+        result.setContent(content);
+        try {
+          response.push(result);
+        } catch (SocketException e) {
+          e.printStackTrace();
+        }
+      }
+    });
+    
+    Thread thread = new Thread(server);
+    thread.start();
+
+    Client client = new Client(new InetSocketAddress("localhost", 8080));
+
+    Interest interest = new Interest();
+    interest.getName().setName("foo");
+    Optional<Data> result = client.send(interest);
+
+    assertTrue(result.isPresent());
+    assertEquals("foo", result.get().getName().getName());
+    assertEquals(2, result.get().getMetadata().getFreshnessPeriod());
+    assertEquals(10  * 1000 * 1000, result.get().getContent().length);
+    
+    server.close();
   }
 }
 

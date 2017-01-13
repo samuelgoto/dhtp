@@ -109,7 +109,7 @@ public class IntegrationTest extends TestCase {
     assertFalse(proxied.isPresent());
   }
   
-  public void test500s_throughNetwork() throws Exception {
+  public void atest500s_throughNetwork() throws Exception {
     // Through the network
     Optional<String> proxied = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
@@ -119,7 +119,7 @@ public class IntegrationTest extends TestCase {
   
   // TODO(goto): tests for loops in the network! Just ran into one right now.
 
-  public void test200_throughNetwork_notProxied() throws IOException {
+  public void atest200_throughNetwork_notProxied() throws IOException {
     // This test requires you to add the following line to your /etc/host file.
     try {
       Optional<String> result = WorldWideWeb.get("http://localhost-6060.kumbaya.io:8080/helloworld");
@@ -135,7 +135,7 @@ public class IntegrationTest extends TestCase {
     }
   }
   
-  public void test200_throughNetwork_publicNetwork() throws IOException {
+  public void atest200_throughNetwork_publicNetwork() throws IOException {
     // This test requires you to add the following line to your /etc/host file.
     try {
       Optional<String> result = WorldWideWeb.get("http://sgo.to.kumbaya.io:8080/google6986897775888699.html");

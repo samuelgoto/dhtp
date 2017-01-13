@@ -2,6 +2,7 @@ package com.kumbaya.www.gateway;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -14,11 +15,15 @@ import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Handler;
 import com.kumbaya.router.TcpServer.Queue;
 import com.kumbaya.www.WorldWideWeb;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.BasicConfigurator;
@@ -39,15 +44,13 @@ public class Gateway implements Server {
   public static class Module extends AbstractModule {
     @Override
     protected void configure() {
-      bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(1));
+      ThreadFactory factory = new ThreadFactoryBuilder()
+        .setNameFormat("Gateway-%d").build();
+      bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(1, factory));
     }
   }
   
   private static class InterestHandler implements Handler<Interest> {
-    @Inject
-    InterestHandler() {
-    }
-    
     @Override
     public void handle(Interest request, Queue response) throws IOException {
       // Fetches the content of the page.
@@ -56,13 +59,22 @@ public class Gateway implements Server {
         Optional<String> content = WorldWideWeb.get(request.getName().getName());
         // If the content is available, return it.
         if (content.isPresent()) {
+        	logger.info("Got data back from the web (" + content.get().length() + " bytes), returning");
           Packets.Data data = new Packets.Data();
           data.getName().setName(request.getName().getName());
           data.getMetadata().setFreshnessPeriod(2);
           data.setContent(content.get().getBytes());
           response.push(data);
-        }      
+          logger.info("Finished writing the data");
+        }
+      } catch (SocketException e) {
+    	  // Socket error, re-throwing.
+        logger.error("Unexpected SocketException", e);
+        throw new RuntimeException("Programming error: application protocol busted (client closed the stream before the server was done writing)");
+        // throw e;
       } catch (IOException e) {
+    	  // TODO(goto): we really have to be able to make a distinction between
+    	  // 500s and IOExceptions.
         logger.error("Got an unexpected error: ", e);
         // Ignores 500s, assumes content isn't available. 
       }
@@ -82,6 +94,7 @@ public class Gateway implements Server {
   }
   
   public static void main(String[] args) throws Exception {
+	BasicConfigurator.resetConfiguration();
     BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
         "[%-5p] %d %c - %m%n")));
     

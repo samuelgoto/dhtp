@@ -132,11 +132,12 @@ public class Proxy implements Server {
       
       String url = assemble(request.getRequestURL().toString());
 
-      logger.info("Got a request: " + url);
-
       interest.getName().setName(url);
       try {
+    	logger.info("Got a request: " + url);
         Optional<Data> result = client.send(interest);
+        logger.info("Got a response");
+
         if (result.isPresent()) {
           response.getOutputStream().write(result.get().getContent());
         } else {
@@ -151,6 +152,7 @@ public class Proxy implements Server {
   
 
   public static void main(String[] args) throws Exception {
+    BasicConfigurator.resetConfiguration();
     BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
         "[%-5p] %d %c - %m%n")));
 

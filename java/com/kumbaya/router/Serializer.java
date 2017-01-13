@@ -3,6 +3,7 @@ package com.kumbaya.router;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.kumbaya.router.Marshaller.TLV;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,10 +18,14 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import static com.kumbaya.router.TypeLengthValues.encode;
 import static com.kumbaya.router.TypeLengthValues.decode;
 
 class Serializer {
+  private static final Log logger = LogFactory.getLog(Serializer.class);
   private static final Map<Long, Class<?>> registry = new HashMap<Long, Class<?>>();
   
   static void register(Class<?> clazz) {

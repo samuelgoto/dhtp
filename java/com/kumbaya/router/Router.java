@@ -2,6 +2,7 @@ package com.kumbaya.router;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -13,11 +14,14 @@ import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Handler;
 import com.kumbaya.router.TcpServer.Queue;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.BasicConfigurator;
@@ -45,7 +49,9 @@ public class Router implements Server {
 
     @Override
     protected void configure() {
-      bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(1));
+      ThreadFactory factory = new ThreadFactoryBuilder()
+        .setNameFormat("Router-%d").build();
+      bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(1, factory));
       bind(InetSocketAddress.class).toInstance(forwardingRouter);
     }
   }
@@ -59,18 +65,19 @@ public class Router implements Server {
     }
 
     @Override
-    public void handle(Interest request, Queue response) {
+    public void handle(Interest request, Queue response) throws IOException {
       logger.info("Handling a request: " + request.getName().getName());
       try {
         // Forwards the interest to the next hop.
         Optional<Data> result = client.send(request);
 
         if (result.isPresent()) {
-          logger.info("Got a Data packet response, responding.");
+          logger.info("Got a Data packet response [" + result.get().getContent().length + " bytes], responding.");
           response.push(result.get());
         }
-      } catch (IllegalArgumentException | IllegalAccessException | InstantiationException
-          | IOException e) {
+      } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
+    	  logger.error("Unexpected error: ", e);
+    	  e.printStackTrace();
       }
     }
   }
@@ -88,6 +95,7 @@ public class Router implements Server {
   }
 
   public static void main(String[] args) throws Exception {
+	BasicConfigurator.resetConfiguration();
     BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
         "[%-5p] %d %c - %m%n")));
     

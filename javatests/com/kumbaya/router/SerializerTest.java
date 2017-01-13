@@ -1,10 +1,16 @@
 package com.kumbaya.router;
 
 import com.google.common.base.Optional;
+import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Serializer.Field;
 import com.kumbaya.router.Serializer.Type;
+
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.stream.Stream;
+
 import junit.framework.TestCase;
+
 import org.junit.Assert;
 
 public class SerializerTest extends TestCase {
@@ -210,5 +216,20 @@ public class SerializerTest extends TestCase {
     Serializer.register(SimplestType.class);
     SimplestType result = Serializer.unserialize(stream.toByteArray());
     assertEquals("bar", result.foo);
+  }
+  
+  public void testSerializeLargeDataPacket() throws Exception {
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    
+    Data data = new Data();
+    data.getName().setName("http://example.com/bigfile");
+    data.setContent(new byte[100 * 1000 * 1000]);
+    Serializer.serialize(stream, data);
+    
+    ByteArrayInputStream incoming = new ByteArrayInputStream(stream.toByteArray());
+    Data result = Serializer.unserialize(incoming);
+    assertEquals(100 * 1000 * 1000, result.getContent().length);
+    
+    assertEquals(0, incoming.available());
   }
 }

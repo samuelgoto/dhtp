@@ -46,7 +46,7 @@ public class TcpServer implements Runnable, Server {
     public <T> Queue push(T object) throws IOException {
       Serializer.serialize(out, object);
       return this;
-    }    
+    }
   }
   
   @SuppressWarnings({"unchecked", "cast"})
@@ -60,7 +60,8 @@ public class TcpServer implements Runnable, Server {
       try {
         Socket connection = socket.accept();
         logger.info("Starting a connection");
-        DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+        OutputStream stream = connection.getOutputStream();
+        DataOutputStream out = new DataOutputStream(stream);
         Object request = Serializer.unserialize(connection.getInputStream());
         Handler<?> handler = handlers.get(request.getClass());
         if (handler == null) {
@@ -68,6 +69,7 @@ public class TcpServer implements Runnable, Server {
           throw new RuntimeException("Unexpected packet type " + request.getClass());
         }
         handle(handler, request, out);
+        stream.close();
         connection.close();
         logger.info("Ended a connection");       
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
@@ -75,9 +77,11 @@ public class TcpServer implements Runnable, Server {
       } catch (ConnectException e) {
         e.printStackTrace();
       } catch (SocketException e) {
+        // e.printStackTrace();
         Preconditions.checkArgument(!running.get(), "Socket closed but server is still running");
       } catch (IOException e) {
         e.printStackTrace();
+        logger.error("Unexpected IOException: ", e);
       }
     }
   }
@@ -91,8 +95,8 @@ public class TcpServer implements Runnable, Server {
 
   @Override
   public void close() throws IOException {
-    socket.close();
     running.set(false);
+    socket.close();
     executor.shutdown();
   }
 }
