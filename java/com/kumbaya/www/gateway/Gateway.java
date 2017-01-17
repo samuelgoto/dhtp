@@ -26,9 +26,6 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.PatternLayout;
 
 public class Gateway implements Server {
   private static final Log logger = LogFactory.getLog(Gateway.class);
@@ -94,10 +91,6 @@ public class Gateway implements Server {
   }
   
   public static void main(String[] args) throws Exception {
-	//BasicConfigurator.resetConfiguration();
-    //BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
-    //    "[%-5p] %d %c - %m%n")));
-    
     logger.info("Running the Kumbaya Gateway");
 
     Set<Flag<?>> options = ImmutableSet.of(

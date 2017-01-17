@@ -29,9 +29,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.PatternLayout;
 import org.eclipse.jetty.servlets.ProxyServlet;
 
 public class Proxy implements Server {
@@ -152,10 +149,6 @@ public class Proxy implements Server {
   
 
   public static void main(String[] args) throws Exception {
-    // BasicConfigurator.resetConfiguration();
-    // BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
-    //    "[%-5p] %d %c - %m%n")));
-
     logger.info("Running the Kumbaya Proxy");
     
     Set<Flag<?>> options = ImmutableSet.of(
