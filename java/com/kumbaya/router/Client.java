@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -31,7 +32,8 @@ public class Client {
     Serializer.serialize(outToServer, packet);
     outToServer.flush();
     try {
-      T result = Serializer.unserialize(clientSocket.getInputStream());
+      InputStream stream = clientSocket.getInputStream();
+      T result = Serializer.unserialize(stream);
       return Optional.of(result);
     } catch (EOFException e) {
       logger.info("No response sent back", e);
