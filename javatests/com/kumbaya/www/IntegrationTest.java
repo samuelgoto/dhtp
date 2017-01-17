@@ -1,27 +1,16 @@
 package com.kumbaya.www;
 
 import com.google.common.base.Optional;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.inject.multibindings.MapBinder;
 import com.kumbaya.common.Server;
 import com.kumbaya.router.Router;
-import com.kumbaya.router.Router.Module;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.gateway.Gateway;
-import com.kumbaya.www.proxy.JettyServer;
 import com.kumbaya.www.proxy.Proxy;
 import com.kumbaya.www.testing.WorldWideWebServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import javax.servlet.Servlet;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import junit.framework.TestCase;
 
 public class IntegrationTest extends TestCase {

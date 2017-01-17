@@ -1,45 +1,52 @@
 package com.kumbaya.www;
 
 import com.google.common.base.Optional;
-import java.io.FileNotFoundException;
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
-import java.net.SocketAddress;
-import java.net.URL;
-import java.util.Scanner;
+import java.net.UnknownHostException;
+import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.HttpHostConnectException;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
 public class WorldWideWeb {
-  public static Optional<String> get(SocketAddress proxy, String url) throws MalformedURLException, IOException {
-    java.net.Proxy p = new java.net.Proxy(java.net.Proxy.Type.HTTP, proxy);
-    HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection(p);
-    connection.setDoOutput(true);
-    connection.setDoInput(true);
-    connection.setRequestProperty("Content-type", "text/xml");
-    connection.setRequestProperty("Accept", "text/xml, application/xml");
-    connection.setRequestMethod("GET");
+  private static final CloseableHttpClient httpclient = HttpClients.createDefault();
 
-    return read(connection);
+  public static Optional<String> get(InetSocketAddress proxy, String url) throws MalformedURLException, IOException {
+    HttpHost p = new HttpHost(proxy.getHostName(), proxy.getPort());
+    RequestConfig config = RequestConfig.custom()
+        .setProxy(p)
+        .build();
+    HttpGet request = new HttpGet(url);
+    request.setConfig(config);
+    return get(request);
   }
 
-  public static Optional<String> get(String url) throws MalformedURLException, IOException {
-    return read((HttpURLConnection) new URL(url).openConnection());
-  }
-
-  private static Optional<String> read(HttpURLConnection connection) throws IOException {
+  public static Optional<String> get(HttpGet request) throws IOException {
     try {
-      Scanner scanner = new Scanner(connection.getInputStream());
-      scanner.useDelimiter("\\Z");
-      String result = scanner.next();
-      scanner.close();
-      return Optional.of(result);
-    } catch (FileNotFoundException e) {
-      // Server responded but said nothing is there.
-      return Optional.absent();
-    } catch (ConnectException e) {
-      // DNS fails or the server isn't responding.
+      CloseableHttpResponse response = httpclient.execute(request);
+      try {
+        if (response.getStatusLine().getStatusCode() == 200) {
+          return Optional.of(new String(ByteStreams.toByteArray(response.getEntity().getContent())));
+        } else {
+          return Optional.absent();
+        }
+      } finally {
+        response.close();
+      }
+    } catch (UnknownHostException | HttpHostConnectException e) {
+      // Should we catch this too HttpHostConnectException?
       return Optional.absent();
     }
+  }
+
+
+  public static Optional<String> get(String url) throws IOException {
+    return get(new HttpGet(url));
   }
 }

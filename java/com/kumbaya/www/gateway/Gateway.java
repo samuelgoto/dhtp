@@ -94,9 +94,9 @@ public class Gateway implements Server {
   }
   
   public static void main(String[] args) throws Exception {
-	BasicConfigurator.resetConfiguration();
-    BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
-        "[%-5p] %d %c - %m%n")));
+	//BasicConfigurator.resetConfiguration();
+    //BasicConfigurator.configure(new ConsoleAppender(new PatternLayout(
+    //    "[%-5p] %d %c - %m%n")));
     
     logger.info("Running the Kumbaya Gateway");
 

@@ -21,7 +21,7 @@ public class WorldWideWebServer {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
         throws IOException, ServletException {
-      response.getWriter().println("hello world");
+      response.getWriter().print("hello world");
     }
   }
 

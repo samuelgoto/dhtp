@@ -38,35 +38,35 @@ public class LoadTest extends TestCase {
 		// Spins up a web server.
 		Server www = WorldWideWebServer.server(
 				"/onemegabytefile", OneMegabyteFileServlet.class);
-		www.bind(InetSocketAddresses.parse("localhost:19080"));
+		www.bind(InetSocketAddresses.parse("localhost:29080"));
 
 		// Spins up a gateway.
 		Gateway.main(new String[] {
 				"--host=localhost",
-				"--port=19081"
+				"--port=29081"
 		});
 
 		// Spins up a router.
 		Router.main(new String[] {
 				"--host=localhost",
-				"--port=19082",
+				"--port=29082",
 				// Points to the gateway.
-				"--forwarding=localhost:19081",
+				"--forwarding=localhost:29081",
 		});
 
 		// Spins up a proxy.
 		Proxy.main(new String[] {
 				"--host=localhost",
-				"--port=19083",
+				"--port=29083",
 				// Points to the router.
-				"--entrypoint=localhost:19082",
+				"--entrypoint=localhost:29082",
 		});
 
 		// Builds a client request against the proxy and traverses the network looking for content.
 		for (int i = 0; i < 10; i++) {
 			Optional<String> content = WorldWideWeb.get(
-					InetSocketAddresses.parse("localhost:19083"),
-					"http://localhost:19080/onemegabytefile");
+					InetSocketAddresses.parse("localhost:29083"),
+					"http://localhost:29080/onemegabytefile");
 			assertTrue(content.isPresent());
 			assertEquals(1000 * 1000, content.get().length());
 		}
