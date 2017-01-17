@@ -15,6 +15,12 @@ public class WorldWideWebTest extends TestCase {
     assertTrue(result.isPresent());
   }
   
+  public void testTimingOut() throws Exception {
+    Optional<String> result = WorldWideWeb.get(
+        "http://104.199.183.97/index.php");
+    assertFalse(result.isPresent()); 
+  }
+  
   public void testDnsFails() throws Exception {
     WorldWideWeb.get("http://thisdomainshouldnotexithopefully.com");
   }
