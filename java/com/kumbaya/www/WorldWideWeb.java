@@ -60,7 +60,7 @@ public class WorldWideWeb {
       logger.info("DNS resolution error: " + request.getURI(), e);
       return Optional.absent();
     } catch (SocketTimeoutException e) {
-      logger.info("Web timeout: " + request.getURI(), e);
+      logger.info("Timeout: " + request.getURI(), e);
       return Optional.absent();
     }
   }

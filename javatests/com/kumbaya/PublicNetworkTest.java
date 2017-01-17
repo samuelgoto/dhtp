@@ -35,11 +35,13 @@ public class PublicNetworkTest extends TestCase {
     });
     
     List<String> urls = ImmutableList.of(
+        // Some default servers that I normally try manually.
         "http://sgo.to",
         "http://1500wordmtu.com",
         "http://www.1500wordmtu.com/2017/digital-objects-last-foreveror-five-years-whichever-comes-first",
         "http://johnpanzer.com",
         "http://cnn.com",
+        // This is a good test because it has some weird markup.
         "http://cloud.google.com/compute/docs/activity-logs");
     
     for (String url : urls) {

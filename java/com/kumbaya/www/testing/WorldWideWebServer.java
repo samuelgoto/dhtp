@@ -44,8 +44,6 @@ public class WorldWideWebServer {
 	        	  mapbinder.addBinding(servlet.getKey()).to(servlet.getValue());
 	          }
 	          
-	          // mapbinder.addBinding("/helloworld").to(HelloWorldServlet.class);
-	          // mapbinder.addBinding("/error").to(ServerErrorServlet.class);
 	        }
 	      }).getInstance(JettyServer.class);
   }

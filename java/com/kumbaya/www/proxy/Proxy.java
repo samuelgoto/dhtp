@@ -133,11 +133,12 @@ public class Proxy implements Server {
       try {
     	logger.info("Got a request: " + url);
         Optional<Data> result = client.send(interest);
-        logger.info("Got a response");
 
         if (result.isPresent()) {
+          logger.info("Got a response. Returning as a 200.");
           response.getOutputStream().write(result.get().getContent());
         } else {
+          logger.info("Got an empty response. Interpreting as a 404.");
           response.sendError(404);
         }
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
