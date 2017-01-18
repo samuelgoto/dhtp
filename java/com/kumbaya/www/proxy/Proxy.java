@@ -10,7 +10,7 @@ import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.Server;
 import com.kumbaya.common.Flags.Flag;
 import com.kumbaya.common.monitor.MonitoringModule;
-import com.kumbaya.router.Client;
+import com.kumbaya.router.Kumbaya;
 import com.kumbaya.router.Packets;
 import com.kumbaya.router.Packets.Data;
 import java.io.IOException;
@@ -75,10 +75,10 @@ public class Proxy implements Server {
     private @Inject(optional=true) @Flag("host") String host = "localhost";
     private @Inject(optional=true) @Flag("port") int port = 8080;
 
-    private final Client client;
+    private final Kumbaya client;
 
     @Inject
-    MyProxyServlet(Client client) {
+    MyProxyServlet(Kumbaya client) {
       this.client = client;
     }
 

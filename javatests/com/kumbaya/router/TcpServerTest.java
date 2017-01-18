@@ -2,7 +2,7 @@ package com.kumbaya.router;
 
 import com.google.common.base.Optional;
 import com.kumbaya.common.InetSocketAddresses;
-import com.kumbaya.router.Client;
+import com.kumbaya.router.Kumbaya;
 import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Queue;
@@ -38,7 +38,7 @@ public class TcpServerTest extends TestCase {
     
     server.bind(new InetSocketAddress("localhost", 8081));
 
-    Client client = new Client();
+    Kumbaya client = new Kumbaya();
 
     Interest interest = new Interest();
     interest.getName().setName("foo");
@@ -72,7 +72,7 @@ public class TcpServerTest extends TestCase {
     });
     server.bind(new InetSocketAddress("localhost", 8080));
 
-    Client client = new Client();
+    Kumbaya client = new Kumbaya();
 
     Interest interest = new Interest();
     interest.getName().setName("foo");

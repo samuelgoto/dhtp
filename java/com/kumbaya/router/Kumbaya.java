@@ -15,10 +15,11 @@ import java.net.UnknownHostException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class Client {
-  private static final Log logger = LogFactory.getLog(Client.class);
+public class Kumbaya {
+  private static final Log logger = LogFactory.getLog(Kumbaya.class);
+
   @Inject
-  public Client() {
+  public Kumbaya() {
     Packets.register();
   }
 
@@ -34,7 +35,7 @@ public class Client {
       T result = Serializer.unserialize(stream);
       return Optional.of(result);
     } catch (EOFException e) {
-      logger.info("No response sent back", e);
+      logger.info("No response sent back, returning an absent packet.");
       // If no response was sent back, return an absent content.
       return Optional.absent();
     } finally {

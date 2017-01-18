@@ -46,10 +46,10 @@ public class Router implements Server {
 
   static class InterestHandler implements Handler<Interest> {
     private @Inject @Flag("forwarding") String forwarding = "localhost:8082";
-    private final Client client;
+    private final Kumbaya client;
 
     @Inject
-    InterestHandler(Client client) {
+    InterestHandler(Kumbaya client) {
       this.client = client;
     }
 
