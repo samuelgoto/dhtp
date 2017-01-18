@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 
 import javax.servlet.Servlet;
-
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.kumbaya.common.Flags;
 import com.kumbaya.common.Server;
@@ -76,5 +76,14 @@ public class LocalNetwork {
         return new LocalNetwork(servlets);
       }
     };
+  }
+  
+  public static void main(String args[]) throws Exception {
+    LocalNetwork network = LocalNetwork.supplier(ImmutableMap.of()).get();
+    network.setUp();
+    System.out.println("Quit?");
+    System.in.read();
+    network.tearDown();
+    System.out.println("Done.");    
   }
 }

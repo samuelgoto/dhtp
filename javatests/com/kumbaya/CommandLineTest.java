@@ -44,6 +44,6 @@ public class CommandLineTest extends TestCase {
         InetSocketAddresses.parse("localhost:9083"),
         "http://localhost:9080/helloworld");
     assertTrue(content.isPresent());
-    assertEquals("hello world", content.get().content());
+    assertEquals("hello world", new String(content.get().content()));
   }
 }

@@ -61,7 +61,7 @@ public class Gateway implements Server {
           // TODO(goto): figure out how to pass the content type back to the network. Will require
           // us to re-do the WorldWideWeb class.
           data.getMetadata().setContentType(content.get().contentType());
-          data.setContent(content.get().content().getBytes());
+          data.setContent(content.get().content());
           response.push(data);
           logger.info("Finished writing the data");
         }

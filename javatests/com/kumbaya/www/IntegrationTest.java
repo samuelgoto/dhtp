@@ -36,7 +36,7 @@ public class IntegrationTest extends TestCase {
   public void test200_direclty() throws IOException {
     Optional<Resource> result = WorldWideWeb.get("http://localhost:8083/helloworld");
     assertTrue(result.isPresent());
-    assertEquals("hello world", result.get().content());
+    assertEquals("hello world", new String(result.get().content()));
   }
  
   public void test404s_directly() throws IOException {
@@ -50,7 +50,7 @@ public class IntegrationTest extends TestCase {
         new InetSocketAddress("localhost", 8080), 
         "http://localhost:8083/helloworld");
     assertTrue(result.isPresent());
-    assertEquals("hello world", result.get().content());
+    assertEquals("hello world", new String(result.get().content()));
   }
   
   public void test404s_throughNetwork() throws Exception {

@@ -57,7 +57,7 @@ public class LoadTest extends TestCase {
 					InetSocketAddresses.parse("localhost:8080"),
 					"http://localhost:8083/onemegabytefile");
 			assertTrue(content.isPresent());
-			assertEquals(1000 * 1000, content.get().content().length());
+			assertEquals(1000 * 1000, content.get().content().length);
 		}
 	}
 }

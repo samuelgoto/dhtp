@@ -33,8 +33,12 @@ public class PublicNetworkTest extends TestCase {
         "http://www.1500wordmtu.com/2017/digital-objects-last-foreveror-five-years-whichever-comes-first",
         "http://johnpanzer.com",
         "http://cnn.com",
+        
         // This is a good test because it has some weird markup.
-        "http://cloud.google.com/compute/docs/activity-logs");
+        "http://cloud.google.com/compute/docs/activity-logs",
+        
+        // Tests image files.
+        "http://johnpanzer.com/me.jpg");
     
     for (String url : urls) {
       // Builds a client request against the proxy and traverses the network looking for content.

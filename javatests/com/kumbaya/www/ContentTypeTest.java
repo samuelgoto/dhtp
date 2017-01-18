@@ -44,6 +44,6 @@ public class ContentTypeTest extends TestCase {
         InetSocketAddresses.parse("localhost:8080"),
         "http://localhost:8083/image.jpg");
     assertTrue(content.isPresent());
-    assertEquals("image/jpeg;charset=ISO-8859-1", content.get().contentType());
+    assertEquals("image/jpeg;charset=ISO-8859-1", content.get().contentType().get());
   }
 }

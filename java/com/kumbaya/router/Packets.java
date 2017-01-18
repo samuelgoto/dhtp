@@ -1,5 +1,6 @@
 package com.kumbaya.router;
 
+import com.google.common.base.Optional;
 import com.kumbaya.router.Serializer.Field;
 import com.kumbaya.router.Serializer.Type;
 
@@ -116,7 +117,7 @@ public class Packets {
     int freshnessPeriod;
 
     @Field(Registry.CONTENT_TYPE)
-    String contentType;
+    Optional<String> contentType;
 
     public int getFreshnessPeriod() {
       return freshnessPeriod;
@@ -127,13 +128,17 @@ public class Packets {
       return this;
     }
 
-    public String getContentType() {
+    public Optional<String> getContentType() {
       return contentType;
     }
 
-    public MetaInfo setContentType(String contentType) {
+    public MetaInfo setContentType(Optional<String> contentType) {
       this.contentType = contentType;
       return this;
+    }
+    
+    public MetaInfo setContentType(String contentType) {
+      return setContentType(Optional.of(contentType));
     }
   }
 }

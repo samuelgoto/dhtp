@@ -26,20 +26,20 @@ public class WorldWideWeb {
   
   public static class Resource {
     private final int status;
-    private final String content;
-    private final String contentType;
+    private final byte[] content;
+    private final Optional<String> contentType;
     
-    Resource(int status, String content, String contentType) {
+    Resource(int status, byte[] content, Optional<String> contentType) {
       this.status = status;
       this.content = content;
       this.contentType = contentType;
     }
     
     static Resource of(String content) {
-      return of(200, content, "text/html");
+      return of(200, content.getBytes(), Optional.of("text/html"));
     }
     
-    static Resource of(int status, String content, String contentType) {
+    static Resource of(int status, byte[] content, Optional<String> contentType) {
       return new Resource(status, content, contentType);
     }
     
@@ -47,11 +47,11 @@ public class WorldWideWeb {
       return status;
     }
     
-    public String content() {
+    public byte[] content() {
       return content;
     }
     
-    public String contentType() {
+    public Optional<String> contentType() {
       return contentType;
     }
   }
@@ -85,11 +85,11 @@ public class WorldWideWeb {
       try {
         if (response.getStatusLine().getStatusCode() == 200) {
           // Defaults to returning text/html as the content type.
-          String contentType = "text/html";
+          Optional<String> contentType = Optional.absent();
           if (response.containsHeader("Content-Type")) {
-            contentType = response.getFirstHeader("Content-Type").getValue();
+            contentType = Optional.of(response.getFirstHeader("Content-Type").getValue());
           }
-          String content = new String(ByteStreams.toByteArray(response.getEntity().getContent())); 
+          byte[] content = ByteStreams.toByteArray(response.getEntity().getContent()); 
           return Optional.of(Resource.of(200, content, contentType));
         } else {
           return Optional.absent();
