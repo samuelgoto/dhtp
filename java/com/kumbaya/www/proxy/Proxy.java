@@ -14,6 +14,7 @@ import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets;
 import com.kumbaya.router.Packets.Data;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -69,6 +70,9 @@ public class Proxy implements Server {
   static class MyProxyServlet extends ProxyServlet.Transparent {
     private static final Log logger = LogFactory.getLog(MyProxyServlet.class);
     private @Inject(optional=true) @Flag("entrypoint") String entrypoint = "localhost:8081";
+    private @Inject(optional=true) @Flag("host") String host = "localhost";
+    private @Inject(optional=true) @Flag("port") int port = 8080;
+
 
     private final Client client;
 
@@ -122,7 +126,14 @@ public class Proxy implements Server {
       String url = assemble(request.getRequestURL().toString());
       
       // TODO(goto): check if the url isn't going to point back to us, in which case, throw a 400.
-      // InetAddress address = InetAddress.getByName(new URL(url).getHost());
+      InetAddress address = InetAddress.getByName(new URL(url).getHost());
+      // If the url points to the same address as ourselves and same port, skip.
+      if (Arrays.equals(address.getAddress(), new InetSocketAddress(host, port).getAddress().getAddress()) &&
+          new URL(url).getPort() == port) {
+        // Client error.
+        response.sendError(400);
+        return;
+      }
 
       interest.getName().setName(url);
       try {

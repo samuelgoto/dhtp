@@ -144,14 +144,13 @@ public class IntegrationTest extends TestCase {
     }
   }
   
-  public void atestBreaksInfiniteLoop() throws IOException, InterruptedException {
+  public void testBreaksInfiniteLoop() throws IOException {
     // We'll send a request to the proxy to fetch content from the proxy itself, leading into
     // an infinite loop.
     Optional<String> result = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
         "http://localhost:8080/index.php");
     assertFalse(result.isPresent());
-    Thread.sleep(100 * 1000);
   }
   
   static abstract class Supplier<T> {
