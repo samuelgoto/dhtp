@@ -1,4 +1,4 @@
-package com.kumbaya;
+package com.kumbaya.www;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;

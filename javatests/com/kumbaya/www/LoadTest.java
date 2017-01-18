@@ -1,4 +1,4 @@
-package com.kumbaya;
+package com.kumbaya.www;
 
 import java.io.IOException;
 
@@ -8,8 +8,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.Server;
+import com.kumbaya.common.testing.LocalNetwork;
+import com.kumbaya.common.testing.Supplier;
 import com.kumbaya.router.Router;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.WorldWideWeb.Resource;
@@ -35,39 +38,25 @@ public class LoadTest extends TestCase {
 		}	
 	}
 
+	private final Supplier<LocalNetwork> network = LocalNetwork.supplier(
+	    ImmutableMap.of("/onemegabytefile", OneMegabyteFileServlet.class));
+	
+	@Override
+	public void setUp() throws Exception {
+	  network.clear().get().setUp();
+	}
+	
+    @Override
+    public void tearDown() throws Exception {
+      network.get().tearDown();
+    }
+    
 	public void testRunnningAll() throws Exception {
-		// Spins up a web server.
-		Server www = WorldWideWebServer.server(
-				"/onemegabytefile", OneMegabyteFileServlet.class);
-		www.bind(InetSocketAddresses.parse("localhost:29080"));
-
-		// Spins up a gateway.
-		Gateway.main(new String[] {
-				"--host=localhost",
-				"--port=29081"
-		});
-
-		// Spins up a router.
-		Router.main(new String[] {
-				"--host=localhost",
-				"--port=29082",
-				// Points to the gateway.
-				"--forwarding=localhost:29081",
-		});
-
-		// Spins up a proxy.
-		Proxy.main(new String[] {
-				"--host=localhost",
-				"--port=29083",
-				// Points to the router.
-				"--entrypoint=localhost:29082",
-		});
-
 		// Builds a client request against the proxy and traverses the network looking for content.
 		for (int i = 0; i < 10; i++) {
 			Optional<Resource> content = WorldWideWeb.get(
-					InetSocketAddresses.parse("localhost:29083"),
-					"http://localhost:29080/onemegabytefile");
+					InetSocketAddresses.parse("localhost:8080"),
+					"http://localhost:8083/onemegabytefile");
 			assertTrue(content.isPresent());
 			assertEquals(1000 * 1000, content.get().content().length());
 		}

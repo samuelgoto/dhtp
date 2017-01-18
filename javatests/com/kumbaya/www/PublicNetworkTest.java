@@ -1,4 +1,4 @@
-package com.kumbaya;
+package com.kumbaya.www;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
