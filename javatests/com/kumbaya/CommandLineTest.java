@@ -3,12 +3,12 @@ package com.kumbaya;
 import com.google.common.base.Optional;
 import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.Server;
+import com.kumbaya.common.testing.WorldWideWebServer;
 import com.kumbaya.router.Router;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.WorldWideWeb.Resource;
 import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.Proxy;
-import com.kumbaya.www.testing.WorldWideWebServer;
 import junit.framework.TestCase;
 
 public class CommandLineTest extends TestCase {

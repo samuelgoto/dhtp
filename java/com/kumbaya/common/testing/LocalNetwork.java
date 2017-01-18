@@ -12,7 +12,6 @@ import com.kumbaya.common.Server;
 import com.kumbaya.router.Router;
 import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.Proxy;
-import com.kumbaya.www.testing.WorldWideWebServer;
 
 public class LocalNetwork {
   private final Map<String, Class<? extends Servlet>> servlets;

@@ -5,14 +5,13 @@ import com.google.inject.Guice;
 import com.kumbaya.common.Flags;
 import com.kumbaya.common.Server;
 import com.kumbaya.common.testing.Supplier;
+import com.kumbaya.common.testing.WorldWideWebServer;
 import com.kumbaya.common.testing.LocalNetwork;
 import com.kumbaya.router.Router;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.WorldWideWeb.Resource;
 import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.Proxy;
-import com.kumbaya.www.testing.WorldWideWebServer;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;

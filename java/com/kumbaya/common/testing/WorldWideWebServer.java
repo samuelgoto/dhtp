@@ -1,4 +1,4 @@
-package com.kumbaya.www.testing;
+package com.kumbaya.common.testing;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
