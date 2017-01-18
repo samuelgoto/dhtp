@@ -59,6 +59,7 @@ public class Proxy implements Server {
 
   @Override
   public void bind(InetSocketAddress address) throws IOException {
+    logger.info("Binding into " + host + ":" + port);
     http.bind(address);
   }
 
@@ -130,6 +131,7 @@ public class Proxy implements Server {
       // If the url points to the same address as ourselves and same port, skip.
       if (Arrays.equals(address.getAddress(), new InetSocketAddress(host, port).getAddress().getAddress()) &&
           new URL(url).getPort() == port) {
+        logger.info("Client asking for url that lives in this server, 400-ing: " + url);
         // Client error.
         response.sendError(400);
         return;

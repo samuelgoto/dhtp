@@ -80,6 +80,7 @@ public class Gateway implements Server {
   
   @Override
   public void bind(InetSocketAddress address) throws IOException {
+    logger.info("Binding into " + host + ":" + port);
     Packets.register();
     server.register(Interest.class, handler);
     server.bind(address);
