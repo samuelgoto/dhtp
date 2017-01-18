@@ -1,20 +1,18 @@
 package com.kumbaya;
 
 import java.io.IOException;
-
+import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.kumbaya.common.InetSocketAddresses;
-import com.kumbaya.common.Server;
-import com.kumbaya.router.Router;
+import com.kumbaya.common.testing.LocalNetwork;
+import com.kumbaya.common.testing.Supplier;
 import com.kumbaya.www.WorldWideWeb;
-import com.kumbaya.www.gateway.Gateway;
-import com.kumbaya.www.proxy.Proxy;
-import com.kumbaya.www.testing.WorldWideWebServer;
 
 import junit.framework.TestCase;
 
@@ -32,41 +30,26 @@ public class TimeoutTest extends TestCase {
       }
     }	
   }
+  
+  private final Supplier<LocalNetwork> network = LocalNetwork.supplier(
+      ImmutableMap.of("/deliberately-timeouts", DeliberatelyTimeoutsServlet.class));
 
+  @Override
+  public void setUp() throws Exception {
+    network.clear().get().setUp();
+  }
+  
+  @Override
+  public void tearDown() throws Exception {
+    network.get().tearDown();
+  }
+  
   public void testRunnningAll() throws Exception {
-    // Spins up a web server.
-    Server www = WorldWideWebServer.server(
-        "/deliberately-timeouts", DeliberatelyTimeoutsServlet.class);
-    www.bind(InetSocketAddresses.parse("localhost:39080"));
-
-    // Spins up a gateway.
-    Gateway.main(new String[] {
-        "--host=localhost",
-        "--port=39081"
-    });
-
-    // Spins up a router.
-    Router.main(new String[] {
-        "--host=localhost",
-        "--port=39082",
-        // Points to the gateway.
-        "--forwarding=localhost:39081",
-    });
-
-    // Spins up a proxy.
-    Proxy.main(new String[] {
-        "--host=localhost",
-        "--port=39083",
-        // Points to the router.
-        "--entrypoint=localhost:39082",
-    });
-
     // Builds a client request against the proxy and traverses the network looking for content.
+    WorldWideWeb.setTimeout(TimeUnit.SECONDS.toMillis(2));
     Optional<String> content = WorldWideWeb.get(
-        InetSocketAddresses.parse("localhost:39083"),
-        "http://localhost:39080/deliberately-timeouts");
+        InetSocketAddresses.parse("localhost:8080"),
+        "http://localhost:8083/deliberately-timeouts");
     assertFalse(content.isPresent());
-
-    System.out.println("Network returned a non-present content for the timeout.");
   }
 }

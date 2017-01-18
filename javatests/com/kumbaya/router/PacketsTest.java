@@ -23,6 +23,7 @@ public class PacketsTest extends TestCase {
     Data packet = new Data();
     packet.getName().setName("foo");
     packet.getMetadata().setFreshnessPeriod(2);
+    packet.getMetadata().setContentType("text/html");
     packet.setContent("hello world".getBytes());
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -38,6 +39,7 @@ public class PacketsTest extends TestCase {
     Data packet = new Data();
     packet.getName().setName("foo");
     packet.getMetadata().setFreshnessPeriod(2);
+    packet.getMetadata().setContentType("text/html");
     packet.setContent("hello world".getBytes());
 
     ByteArrayOutputStream stream = new ByteArrayOutputStream();

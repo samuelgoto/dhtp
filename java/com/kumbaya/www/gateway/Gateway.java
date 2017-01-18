@@ -54,10 +54,13 @@ public class Gateway implements Server {
         Optional<String> content = WorldWideWeb.get(request.getName().getName());
         // If the content is available, return it.
         if (content.isPresent()) {
-        	logger.info("Got data back from the web, returning");
+          logger.info("Got data back from the web, returning");
           Packets.Data data = new Packets.Data();
           data.getName().setName(request.getName().getName());
           data.getMetadata().setFreshnessPeriod(2);
+          // TODO(goto): figure out how to pass the content type back to the network. Will require
+          // us to re-do the WorldWideWeb class.
+          data.getMetadata().setContentType("");
           data.setContent(content.get().getBytes());
           response.push(data);
           logger.info("Finished writing the data");

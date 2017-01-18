@@ -30,6 +30,7 @@ public class TcpServerTest extends TestCase {
         Data result = new Data();
         result.setName(request.getName());
         result.getMetadata().setFreshnessPeriod(2);
+        result.getMetadata().setContentType("text/html");
         result.setContent("hello world".getBytes());
         response.push(result);
       }
@@ -59,6 +60,7 @@ public class TcpServerTest extends TestCase {
         Data result = new Data();
         result.setName(request.getName());
         result.getMetadata().setFreshnessPeriod(2);
+        result.getMetadata().setContentType("text/html");
         byte[] content = new byte[10 * 1000 * 1000];
         result.setContent(content);
         try {

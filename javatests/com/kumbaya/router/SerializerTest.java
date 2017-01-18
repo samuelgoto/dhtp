@@ -224,6 +224,7 @@ public class SerializerTest extends TestCase {
     Data data = new Data();
     data.getName().setName("http://example.com/bigfile");
     data.setContent(new byte[100 * 1000 * 1000]);
+    data.getMetadata().setContentType("text/html");
     Serializer.serialize(stream, data);
     
     ByteArrayInputStream incoming = new ByteArrayInputStream(stream.toByteArray());

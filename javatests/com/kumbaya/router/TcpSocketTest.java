@@ -37,6 +37,7 @@ public class TcpSocketTest extends TestCase {
             byte[] content = new byte[bytes];
             Data result = new Data();
             result.getName().setName("http://example.com/largefile");
+            result.getMetadata().setContentType("text/html");
             result.setContent(content);
             Serializer.serialize(outToClient, result);
             outToClient.close();

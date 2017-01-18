@@ -2,38 +2,29 @@ package com.kumbaya;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.kumbaya.common.InetSocketAddresses;
-import com.kumbaya.router.Router;
+import com.kumbaya.common.testing.LocalNetwork;
+import com.kumbaya.common.testing.Supplier;
 import com.kumbaya.www.WorldWideWeb;
-import com.kumbaya.www.gateway.Gateway;
-import com.kumbaya.www.proxy.Proxy;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 public class PublicNetworkTest extends TestCase {
+  Supplier<LocalNetwork> network = LocalNetwork.supplier(ImmutableMap.of());
+  
+  @Override
+  public void setUp() throws Exception {
+    network.clear().get().setUp();
+  }
+  
+  @Override
+  public void tearDown() throws Exception {
+    network.get().tearDown();
+  }
+  
   public void testRunnningAll() throws Exception {
-    // Spins up a gateway.
-    Gateway.main(new String[] {
-        "--host=localhost",
-        "--port=19081"
-    });
-
-    // Spins up a router.
-    Router.main(new String[] {
-        "--host=localhost",
-        "--port=19082",
-        // Points to the gateway.
-        "--forwarding=localhost:19081",
-    });
-
-    // Spins up a proxy.
-    Proxy.main(new String[] {
-        "--host=localhost",
-        "--port=19083",
-        // Points to the router.
-        "--entrypoint=localhost:19082",
-    });
-    
     List<String> urls = ImmutableList.of(
         // Some default servers that I normally try manually.
         "http://sgo.to",
@@ -46,8 +37,9 @@ public class PublicNetworkTest extends TestCase {
     
     for (String url : urls) {
       // Builds a client request against the proxy and traverses the network looking for content.
+      WorldWideWeb.setTimeout(TimeUnit.MINUTES.toMillis(5));
       Optional<String> content = WorldWideWeb.get(
-          InetSocketAddresses.parse("localhost:19083"), url);
+          InetSocketAddresses.parse("localhost:8080"), url);
       assertTrue(content.isPresent());
     }
   }

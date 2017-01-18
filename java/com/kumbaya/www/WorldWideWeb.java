@@ -8,7 +8,7 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHost;
@@ -22,11 +22,16 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 public class WorldWideWeb {
   private static final Log logger = LogFactory.getLog(WorldWideWeb.class);
-
+  private static int CONNECTION_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5); // Timeout in milliseconds.
+  
   private static final CloseableHttpClient httpclient = HttpClientBuilder.create()
       .setMaxConnTotal(200)
       .setMaxConnPerRoute(50)
       .build();
+  
+  public static void setTimeout(long milliseconds) {
+    CONNECTION_TIMEOUT_MS = (int) milliseconds;
+  }
 
   public static Optional<String> get(InetSocketAddress proxy, String url) throws MalformedURLException, IOException {
     HttpHost p = new HttpHost(proxy.getHostName(), proxy.getPort());
@@ -37,7 +42,6 @@ public class WorldWideWeb {
   }
 
   private static Optional<String> get(HttpGet request, RequestConfig.Builder config) throws IOException {
-    int CONNECTION_TIMEOUT_MS = 5 * 1000; // Timeout in millis.
     config.setConnectionRequestTimeout(CONNECTION_TIMEOUT_MS);
     config.setConnectTimeout(CONNECTION_TIMEOUT_MS);
     config.setSocketTimeout(CONNECTION_TIMEOUT_MS);

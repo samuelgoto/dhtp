@@ -103,6 +103,9 @@ public class TcpServer implements Runnable, Server {
       } catch (IOException e) {
         e.printStackTrace();
         logger.error("Unexpected IOException: ", e);
+      } catch (Exception e) {
+        logger.error("Got an unexpected exception: ", e);   
+        e.printStackTrace();        
       } finally {
         logger.info("Ended a connection");   
         try {

@@ -34,21 +34,21 @@ public class IntegrationTest extends TestCase {
   }
   
   public void test200_direclty() throws IOException {
-    Optional<String> result = WorldWideWeb.get("http://localhost:6060/helloworld");
+    Optional<String> result = WorldWideWeb.get("http://localhost:8083/helloworld");
     assertTrue(result.isPresent());
     assertEquals("hello world", result.get());
   }
  
   public void test404s_directly() throws IOException {
     // Straight to the server
-    Optional<String> result = WorldWideWeb.get("http://localhost:6060/doesntexist");
+    Optional<String> result = WorldWideWeb.get("http://localhost:8083/doesntexist");
     assertFalse(result.isPresent());
   }
 
   public void test200_throughNetwork() throws IOException {
     Optional<String> result = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
-        "http://localhost:6060/helloworld");
+        "http://localhost:8083/helloworld");
     assertTrue(result.isPresent());
     assertEquals("hello world", result.get());
   }

@@ -26,12 +26,12 @@ public class Client {
   public <T> Optional<T> send(InetSocketAddress host, Object packet) throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
     logger.info("Sending a request to the network");
     
-    Socket clientSocket = new Socket(host.getHostName(), host.getPort());
-    DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
+    Socket socket = new Socket(host.getHostName(), host.getPort());
+    DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
     Serializer.serialize(outToServer, packet);
     outToServer.flush();
     try {
-      InputStream stream = clientSocket.getInputStream();
+      InputStream stream = socket.getInputStream();
       T result = Serializer.unserialize(stream);
       return Optional.of(result);
     } catch (EOFException e) {
@@ -39,7 +39,7 @@ public class Client {
       // If no response was sent back, return an absent content.
       return Optional.absent();
     } finally {
-      clientSocket.close();
+      socket.close();
     }
   }
 }

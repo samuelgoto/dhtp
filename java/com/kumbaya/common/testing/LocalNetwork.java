@@ -25,7 +25,7 @@ public class LocalNetwork {
     @Override
     public Proxy build() {
       return Guice.createInjector(
-          Flags.asModule(new String[] {"--entrypoint=localhost:9090"}),
+          Flags.asModule(new String[] {"--entrypoint=localhost:8081"}),
           new Proxy.Module() 
           ).getInstance(Proxy.class);
     }
@@ -35,7 +35,7 @@ public class LocalNetwork {
     @Override
     public Router build() {
       return Guice.createInjector(
-          Flags.asModule(new String[] {"--forwarding=localhost:7070"}),
+          Flags.asModule(new String[] {"--forwarding=localhost:8082"}),
           new Router.Module())
       .getInstance(Router.class);    
     }
@@ -44,7 +44,8 @@ public class LocalNetwork {
   private final Supplier<Gateway> gateway = new Supplier<Gateway>() {
     @Override
     public Gateway build() {
-      return Guice.createInjector(new Gateway.Module()).getInstance(Gateway.class);    
+      return Guice.createInjector(
+          new Gateway.Module()).getInstance(Gateway.class);    
     }
   };
   
@@ -57,9 +58,9 @@ public class LocalNetwork {
   
   public void setUp() throws IOException {
     proxy.clear().get().bind(new InetSocketAddress("127.0.0.1", 8080));
-    router.clear().get().bind(new InetSocketAddress("127.0.0.1", 9090));
-    gateway.clear().get().bind(new InetSocketAddress("127.0.0.1", 7070));
-    www.clear().get().bind(new InetSocketAddress("127.0.0.1", 6060));
+    router.clear().get().bind(new InetSocketAddress("127.0.0.1", 8081));
+    gateway.clear().get().bind(new InetSocketAddress("127.0.0.1", 8082));
+    www.clear().get().bind(new InetSocketAddress("127.0.0.1", 8083));
   }
   
   public void tearDown() throws IOException {
