@@ -13,7 +13,7 @@ import junit.framework.TestCase;
 public class CommandLineTest extends TestCase {
   public void testRunnningAll() throws Exception {
     // Spins up a web server.
-    Server www = WorldWideWebServer.server();
+    Server www = WorldWideWebServer.server(WorldWideWebServer.defaultServlets());
     www.bind(InetSocketAddresses.parse("localhost:9080"));
     
     // Spins up a gateway.
@@ -27,7 +27,7 @@ public class CommandLineTest extends TestCase {
         "--host=localhost",
         "--port=9082",
         // Points to the gateway.
-        "--entrypoint=localhost:9081",
+        "--forwarding=localhost:9081",
         });
     
     // Spins up a proxy.

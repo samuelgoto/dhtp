@@ -51,7 +51,7 @@ public class LoadTest extends TestCase {
 				"--host=localhost",
 				"--port=29082",
 				// Points to the gateway.
-				"--entrypoint=localhost:29081",
+				"--forwarding=localhost:29081",
 		});
 
 		// Spins up a proxy.
@@ -70,6 +70,5 @@ public class LoadTest extends TestCase {
 			assertTrue(content.isPresent());
 			assertEquals(1000 * 1000, content.get().length());
 		}
-		
 	}
 }

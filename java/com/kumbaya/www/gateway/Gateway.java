@@ -43,7 +43,7 @@ public class Gateway implements Server {
     protected void configure() {
       ThreadFactory factory = new ThreadFactoryBuilder()
         .setNameFormat("Gateway-%d").build();
-      bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(1, factory));
+      bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(10, factory));
     }
   }
   

@@ -4,66 +4,34 @@ import com.google.common.base.Optional;
 import com.google.inject.Guice;
 import com.kumbaya.common.Flags;
 import com.kumbaya.common.Server;
+import com.kumbaya.common.testing.Supplier;
+import com.kumbaya.common.testing.TestNetwork;
 import com.kumbaya.router.Router;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.Proxy;
 import com.kumbaya.www.testing.WorldWideWebServer;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+
 import junit.framework.TestCase;
 
 public class IntegrationTest extends TestCase {
-  private final Supplier<Proxy> proxy = new Supplier<Proxy>() {
-    @Override
-    Proxy build() {
-      return Guice.createInjector(
-          Flags.asModule(new String[] {"--entrypoint=localhost:9090"}),
-          new Proxy.Module() 
-          ).getInstance(Proxy.class);
-    }
-  };
-  
-  private final Supplier<Router> router = new Supplier<Router>() {
-    @Override
-    Router build() {
-      return Guice.createInjector(
-          Flags.asModule(new String[] {"--forwarding=localhost:7070"}),
-          new Router.Module())
-      .getInstance(Router.class);    
-    }
-  };
-  
-  private final Supplier<Gateway> gateway = new Supplier<Gateway>() {
-    @Override
-    Gateway build() {
-      return Guice.createInjector(new Gateway.Module()).getInstance(Gateway.class);    
-    }
-  };
-  
-  private final Supplier<Server> www = new Supplier<Server>() {
-    @Override
-    Server build() {
-      return WorldWideWebServer.server();
-    }
-  };
+  private Supplier<TestNetwork> network = TestNetwork.supplier(
+      WorldWideWebServer.defaultServlets());
 
   @Override
   public void setUp() throws IOException {
-    proxy.clear().get().bind(new InetSocketAddress("127.0.0.1", 8080));
-    router.clear().get().bind(new InetSocketAddress("127.0.0.1", 9090));
-    gateway.clear().get().bind(new InetSocketAddress("127.0.0.1", 7070));
-    www.clear().get().bind(new InetSocketAddress("127.0.0.1", 6060));
+    network.get().setUp();
   }
   
   @Override
   public void tearDown() throws IOException {
-    proxy.get().close();
-    router.get().close();
-    gateway.get().close();
-    www.get().close();
-  }  
+    network.get().tearDown();
+    network.clear();
+  }
   
   public void test200_direclty() throws IOException {
     Optional<String> result = WorldWideWeb.get("http://localhost:6060/helloworld");
@@ -151,26 +119,6 @@ public class IntegrationTest extends TestCase {
         new InetSocketAddress("localhost", 8080), 
         "http://localhost:8080/index.php");
     assertFalse(result.isPresent());
-  }
-  
-  static abstract class Supplier<T> {
-    private Optional<T> instance = Optional.absent();
-    
-    T get() {
-      if (instance.isPresent()) {
-        return instance.get();
-      } else {
-        instance = Optional.of(build());
-        return instance.get();
-      }      
-    }
-    
-    Supplier<T> clear() {
-      this.instance = Optional.absent();
-      return this;
-    }
-    
-    abstract T build();
   }
 }
 

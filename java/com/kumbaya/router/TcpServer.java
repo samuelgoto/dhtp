@@ -24,7 +24,7 @@ public class TcpServer implements Runnable, Server {
   private final Map<Class<?>, Handler<?>> handlers = new HashMap<Class<?>, Handler<?>>();
   private ServerSocket socket;
   private AtomicBoolean running = new AtomicBoolean(false);
-  
+
   @Inject
   TcpServer(ExecutorService executor) {
     this.executor = executor;
@@ -37,7 +37,7 @@ public class TcpServer implements Runnable, Server {
   public interface Handler<I> {
     void handle(I request, Queue queue) throws IOException;
   }
-  
+
   public static class Queue {
     private final OutputStream out;
     Queue(OutputStream out) {
@@ -48,19 +48,45 @@ public class TcpServer implements Runnable, Server {
       return this;
     }
   }
-  
-  @SuppressWarnings({"unchecked", "cast"})
-  private <I> void handle(Handler<I> handler, Object request, OutputStream response) throws IOException {
-    handler.handle((I) request, new Queue(response));
-  }
-  
+
+
   @Override
   public void run() {
     while (running.get()) {
       try {
-        Socket connection = socket.accept();
-        logger.info("Starting a connection");
+        logger.info("Accepting new connections");
+        final Socket connection = socket.accept();
+        // executor.execute(new RequestHandler(connection, handlers));
+        new RequestHandler(connection, handlers).run();
+      } catch (SocketException e) {
+        Preconditions.checkArgument(!running.get(), "Socket closed but server is still running");
+      } catch (IOException e) {
+        e.printStackTrace();
+        logger.error("Unexpected IOException: ", e);
+      }
+    }
+  }
+
+  private static class RequestHandler implements Runnable {
+    private final Socket connection;
+    private final Map<Class<?>, Handler<?>> handlers;
+
+    RequestHandler(Socket connection, Map<Class<?>, Handler<?>> handlers) {
+      this.connection = connection;
+      this.handlers = handlers;
+    }
+
+    @SuppressWarnings({"unchecked", "cast"})
+    private <I> void handle(Handler<I> handler, Object request, OutputStream response) throws IOException {
+      handler.handle((I) request, new Queue(response));
+    }
+
+    @Override
+    public void run() {
+
+      try {
         OutputStream stream = connection.getOutputStream();
+        logger.info("Starting a connection");
         DataOutputStream out = new DataOutputStream(stream);
         Object request = Serializer.unserialize(connection.getInputStream());
         Handler<?> handler = handlers.get(request.getClass());
@@ -71,20 +97,26 @@ public class TcpServer implements Runnable, Server {
         handle(handler, request, out);
         stream.close();
         connection.close();
-        logger.info("Ended a connection");       
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
-        throw new RuntimeException("Failed to serialize payload", e);
+        e.printStackTrace();
+        logger.error("Unexpected Serialization error: ", e);
       } catch (ConnectException e) {
         e.printStackTrace();
-      } catch (SocketException e) {
-        // e.printStackTrace();
-        Preconditions.checkArgument(!running.get(), "Socket closed but server is still running");
       } catch (IOException e) {
         e.printStackTrace();
         logger.error("Unexpected IOException: ", e);
+      } finally {
+        logger.info("Ended a connection");   
+        try {
+          connection.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+          logger.error("Unexpected error closing the connection", e);
+        }
       }
     }
   }
+
 
   @Override
   public void bind(InetSocketAddress address) throws IOException {

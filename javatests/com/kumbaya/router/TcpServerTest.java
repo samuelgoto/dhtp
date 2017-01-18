@@ -16,14 +16,14 @@ import junit.framework.TestCase;
 
 public class TcpServerTest extends TestCase {
   public void testStartingStopping() throws Exception {
-    TcpServer server = new TcpServer(Executors.newFixedThreadPool(1));
+    TcpServer server = new TcpServer(Executors.newFixedThreadPool(10));
     server.bind(new InetSocketAddress("localhost", 8080));
     server.close();
   }
   
   public void testPacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
-    TcpServer server = new TcpServer(Executors.newFixedThreadPool(1));
-    server.bind(new InetSocketAddress("localhost", 8081));
+    TcpServer server = new TcpServer(Executors.newFixedThreadPool(10));
+    
     server.register(Interest.class, new TcpServer.Handler<Interest>() {
       @Override
       public void handle(Interest request, Queue response) throws IOException {
@@ -34,8 +34,8 @@ public class TcpServerTest extends TestCase {
         response.push(result);
       }
     });
-    Thread thread = new Thread(server);
-    thread.start();
+    
+    server.bind(new InetSocketAddress("localhost", 8081));
 
     Client client = new Client();
 
@@ -52,8 +52,7 @@ public class TcpServerTest extends TestCase {
   }
   
   public void testLargePacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
-    TcpServer server = new TcpServer(Executors.newFixedThreadPool(1));
-    server.bind(new InetSocketAddress("localhost", 8080));
+    TcpServer server = new TcpServer(Executors.newFixedThreadPool(10));
     server.register(Interest.class, new TcpServer.Handler<Interest>() {
       @Override
       public void handle(Interest request, Queue response) throws IOException {
@@ -69,9 +68,7 @@ public class TcpServerTest extends TestCase {
         }
       }
     });
-    
-    Thread thread = new Thread(server);
-    thread.start();
+    server.bind(new InetSocketAddress("localhost", 8080));
 
     Client client = new Client();
 

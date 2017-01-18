@@ -42,12 +42,12 @@ public class Router implements Server {
     protected void configure() {
       ThreadFactory factory = new ThreadFactoryBuilder()
         .setNameFormat("Router-%d").build();
-      bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(1, factory));
+      bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(10, factory));
     }
   }
 
   static class InterestHandler implements Handler<Interest> {
-    private @Inject(optional=true) @Flag("forwarding") String forwarding = "localhost:8082";
+    private @Inject @Flag("forwarding") String forwarding = "localhost:8082";
     private final Client client;
 
     @Inject

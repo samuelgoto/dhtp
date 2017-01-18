@@ -128,7 +128,6 @@ public class Proxy implements Server {
       // The proxy will get two types of requests:
       // - through HTTP proxying, which sets the entire request with an absolute url.
       // - through DNS proxying, which requires the proxy to dissamble the url and reconstruct it.
-      
       Packets.Interest interest = new Packets.Interest();
       HttpServletRequest request = (HttpServletRequest) req;
       HttpServletResponse response = (HttpServletResponse) res;

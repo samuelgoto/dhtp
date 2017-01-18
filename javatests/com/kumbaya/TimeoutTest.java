@@ -50,7 +50,7 @@ public class TimeoutTest extends TestCase {
         "--host=localhost",
         "--port=39082",
         // Points to the gateway.
-        "--entrypoint=localhost:39081",
+        "--forwarding=localhost:39081",
     });
 
     // Spins up a proxy.

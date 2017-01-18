@@ -32,35 +32,32 @@ public class WorldWideWebServer {
       response.sendError(500);
     }
   }
-  
+
   public static Server server(Map<String, Class<? extends Servlet>> servlets) {
-	    return Guice.createInjector(new AbstractModule() {
-	        @Override
-	        protected void configure() {
-	          MapBinder<String, Servlet> mapbinder
-	          = MapBinder.newMapBinder(binder(), String.class, Servlet.class);
+    return Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        MapBinder<String, Servlet> mapbinder
+        = MapBinder.newMapBinder(binder(), String.class, Servlet.class);
 
-	          for (Map.Entry<String, Class<? extends Servlet>> servlet : servlets.entrySet()) {
-	        	  mapbinder.addBinding(servlet.getKey()).to(servlet.getValue());
-	          }
-	          
-	        }
-	      }).getInstance(JettyServer.class);
+        for (Map.Entry<String, Class<? extends Servlet>> servlet : servlets.entrySet()) {
+          mapbinder.addBinding(servlet.getKey()).to(servlet.getValue());
+        }
+
+      }
+    }).getInstance(JettyServer.class);
   }
-  
+
   public static Server server(String path, Class<? extends Servlet> servlet) {
-	  return server(ImmutableMap.<String, Class<? extends Servlet>>builder()
-			  .put(path, servlet)
-			  .build()); 
-  }
-
-  public static Server server() {
-	  // Installs some default servlets.
-	  return server(ImmutableMap.<String, Class<? extends Servlet>>builder()
-			  .put("/helloworld", HelloWorldServlet.class)
-			  .put("/error", ServerErrorServlet.class)
-			  .build());
+    return server(ImmutableMap.<String, Class<? extends Servlet>>builder()
+        .put(path, servlet)
+        .build()); 
   }
   
-  
+  public static Map<String, Class<? extends Servlet>> defaultServlets() {
+    return ImmutableMap.<String, Class<? extends Servlet>>builder()
+        .put("/helloworld", HelloWorldServlet.class)
+        .put("/error", ServerErrorServlet.class)
+        .build();
+  }
 }

@@ -18,32 +18,31 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.HttpHostConnectException;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 public class WorldWideWeb {
   private static final Log logger = LogFactory.getLog(WorldWideWeb.class);
 
-  private static final CloseableHttpClient httpclient = HttpClients.createDefault();
+  private static final CloseableHttpClient httpclient = HttpClientBuilder.create()
+      .setMaxConnTotal(200)
+      .setMaxConnPerRoute(50)
+      .build();
 
   public static Optional<String> get(InetSocketAddress proxy, String url) throws MalformedURLException, IOException {
     HttpHost p = new HttpHost(proxy.getHostName(), proxy.getPort());
-    RequestConfig config = RequestConfig.custom()
-        .setProxy(p)
-        .build();
+    RequestConfig.Builder config = RequestConfig.custom()
+        .setProxy(p);
     HttpGet request = new HttpGet(url);
-    request.setConfig(config);
-    return get(request);
+    return get(request, config);
   }
 
-  public static Optional<String> get(HttpGet request) throws IOException {
-    int CONNECTION_TIMEOUT_MS = 2 * 1000; // Timeout in millis.
-    RequestConfig config = RequestConfig.custom()
-        .setConnectionRequestTimeout(CONNECTION_TIMEOUT_MS)
-        .setConnectTimeout(CONNECTION_TIMEOUT_MS)
-        .setSocketTimeout(CONNECTION_TIMEOUT_MS)
-        .build();
+  private static Optional<String> get(HttpGet request, RequestConfig.Builder config) throws IOException {
+    int CONNECTION_TIMEOUT_MS = 5 * 1000; // Timeout in millis.
+    config.setConnectionRequestTimeout(CONNECTION_TIMEOUT_MS);
+    config.setConnectTimeout(CONNECTION_TIMEOUT_MS);
+    config.setSocketTimeout(CONNECTION_TIMEOUT_MS);
     
-    request.setConfig(config);
+    request.setConfig(config.build());
     
     try {
       CloseableHttpResponse response = httpclient.execute(request);
@@ -71,6 +70,6 @@ public class WorldWideWeb {
 
 
   public static Optional<String> get(String url) throws IOException {
-    return get(new HttpGet(url));
+    return get(new HttpGet(url), RequestConfig.custom());
   }
 }
