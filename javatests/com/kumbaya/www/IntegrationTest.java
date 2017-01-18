@@ -5,7 +5,7 @@ import com.google.inject.Guice;
 import com.kumbaya.common.Flags;
 import com.kumbaya.common.Server;
 import com.kumbaya.common.testing.Supplier;
-import com.kumbaya.common.testing.TestNetwork;
+import com.kumbaya.common.testing.LocalNetwork;
 import com.kumbaya.router.Router;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.gateway.Gateway;
@@ -19,7 +19,7 @@ import java.net.UnknownHostException;
 import junit.framework.TestCase;
 
 public class IntegrationTest extends TestCase {
-  private Supplier<TestNetwork> network = TestNetwork.supplier(
+  private Supplier<LocalNetwork> network = LocalNetwork.supplier(
       WorldWideWebServer.defaultServlets());
 
   @Override

@@ -18,6 +18,7 @@ public class Packets {
     public static final int META_INFO = 8;
     public static final int FRESHNESS_PERIOD = 9;
     public static final int CONTENT = 10;
+    public static final int CONTENT_TYPE = 10;
   }
   
   // TODO(goto): figure out a more foolproof way to get this done. Not ideal.
@@ -114,12 +115,24 @@ public class Packets {
     @Field(Registry.FRESHNESS_PERIOD)
     int freshnessPeriod;
 
+    @Field(Registry.CONTENT_TYPE)
+    String contentType;
+
     public int getFreshnessPeriod() {
       return freshnessPeriod;
     }
 
     public MetaInfo setFreshnessPeriod(int freshnessPeriod) {
       this.freshnessPeriod = freshnessPeriod;
+      return this;
+    }
+
+    public String getContentType() {
+      return contentType;
+    }
+
+    public MetaInfo setContentType(String contentType) {
+      this.contentType = contentType;
       return this;
     }
   }

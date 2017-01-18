@@ -6,7 +6,6 @@ import java.util.Map;
 
 import javax.servlet.Servlet;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.kumbaya.common.Flags;
 import com.kumbaya.common.Server;
@@ -15,10 +14,10 @@ import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.Proxy;
 import com.kumbaya.www.testing.WorldWideWebServer;
 
-public class TestNetwork {
+public class LocalNetwork {
   private final Map<String, Class<? extends Servlet>> servlets;
   
-  TestNetwork(Map<String, Class<? extends Servlet>> servlets) {
+  LocalNetwork(Map<String, Class<? extends Servlet>> servlets) {
     this.servlets = servlets;
   }
     
@@ -70,11 +69,11 @@ public class TestNetwork {
     www.get().close();
   }
   
-  public static Supplier<TestNetwork> supplier(final Map<String, Class<? extends Servlet>> servlets) {
-    return new Supplier<TestNetwork>() {
+  public static Supplier<LocalNetwork> supplier(final Map<String, Class<? extends Servlet>> servlets) {
+    return new Supplier<LocalNetwork>() {
       @Override
-      public TestNetwork build() {
-        return new TestNetwork(servlets);
+      public LocalNetwork build() {
+        return new LocalNetwork(servlets);
       }
     };
   }

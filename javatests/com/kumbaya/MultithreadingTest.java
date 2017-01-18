@@ -18,7 +18,7 @@ import org.apache.commons.logging.LogFactory;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.kumbaya.common.testing.Supplier;
-import com.kumbaya.common.testing.TestNetwork;
+import com.kumbaya.common.testing.LocalNetwork;
 import com.kumbaya.www.WorldWideWeb;
 
 import junit.framework.TestCase;
@@ -26,7 +26,7 @@ import junit.framework.TestCase;
 public class MultithreadingTest extends TestCase {
   private static final Log logger = LogFactory.getLog(MultithreadingTest.class);
   
-  Supplier<TestNetwork> network = TestNetwork.supplier(ImmutableMap.of(
+  Supplier<LocalNetwork> network = LocalNetwork.supplier(ImmutableMap.of(
       "/please-sleep", SleepServlet.class));
   
   @Override
