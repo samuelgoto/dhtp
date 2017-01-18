@@ -49,15 +49,13 @@ public class TcpServer implements Runnable, Server {
     }
   }
 
-
   @Override
   public void run() {
     while (running.get()) {
       try {
         logger.info("Accepting new connections");
         final Socket connection = socket.accept();
-        // executor.execute(new RequestHandler(connection, handlers));
-        new RequestHandler(connection, handlers).run();
+        executor.execute(new RequestHandler(connection, handlers));
       } catch (SocketException e) {
         Preconditions.checkArgument(!running.get(), "Socket closed but server is still running");
       } catch (IOException e) {

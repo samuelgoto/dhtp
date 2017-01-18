@@ -1,7 +1,6 @@
 package com.kumbaya.www.gateway;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -19,7 +18,6 @@ import com.kumbaya.www.WorldWideWeb;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -56,7 +54,7 @@ public class Gateway implements Server {
         Optional<String> content = WorldWideWeb.get(request.getName().getName());
         // If the content is available, return it.
         if (content.isPresent()) {
-        	logger.info("Got data back from the web (" + content.get().length() + " bytes), returning");
+        	logger.info("Got data back from the web, returning");
           Packets.Data data = new Packets.Data();
           data.getName().setName(request.getName().getName());
           data.getMetadata().setFreshnessPeriod(2);

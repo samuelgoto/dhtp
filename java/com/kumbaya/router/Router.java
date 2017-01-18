@@ -1,7 +1,6 @@
 package com.kumbaya.router;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -17,7 +16,6 @@ import com.kumbaya.router.TcpServer.Queue;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -63,7 +61,7 @@ public class Router implements Server {
         Optional<Data> result = client.send(InetSocketAddresses.parse(forwarding), request);
 
         if (result.isPresent()) {
-          logger.info("Got a Data packet response [" + result.get().getContent().length + " bytes], responding.");
+          logger.info("Got a Data packet, responding.");
           response.push(result.get());
         }
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
