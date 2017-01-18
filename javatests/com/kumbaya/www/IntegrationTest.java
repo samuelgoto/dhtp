@@ -29,7 +29,7 @@ public class IntegrationTest extends TestCase {
     @Override
     Router build() {
       return Guice.createInjector(
-          Flags.asModule(new String[] {"--entrypoint=localhost:7070"}),
+          Flags.asModule(new String[] {"--forwarding=localhost:7070"}),
           new Router.Module())
       .getInstance(Router.class);    
     }

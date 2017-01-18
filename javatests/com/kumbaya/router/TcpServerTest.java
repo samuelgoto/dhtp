@@ -1,6 +1,7 @@
 package com.kumbaya.router;
 
 import com.google.common.base.Optional;
+import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
@@ -36,11 +37,11 @@ public class TcpServerTest extends TestCase {
     Thread thread = new Thread(server);
     thread.start();
 
-    Client client = new Client("localhost:8081");
+    Client client = new Client();
 
     Interest interest = new Interest();
     interest.getName().setName("foo");
-    Optional<Data> result = client.send(interest);
+    Optional<Data> result = client.send(InetSocketAddresses.parse("localhost:8081"), interest);
 
     assertTrue(result.isPresent());
     assertEquals("foo", result.get().getName().getName());
@@ -72,11 +73,11 @@ public class TcpServerTest extends TestCase {
     Thread thread = new Thread(server);
     thread.start();
 
-    Client client = new Client("localhost:8080");
+    Client client = new Client();
 
     Interest interest = new Interest();
     interest.getName().setName("foo");
-    Optional<Data> result = client.send(interest);
+    Optional<Data> result = client.send(InetSocketAddresses.parse("localhost:8080"), interest);
 
     assertTrue(result.isPresent());
     assertEquals("foo", result.get().getName().getName());

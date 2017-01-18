@@ -47,6 +47,7 @@ public class Router implements Server {
   }
 
   static class InterestHandler implements Handler<Interest> {
+    private @Inject(optional=true) @Flag("forwarding") String forwarding = "localhost:8082";
     private final Client client;
 
     @Inject
@@ -59,7 +60,7 @@ public class Router implements Server {
       logger.info("Handling a request: " + request.getName().getName());
       try {
         // Forwards the interest to the next hop.
-        Optional<Data> result = client.send(request);
+        Optional<Data> result = client.send(InetSocketAddresses.parse(forwarding), request);
 
         if (result.isPresent()) {
           logger.info("Got a Data packet response [" + result.get().getContent().length + " bytes], responding.");

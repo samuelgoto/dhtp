@@ -17,15 +17,13 @@ import org.apache.commons.logging.LogFactory;
 
 public class Client {
   private static final Log logger = LogFactory.getLog(Client.class);
-  private final InetSocketAddress host;
-
   @Inject
-  public Client(@Flag("entrypoint") String entrypoint) {
+  public Client() {
     Packets.register();
-    this.host = InetSocketAddresses.parse(entrypoint);
+    // this.host = InetSocketAddresses.parse(entrypoint);
   }
 
-  public <T> Optional<T> send(Object packet) throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
+  public <T> Optional<T> send(InetSocketAddress host, Object packet) throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
     logger.info("Sending a request to the network");
     
     Socket clientSocket = new Socket(host.getHostName(), host.getPort());

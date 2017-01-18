@@ -1,7 +1,6 @@
 package com.kumbaya.www.proxy;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -15,12 +14,10 @@ import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets;
 import com.kumbaya.router.Packets.Data;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Set;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -71,6 +68,7 @@ public class Proxy implements Server {
   
   static class MyProxyServlet extends ProxyServlet.Transparent {
     private static final Log logger = LogFactory.getLog(MyProxyServlet.class);
+    private @Inject(optional=true) @Flag("entrypoint") String entrypoint = "localhost:8081";
 
     private final Client client;
 
@@ -129,7 +127,7 @@ public class Proxy implements Server {
       interest.getName().setName(url);
       try {
     	logger.info("Got a request: " + url + " from " + req.getRemoteAddr());
-        Optional<Data> result = client.send(interest);
+        Optional<Data> result = client.send(InetSocketAddresses.parse(entrypoint), interest);
 
         if (result.isPresent()) {
           logger.info("Got a response. Returning as a 200.");
@@ -149,7 +147,7 @@ public class Proxy implements Server {
   
   private @Inject(optional=true) @Flag("host") String host = "localhost";
   private @Inject(optional=true) @Flag("port") int port = 8080;
- 
+  
   public static void main(String[] args) throws Exception {
     logger.info("Running the Kumbaya Proxy");
     
