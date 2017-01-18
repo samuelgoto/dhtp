@@ -1,5 +1,6 @@
 package com.kumbaya.www.proxy;
 
+import com.kumbaya.www.proxy.Proxy.MyProxyServlet;
 import java.net.MalformedURLException;
 import junit.framework.TestCase;
 
@@ -30,5 +31,9 @@ public class ProxyTest extends TestCase {
   public void testAssemblingRedirector_complexPath() throws MalformedURLException {
     assertEquals("http://photos.sgo.to/dir1/dir2/file.html#fragment",
         Proxy.MyProxyServlet.assemble("http://photos.sgo.to.kumbaya.io:8080/dir1/dir2/file.html#fragment"));
+  }
+  
+  public void testSameHosts() throws Exception {
+    assertTrue(MyProxyServlet.sameHost("http://104.199.183.97/index.php", "104.199.183.97", 80));
   }
 }
