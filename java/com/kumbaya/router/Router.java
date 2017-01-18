@@ -38,18 +38,11 @@ public class Router implements Server {
   }
 
   public static class Module extends AbstractModule {
-    private final InetSocketAddress forwardingRouter;
-
-    public Module(InetSocketAddress forwardingRouter) {
-      this.forwardingRouter = forwardingRouter;
-    }
-
     @Override
     protected void configure() {
       ThreadFactory factory = new ThreadFactoryBuilder()
         .setNameFormat("Router-%d").build();
       bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(1, factory));
-      bind(InetSocketAddress.class).toInstance(forwardingRouter);
     }
   }
 
@@ -91,23 +84,14 @@ public class Router implements Server {
     server.close();
   }
 
+  private @Inject(optional=true) @Flag("host") String host = "localhost";
+  private @Inject(optional=true) @Flag("port") int port = 8082;
+  
   public static void main(String[] args) throws Exception {
     logger.info("Running the Kumbaya Router");
 
-    Set<Flag<?>> options = ImmutableSet.of(
-        Flag.of("host", "The external hostname", true, "localhost"),
-        Flag.of("port", "The external hostname", true, 8082),
-        Flag.of("forwarding", "The external ip/port of the forwarding table", true, "localhost:8081")
-        );
-
-    Flags flags = Flags.parse(options, args);
-    final String host = flags.get("host");
-    final int port = flags.get("port");
-    final String forwarding = flags.get("forwarding");
-    
-    Router router = Guice.createInjector(
-        new Module(InetSocketAddresses.parse(forwarding)))
+    Router router = Guice.createInjector(new Module(), Flags.asModule(args))
         .getInstance(Router.class);
-    router.bind(new InetSocketAddress(host, port));
+    router.bind(new InetSocketAddress(router.host, router.port));
   }
 }

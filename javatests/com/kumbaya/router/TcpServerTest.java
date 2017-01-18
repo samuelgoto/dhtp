@@ -36,7 +36,7 @@ public class TcpServerTest extends TestCase {
     Thread thread = new Thread(server);
     thread.start();
 
-    Client client = new Client(new InetSocketAddress("localhost", 8081));
+    Client client = new Client("localhost:8081");
 
     Interest interest = new Interest();
     interest.getName().setName("foo");
@@ -72,7 +72,7 @@ public class TcpServerTest extends TestCase {
     Thread thread = new Thread(server);
     thread.start();
 
-    Client client = new Client(new InetSocketAddress("localhost", 8080));
+    Client client = new Client("localhost:8080");
 
     Interest interest = new Interest();
     interest.getName().setName("foo");

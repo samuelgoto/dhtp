@@ -90,19 +90,16 @@ public class Gateway implements Server {
     server.close();
   }
   
+  private @Inject(optional=true) @Flag("host") String host = "localhost";
+  private @Inject(optional=true) @Flag("port") int port = 8081;
+  
   public static void main(String[] args) throws Exception {
     logger.info("Running the Kumbaya Gateway");
-
-    Set<Flag<?>> options = ImmutableSet.of(
-        Flag.of("host", "The external hostname", true, "localhost"),
-        Flag.of("port", "The external hostname", true, 8081)
-        );
-
-    Flags flags = Flags.parse(options, args);
-    final String host = flags.get("host");
-    final int port = flags.get("port");
     
-    Gateway router = Guice.createInjector(new Module()).getInstance(Gateway.class);
-    router.bind(new InetSocketAddress(host, port));
+    Gateway gateway = Guice.createInjector(
+        new Module(),
+        Flags.asModule(args))
+        .getInstance(Gateway.class);
+    gateway.bind(new InetSocketAddress(gateway.host, gateway.port));
   }
 }

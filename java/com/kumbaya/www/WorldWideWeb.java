@@ -12,6 +12,7 @@ import java.net.UnknownHostException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHost;
+import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -61,6 +62,9 @@ public class WorldWideWeb {
       return Optional.absent();
     } catch (SocketTimeoutException e) {
       logger.info("Timeout: " + request.getURI(), e);
+      return Optional.absent();
+    } catch (NoHttpResponseException e) {
+      logger.info("No response: " + request.getURI(), e);
       return Optional.absent();
     }
   }

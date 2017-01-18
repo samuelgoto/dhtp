@@ -51,7 +51,7 @@ public class LoadTest extends TestCase {
 				"--host=localhost",
 				"--port=29082",
 				// Points to the gateway.
-				"--forwarding=localhost:29081",
+				"--entrypoint=localhost:29081",
 		});
 
 		// Spins up a proxy.

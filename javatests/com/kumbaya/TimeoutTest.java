@@ -37,38 +37,36 @@ public class TimeoutTest extends TestCase {
     // Spins up a web server.
     Server www = WorldWideWebServer.server(
         "/deliberately-timeouts", DeliberatelyTimeoutsServlet.class);
-    www.bind(InetSocketAddresses.parse("localhost:29080"));
+    www.bind(InetSocketAddresses.parse("localhost:39080"));
 
     // Spins up a gateway.
     Gateway.main(new String[] {
         "--host=localhost",
-        "--port=29081"
+        "--port=39081"
     });
 
     // Spins up a router.
     Router.main(new String[] {
         "--host=localhost",
-        "--port=29082",
+        "--port=39082",
         // Points to the gateway.
-        "--forwarding=localhost:29081",
+        "--entrypoint=localhost:39081",
     });
 
     // Spins up a proxy.
     Proxy.main(new String[] {
         "--host=localhost",
-        "--port=29083",
+        "--port=39083",
         // Points to the router.
-        "--entrypoint=localhost:29082",
+        "--entrypoint=localhost:39082",
     });
 
     // Builds a client request against the proxy and traverses the network looking for content.
     Optional<String> content = WorldWideWeb.get(
-        InetSocketAddresses.parse("localhost:29083"),
-        "http://localhost:29080/deliberately-timeouts");
+        InetSocketAddresses.parse("localhost:39083"),
+        "http://localhost:39080/deliberately-timeouts");
     assertFalse(content.isPresent());
 
     System.out.println("Network returned a non-present content for the timeout.");
-    // Sleeps for 10 seconds.
-    Thread.sleep(10 * 1000);
   }
 }

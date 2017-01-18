@@ -2,7 +2,8 @@ package com.kumbaya.router;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-
+import com.kumbaya.common.Flags.Flag;
+import com.kumbaya.common.InetSocketAddresses;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -16,17 +17,17 @@ import org.apache.commons.logging.LogFactory;
 
 public class Client {
   private static final Log logger = LogFactory.getLog(Client.class);
-
   private final InetSocketAddress host;
 
   @Inject
-  public Client(InetSocketAddress host) {
+  public Client(@Flag("entrypoint") String entrypoint) {
     Packets.register();
-    this.host = host;
+    this.host = InetSocketAddresses.parse(entrypoint);
   }
 
   public <T> Optional<T> send(Object packet) throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
     logger.info("Sending a request to the network");
+    
     Socket clientSocket = new Socket(host.getHostName(), host.getPort());
     DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
     Serializer.serialize(outToServer, packet);

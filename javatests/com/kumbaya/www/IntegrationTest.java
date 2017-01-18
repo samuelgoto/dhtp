@@ -2,6 +2,7 @@ package com.kumbaya.www;
 
 import com.google.common.base.Optional;
 import com.google.inject.Guice;
+import com.kumbaya.common.Flags;
 import com.kumbaya.common.Server;
 import com.kumbaya.router.Router;
 import com.kumbaya.www.WorldWideWeb;
@@ -18,7 +19,8 @@ public class IntegrationTest extends TestCase {
     @Override
     Proxy build() {
       return Guice.createInjector(
-          new Proxy.Module(new InetSocketAddress("localhost", 9090)) 
+          Flags.asModule(new String[] {"--entrypoint=localhost:9090"}),
+          new Proxy.Module() 
           ).getInstance(Proxy.class);
     }
   };
@@ -27,7 +29,8 @@ public class IntegrationTest extends TestCase {
     @Override
     Router build() {
       return Guice.createInjector(
-          new Router.Module(new InetSocketAddress("localhost", 7070)))
+          Flags.asModule(new String[] {"--entrypoint=localhost:7070"}),
+          new Router.Module())
       .getInstance(Router.class);    
     }
   };
@@ -139,6 +142,16 @@ public class IntegrationTest extends TestCase {
       System.out.println("127.0.0.1     sgo.to.kumbaya.io");
       System.out.println("===================================================================");
     }
+  }
+  
+  public void atestBreaksInfiniteLoop() throws IOException, InterruptedException {
+    // We'll send a request to the proxy to fetch content from the proxy itself, leading into
+    // an infinite loop.
+    Optional<String> result = WorldWideWeb.get(
+        new InetSocketAddress("localhost", 8080), 
+        "http://localhost:8080/index.php");
+    assertFalse(result.isPresent());
+    Thread.sleep(100 * 1000);
   }
   
   static abstract class Supplier<T> {

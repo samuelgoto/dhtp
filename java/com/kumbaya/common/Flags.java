@@ -1,71 +1,95 @@
 package com.kumbaya.common;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Maps;
-import java.util.Map;
-import java.util.Set;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
-
+import com.google.common.base.Preconditions;
+import com.google.inject.AbstractModule;
+import com.google.inject.BindingAnnotation;
+import com.google.inject.Key;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import javax.inject.Provider;
 
 public class Flags {
-  private final Map<String, Object> defaultValues = Maps.newHashMap();
-  private final CommandLine line;
 
-  private Flags(Set<Flag<?>> flags, String[] args) throws ParseException {
-    Options options = new Options();
+  @Retention(RetentionPolicy.RUNTIME)
+  @Target({ElementType.FIELD, ElementType.PARAMETER})
+  @BindingAnnotation
+  public @interface Flag {
+    public String value();
+  }
 
-    for (Flag<?> flag : flags) {
-      options.addOption(flag.name, flag.hasArg, flag.description);
-      defaultValues.put(flag.name, flag.defaultValue);
+  private static class FlagImpl implements Flag {
+    @SuppressWarnings("unused")
+    private static final long serialVersionUID = 0;
+
+    private final String value;
+
+    public FlagImpl(String value) {
+      this.value = value;
     }
 
-    CommandLineParser parser = new PosixParser();
-    this.line = parser.parse(options, args);
+    @Override
+    public Class<? extends Annotation> annotationType() {
+      return Flag.class;
+    }
+
+    @Override
+    public String value() {
+      return value;
+    }
+
+    @Override
+    public int hashCode() {
+      // This is specified in java.lang.Annotation.
+      return (127 * "value".hashCode()) ^ value.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof Flag)) {
+        return false;
+      }
+
+      Flag other = (Flag) o;
+      return value.equals(other.value());
+    }
+
+    @Override
+    public String toString() {
+      return "@" + Flag.class.getName() + "(value=" + value + ")";
+    }
   }
   
-  public static Flags parse(Set<Flag<?>> flags, String[] args) throws ParseException {
-    return new Flags(flags, args);
-  }
+  public static AbstractModule asModule(final String[] args) {
+    return new AbstractModule() {
+      @Override
+      protected void configure() {
+        for (final String arg : args) {
+          String[] argv = arg.split("=");
+          Preconditions.checkArgument(arg.startsWith("--"), 
+              "Invalid format for argument, must start with -- " + arg);
+          // Binds the value to ints.
+          bind(Key.get(int.class, new FlagImpl(argv[0].substring(2)))).toProvider(new Provider<Integer>() {
+            @Override
+            public Integer get() {
+              Preconditions.checkArgument(argv.length == 2, "Invalid flag format for " + arg);
+              return Integer.parseInt(argv[1]);
+            }
+          });
 
-  @SuppressWarnings("unchecked")
-  public <T> T get(String name) {
-    Optional<String> value = Optional.absent();
-    Object defaultValue = defaultValues.get(name);
-    
-    if (line.hasOption(name)) {
-      value = Optional.of(line.getOptionValue(name));
-    }
+          // Binds to Strings.
+          bind(Key.get(String.class, new FlagImpl(argv[0].substring(2)))).toProvider(new Provider<String>() {
+            @Override
+            public String get() {
+              Preconditions.checkArgument(argv.length == 2, "Invalid flag format for " + arg);
+              return argv[1];
+            }
+          });
+        }
 
-    if (defaultValue instanceof Integer) {
-      Integer result = value.isPresent() ? Integer.parseInt(value.get()) : (Integer) defaultValue;
-      return (T) result;
-    } else if (defaultValue instanceof String) {
-      String result = value.isPresent() ? value.get() : (String) defaultValue;
-      return (T) result;
-    } else {
-      throw new UnsupportedOperationException("Unknown flag type " + name);
-    }
-  }
-
-  public static class Flag<K> {
-    private final String name;
-    private final String description;
-    private final boolean hasArg;
-    private final K defaultValue;
-
-    private Flag(String name, String description, boolean hasArg, K defaultValue) {
-      this.name = name;
-      this.description = description;
-      this.hasArg = hasArg;
-      this.defaultValue = defaultValue;
-    }
-
-    public static <K> Flag<K> of (String name, String description, boolean hasArg, K defaultValue) {
-      return new Flag<K>(name, description, hasArg, defaultValue);
-    }
+      }
+    };
   }
 }

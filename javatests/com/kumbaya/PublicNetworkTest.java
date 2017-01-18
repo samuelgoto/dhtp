@@ -23,7 +23,7 @@ public class PublicNetworkTest extends TestCase {
         "--host=localhost",
         "--port=19082",
         // Points to the gateway.
-        "--forwarding=localhost:19081",
+        "--entrypoint=localhost:19081",
     });
 
     // Spins up a proxy.

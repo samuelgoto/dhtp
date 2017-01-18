@@ -15,6 +15,7 @@ import com.kumbaya.router.Client;
 import com.kumbaya.router.Packets;
 import com.kumbaya.router.Packets.Data;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -42,11 +43,6 @@ public class Proxy implements Server {
   }  
 
   public static class Module extends AbstractModule {
-    private final InetSocketAddress entrypoint;
-    public Module(InetSocketAddress entrypoint) {
-      this.entrypoint = entrypoint;
-    }
-
     @Override
     protected void configure() {
       install(new ServletModule()); 
@@ -60,8 +56,6 @@ public class Proxy implements Server {
           mapbinder.addBinding("/*").to(MyProxyServlet.class);
         }
       });
-
-      bind(InetSocketAddress.class).toInstance(entrypoint);
     }
   }
 
@@ -128,10 +122,13 @@ public class Proxy implements Server {
       HttpServletResponse response = (HttpServletResponse) res;
       
       String url = assemble(request.getRequestURL().toString());
+      
+      // TODO(goto): check if the url isn't going to point back to us, in which case, throw a 400.
+      // InetAddress address = InetAddress.getByName(new URL(url).getHost());
 
       interest.getName().setName(url);
       try {
-    	logger.info("Got a request: " + url);
+    	logger.info("Got a request: " + url + " from " + req.getRemoteAddr());
         Optional<Data> result = client.send(interest);
 
         if (result.isPresent()) {
@@ -144,28 +141,22 @@ public class Proxy implements Server {
       } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
         logger.error(e);
         response.sendError(500);
+      } finally {
+        response.getOutputStream().close();
       }
     }
   }  
   
-
+  private @Inject(optional=true) @Flag("host") String host = "localhost";
+  private @Inject(optional=true) @Flag("port") int port = 8080;
+ 
   public static void main(String[] args) throws Exception {
     logger.info("Running the Kumbaya Proxy");
     
-    Set<Flag<?>> options = ImmutableSet.of(
-        Flag.of("host", "The external hostname", true, "localhost"),
-        Flag.of("port", "The external hostname", true, 8083),
-        Flag.of("entrypoint", "The external ip/port of the network entrypoint", true, "localhost:8082")
-        );
-
-    Flags flags = Flags.parse(options, args);
-    final String host = flags.get("host");
-    final int port = flags.get("port");
-    final String entrypoint = flags.get("entrypoint");
-    
     Proxy proxy = Guice.createInjector(
-        new Module(InetSocketAddresses.parse(entrypoint)))
+        new Module(), 
+        Flags.asModule(args))
         .getInstance(Proxy.class);
-    proxy.bind(new InetSocketAddress(host, port));
+    proxy.bind(new InetSocketAddress(proxy.host, proxy.port));
   }
 }

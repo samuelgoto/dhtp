@@ -27,7 +27,7 @@ public class CommandLineTest extends TestCase {
         "--host=localhost",
         "--port=9082",
         // Points to the gateway.
-        "--forwarding=localhost:9081",
+        "--entrypoint=localhost:9081",
         });
     
     // Spins up a proxy.
