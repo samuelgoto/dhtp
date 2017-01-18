@@ -13,7 +13,7 @@ import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.testing.LocalNetwork;
 import com.kumbaya.common.testing.Supplier;
 import com.kumbaya.www.WorldWideWeb;
-
+import com.kumbaya.www.WorldWideWeb.Resource;
 import junit.framework.TestCase;
 
 public class TimeoutTest extends TestCase {
@@ -47,7 +47,7 @@ public class TimeoutTest extends TestCase {
   public void testRunnningAll() throws Exception {
     // Builds a client request against the proxy and traverses the network looking for content.
     WorldWideWeb.setTimeout(TimeUnit.SECONDS.toMillis(2));
-    Optional<String> content = WorldWideWeb.get(
+    Optional<Resource> content = WorldWideWeb.get(
         InetSocketAddresses.parse("localhost:8080"),
         "http://localhost:8083/deliberately-timeouts");
     assertFalse(content.isPresent());

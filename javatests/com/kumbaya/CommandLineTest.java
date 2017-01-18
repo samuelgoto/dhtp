@@ -5,6 +5,7 @@ import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.Server;
 import com.kumbaya.router.Router;
 import com.kumbaya.www.WorldWideWeb;
+import com.kumbaya.www.WorldWideWeb.Resource;
 import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.Proxy;
 import com.kumbaya.www.testing.WorldWideWebServer;
@@ -39,10 +40,10 @@ public class CommandLineTest extends TestCase {
         });
     
     // Builds a client request against the proxy and traverses the network looking for content.
-    Optional<String> content = WorldWideWeb.get(
+    Optional<Resource> content = WorldWideWeb.get(
         InetSocketAddresses.parse("localhost:9083"),
         "http://localhost:9080/helloworld");
     assertTrue(content.isPresent());
-    assertEquals("hello world", content.get());
+    assertEquals("hello world", content.get().content());
   }
 }

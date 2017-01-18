@@ -20,7 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.kumbaya.common.testing.Supplier;
 import com.kumbaya.common.testing.LocalNetwork;
 import com.kumbaya.www.WorldWideWeb;
-
+import com.kumbaya.www.WorldWideWeb.Resource;
 import junit.framework.TestCase;
 
 public class MultithreadingTest extends TestCase {
@@ -72,12 +72,12 @@ public class MultithreadingTest extends TestCase {
           try {
             logger.info("Sending request");
             
-            Optional<String> content = WorldWideWeb.get(
+            Optional<Resource> content = WorldWideWeb.get(
                 new InetSocketAddress("localhost", 8080),
                 "http://localhost:6060/please-sleep");
             
             assertTrue(content.isPresent());
-            assertEquals("hello world", new String(content.get()));
+            assertEquals("hello world", new String(content.get().content()));
             logger.info("Got response");
           } catch (SocketTimeoutException e) {
             errors.incrementAndGet();

@@ -24,6 +24,38 @@ public class WorldWideWeb {
   private static final Log logger = LogFactory.getLog(WorldWideWeb.class);
   private static int CONNECTION_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5); // Timeout in milliseconds.
   
+  public static class Resource {
+    private final int status;
+    private final String content;
+    private final String contentType;
+    
+    Resource(int status, String content, String contentType) {
+      this.status = status;
+      this.content = content;
+      this.contentType = contentType;
+    }
+    
+    static Resource of(String content) {
+      return of(200, content, "text/html");
+    }
+    
+    static Resource of(int status, String content, String contentType) {
+      return new Resource(status, content, contentType);
+    }
+    
+    public int status() {
+      return status;
+    }
+    
+    public String content() {
+      return content;
+    }
+    
+    public String contentType() {
+      return contentType;
+    }
+  }
+  
   private static final CloseableHttpClient httpclient = HttpClientBuilder.create()
       .setMaxConnTotal(200)
       .setMaxConnPerRoute(50)
@@ -33,7 +65,7 @@ public class WorldWideWeb {
     CONNECTION_TIMEOUT_MS = (int) milliseconds;
   }
 
-  public static Optional<String> get(InetSocketAddress proxy, String url) throws MalformedURLException, IOException {
+  public static Optional<Resource> get(InetSocketAddress proxy, String url) throws MalformedURLException, IOException {
     HttpHost p = new HttpHost(proxy.getHostName(), proxy.getPort());
     RequestConfig.Builder config = RequestConfig.custom()
         .setProxy(p);
@@ -41,7 +73,7 @@ public class WorldWideWeb {
     return get(request, config);
   }
 
-  private static Optional<String> get(HttpGet request, RequestConfig.Builder config) throws IOException {
+  private static Optional<Resource> get(HttpGet request, RequestConfig.Builder config) throws IOException {
     config.setConnectionRequestTimeout(CONNECTION_TIMEOUT_MS);
     config.setConnectTimeout(CONNECTION_TIMEOUT_MS);
     config.setSocketTimeout(CONNECTION_TIMEOUT_MS);
@@ -52,7 +84,8 @@ public class WorldWideWeb {
       CloseableHttpResponse response = httpclient.execute(request);
       try {
         if (response.getStatusLine().getStatusCode() == 200) {
-          return Optional.of(new String(ByteStreams.toByteArray(response.getEntity().getContent())));
+          return Optional.of(
+              Resource.of(new String(ByteStreams.toByteArray(response.getEntity().getContent()))));
         } else {
           return Optional.absent();
         }
@@ -73,7 +106,7 @@ public class WorldWideWeb {
   }
 
 
-  public static Optional<String> get(String url) throws IOException {
+  public static Optional<Resource> get(String url) throws IOException {
     return get(new HttpGet(url), RequestConfig.custom());
   }
 }

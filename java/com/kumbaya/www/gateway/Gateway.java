@@ -14,7 +14,7 @@ import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Handler;
 import com.kumbaya.router.TcpServer.Queue;
 import com.kumbaya.www.WorldWideWeb;
-
+import com.kumbaya.www.WorldWideWeb.Resource;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -51,7 +51,7 @@ public class Gateway implements Server {
       // Fetches the content of the page.
       logger.info("Got a request to fetch " + request.getName().getName());
       try {
-        Optional<String> content = WorldWideWeb.get(request.getName().getName());
+        Optional<Resource> content = WorldWideWeb.get(request.getName().getName());
         // If the content is available, return it.
         if (content.isPresent()) {
           logger.info("Got data back from the web, returning");
@@ -61,7 +61,7 @@ public class Gateway implements Server {
           // TODO(goto): figure out how to pass the content type back to the network. Will require
           // us to re-do the WorldWideWeb class.
           data.getMetadata().setContentType("");
-          data.setContent(content.get().getBytes());
+          data.setContent(content.get().content().getBytes());
           response.push(data);
           logger.info("Finished writing the data");
         }

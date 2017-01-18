@@ -7,6 +7,7 @@ import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.testing.LocalNetwork;
 import com.kumbaya.common.testing.Supplier;
 import com.kumbaya.www.WorldWideWeb;
+import com.kumbaya.www.WorldWideWeb.Resource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
@@ -38,7 +39,7 @@ public class PublicNetworkTest extends TestCase {
     for (String url : urls) {
       // Builds a client request against the proxy and traverses the network looking for content.
       WorldWideWeb.setTimeout(TimeUnit.MINUTES.toMillis(5));
-      Optional<String> content = WorldWideWeb.get(
+      Optional<Resource> content = WorldWideWeb.get(
           InetSocketAddresses.parse("localhost:8080"), url);
       assertTrue(content.isPresent());
     }

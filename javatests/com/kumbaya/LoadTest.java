@@ -12,6 +12,7 @@ import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.Server;
 import com.kumbaya.router.Router;
 import com.kumbaya.www.WorldWideWeb;
+import com.kumbaya.www.WorldWideWeb.Resource;
 import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.Proxy;
 import com.kumbaya.www.testing.WorldWideWebServer;
@@ -64,11 +65,11 @@ public class LoadTest extends TestCase {
 
 		// Builds a client request against the proxy and traverses the network looking for content.
 		for (int i = 0; i < 10; i++) {
-			Optional<String> content = WorldWideWeb.get(
+			Optional<Resource> content = WorldWideWeb.get(
 					InetSocketAddresses.parse("localhost:29083"),
 					"http://localhost:29080/onemegabytefile");
 			assertTrue(content.isPresent());
-			assertEquals(1000 * 1000, content.get().length());
+			assertEquals(1000 * 1000, content.get().content().length());
 		}
 	}
 }
