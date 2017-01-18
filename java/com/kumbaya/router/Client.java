@@ -20,7 +20,6 @@ public class Client {
   @Inject
   public Client() {
     Packets.register();
-    // this.host = InetSocketAddresses.parse(entrypoint);
   }
 
   public <T> Optional<T> send(InetSocketAddress host, Object packet) throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {

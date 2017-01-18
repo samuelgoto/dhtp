@@ -60,7 +60,7 @@ public class Gateway implements Server {
           data.getMetadata().setFreshnessPeriod(2);
           // TODO(goto): figure out how to pass the content type back to the network. Will require
           // us to re-do the WorldWideWeb class.
-          data.getMetadata().setContentType("");
+          data.getMetadata().setContentType(content.get().contentType());
           data.setContent(content.get().content().getBytes());
           response.push(data);
           logger.info("Finished writing the data");

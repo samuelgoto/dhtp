@@ -7,7 +7,6 @@ import com.kumbaya.router.Serializer.Type;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.stream.Stream;
 
 import junit.framework.TestCase;
 

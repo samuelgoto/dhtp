@@ -150,6 +150,7 @@ public class Proxy implements Server {
         if (result.isPresent()) {
           logger.info("Got a response. Returning as a 200.");
           response.getOutputStream().write(result.get().getContent());
+          response.setContentType(result.get().getMetadata().getContentType());
         } else {
           logger.info("Got an empty response. Interpreting as a 404.");
           response.sendError(404);

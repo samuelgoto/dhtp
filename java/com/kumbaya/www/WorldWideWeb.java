@@ -84,8 +84,13 @@ public class WorldWideWeb {
       CloseableHttpResponse response = httpclient.execute(request);
       try {
         if (response.getStatusLine().getStatusCode() == 200) {
-          return Optional.of(
-              Resource.of(new String(ByteStreams.toByteArray(response.getEntity().getContent()))));
+          // Defaults to returning text/html as the content type.
+          String contentType = "text/html";
+          if (response.containsHeader("Content-Type")) {
+            contentType = response.getFirstHeader("Content-Type").getValue();
+          }
+          String content = new String(ByteStreams.toByteArray(response.getEntity().getContent())); 
+          return Optional.of(Resource.of(200, content, contentType));
         } else {
           return Optional.absent();
         }
