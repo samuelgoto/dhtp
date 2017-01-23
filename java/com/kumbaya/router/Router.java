@@ -19,16 +19,12 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class Router implements Server {
   private static final Log logger = LogFactory.getLog(Router.class);
-
   private final TcpServer server;
-  @Inject
-  private InterestHandler handler;
 
   @Inject
   Router(TcpServer server) {
@@ -41,10 +37,17 @@ public class Router implements Server {
       ThreadFactory factory = new ThreadFactoryBuilder()
         .setNameFormat("Router-%d").build();
       bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(10, factory));
+      
+      install(new TcpServer.HandlerModule() {
+        @Override
+        protected void register() {
+          addHandler(Interest.class, InterestHandler.class);
+        }
+      });
     }
   }
 
-  static class InterestHandler implements Handler<Interest> {
+  private static class InterestHandler implements Handler<Interest> {
     private @Inject @Flag("forwarding") String forwarding = "localhost:8082";
     private final Kumbaya client;
 
@@ -75,7 +78,6 @@ public class Router implements Server {
   public void bind(InetSocketAddress address) throws IOException {
     logger.info("Binding into " + host + ":" + port);
     Packets.register();
-    server.register(Interest.class, handler);
     server.bind(address);
   }
 

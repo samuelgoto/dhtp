@@ -21,7 +21,6 @@ import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -29,7 +28,6 @@ public class Gateway implements Server {
   private static final Log logger = LogFactory.getLog(Gateway.class);
 
   private final TcpServer server;
-  @Inject private InterestHandler handler;
   
   @Inject
   Gateway(TcpServer server) {
@@ -42,6 +40,13 @@ public class Gateway implements Server {
       ThreadFactory factory = new ThreadFactoryBuilder()
         .setNameFormat("Gateway-%d").build();
       bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(10, factory));
+
+      install(new TcpServer.HandlerModule() {
+        @Override
+        protected void register() {
+          addHandler(Interest.class, InterestHandler.class);
+        }
+      });
     }
   }
   
@@ -83,7 +88,6 @@ public class Gateway implements Server {
   public void bind(InetSocketAddress address) throws IOException {
     logger.info("Binding into " + host + ":" + port);
     Packets.register();
-    server.register(Interest.class, handler);
     server.bind(address);
   }
 
