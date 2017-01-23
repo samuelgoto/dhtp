@@ -1,9 +1,6 @@
 package com.kumbaya.router;
 
 import com.google.common.base.Optional;
-import com.google.inject.Inject;
-import com.kumbaya.common.Flags.Flag;
-import com.kumbaya.common.InetSocketAddresses;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -18,11 +15,10 @@ import org.apache.commons.logging.LogFactory;
 public class Kumbaya {
   private static final Log logger = LogFactory.getLog(Kumbaya.class);
 
-  @Inject
-  public Kumbaya() {
+  static {
     Packets.register();
   }
-
+  
   public <T> Optional<T> send(InetSocketAddress host, Object packet) throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
     logger.info("Sending a request to the network");
     

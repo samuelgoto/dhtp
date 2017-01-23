@@ -1,19 +1,13 @@
 package com.kumbaya.router;
 
-import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.kumbaya.common.Flags;
 import com.kumbaya.common.Flags.Flag;
-import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.Server;
-import com.kumbaya.router.Packets.Data;
-import com.kumbaya.router.Packets.Interest;
-import com.kumbaya.router.TcpServer.Handler;
-import com.kumbaya.router.TcpServer.Queue;
-
+import com.kumbaya.router.handlers.HandlersModule;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
@@ -38,39 +32,7 @@ public class Router implements Server {
         .setNameFormat("Router-%d").build();
       bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(10, factory));
       
-      install(new TcpServer.HandlerModule() {
-        @Override
-        protected void register() {
-          addHandler(Interest.class, InterestHandler.class);
-        }
-      });
-    }
-  }
-
-  private static class InterestHandler implements Handler<Interest> {
-    private @Inject @Flag("forwarding") String forwarding = "localhost:8082";
-    private final Kumbaya client;
-
-    @Inject
-    InterestHandler(Kumbaya client) {
-      this.client = client;
-    }
-
-    @Override
-    public void handle(Interest request, Queue response) throws IOException {
-      logger.info("Handling a request: " + request.getName().getName());
-      try {
-        // Forwards the interest to the next hop.
-        Optional<Data> result = client.send(InetSocketAddresses.parse(forwarding), request);
-
-        if (result.isPresent()) {
-          logger.info("Got a Data packet, responding.");
-          response.push(result.get());
-        }
-      } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
-    	  logger.error("Unexpected error: ", e);
-    	  e.printStackTrace();
-      }
+      install(new HandlersModule());
     }
   }
 

@@ -68,8 +68,7 @@ public class TcpServer implements Runnable, Server {
           binder(), Class.class, Handler.class);
       binder.addBinding(clazz).to(handler);
     }
-  }
-  
+  }  
 
   @Override
   public void run() {
