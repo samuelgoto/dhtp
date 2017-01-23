@@ -9,7 +9,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.router.Packets.Data;
 
 import junit.framework.TestCase;

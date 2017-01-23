@@ -41,9 +41,6 @@ public class MultithreadingTest extends TestCase {
   
   @SuppressWarnings("serial")
   private static class SleepServlet extends HttpServlet {
-    private static final Log logger = LogFactory.getLog(SleepServlet.class);
-    private AtomicInteger counter = new AtomicInteger(0);
-    
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
         throws IOException, ServletException {
