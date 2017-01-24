@@ -10,6 +10,7 @@ import com.google.inject.Guice;
 import com.kumbaya.common.Flags;
 import com.kumbaya.common.Server;
 import com.kumbaya.router.Router;
+import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.gateway.Gateway;
 import com.kumbaya.www.proxy.Proxy;
 
@@ -56,6 +57,7 @@ public class LocalNetwork {
   };
   
   public void setUp() throws IOException {
+    WorldWideWeb.setTimeout(WorldWideWeb.DEFAULT_CONNECTION_TIMEOUT_MS);
     proxy.clear().get().bind(new InetSocketAddress("127.0.0.1", 8080));
     router.clear().get().bind(new InetSocketAddress("127.0.0.1", 8081));
     gateway.clear().get().bind(new InetSocketAddress("127.0.0.1", 8082));

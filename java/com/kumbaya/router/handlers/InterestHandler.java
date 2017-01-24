@@ -31,7 +31,7 @@ class InterestHandler implements Handler<Interest> {
   InterestHandler(Kumbaya client) {
     this.client = client;
   }
-
+  
   @Override
   public void handle(Interest request, Interface response) throws IOException {
     String key = request.getName().getName();
@@ -40,8 +40,9 @@ class InterestHandler implements Handler<Interest> {
 
     Supplier<ListenableFuture<Optional<Data>>> value = new Supplier<ListenableFuture<Optional<Data>>>() {
       @Override
-      public ListenableFuture<Optional<Data>> build() {
+      public synchronized ListenableFuture<Optional<Data>> build() {
         try {
+          logger.info("Forwarding: " + key);
           Optional<Data> value = client.send(InetSocketAddresses.parse(forwarding), request);
           return Futures.immediateFuture(value);
         } catch (IOException e) {

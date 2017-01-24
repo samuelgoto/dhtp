@@ -114,15 +114,6 @@ public class Proxy implements Server {
       return url;
     }
     
-    static boolean sameHost(String url, String host, int port) throws UnknownHostException, MalformedURLException {
-      // TODO(goto): check if the url isn't going to point back to us, in which case, throw a 400.
-      URL parsed = new URL(url);
-      InetAddress address = InetAddress.getByName(parsed.getHost());
-      boolean sameIp = Arrays.equals(address.getAddress(), new InetSocketAddress(host, port).getAddress().getAddress());
-      boolean samePort = (parsed.getPort() != -1 ? parsed.getPort() : 80) == port; 
-      return  sameIp && samePort;
-    }
-
     @Override
     public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
       // The proxy will get two types of requests:
@@ -134,14 +125,6 @@ public class Proxy implements Server {
       
       String url = assemble(request.getRequestURL().toString());
       
-      // If the url points to the same address as ourselves and same port, skip.
-      if (sameHost(url, host, port)) {
-        logger.info("Client asking for url that lives in this server, 400-ing: " + url);
-        // Client error.
-        response.sendError(400);
-        return;
-      }
-
       interest.getName().setName(url);
       try {
     	logger.info("Got a request: " + url + " from " + req.getRemoteAddr());

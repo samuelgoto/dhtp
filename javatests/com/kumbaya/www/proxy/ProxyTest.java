@@ -32,8 +32,4 @@ public class ProxyTest extends TestCase {
     assertEquals("http://photos.sgo.to/dir1/dir2/file.html#fragment",
         Proxy.MyProxyServlet.assemble("http://photos.sgo.to.kumbaya.io:8080/dir1/dir2/file.html#fragment"));
   }
-  
-  public void testSameHosts() throws Exception {
-    assertTrue(MyProxyServlet.sameHost("http://104.199.183.97/index.php", "104.199.183.97", 80));
-  }
 }

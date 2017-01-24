@@ -22,7 +22,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 public class WorldWideWeb {
   private static final Log logger = LogFactory.getLog(WorldWideWeb.class);
-  private static int CONNECTION_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5); // Timeout in milliseconds.
+  public static int DEFAULT_CONNECTION_TIMEOUT_MS = (int) TimeUnit.SECONDS.toMillis(5); 
+  private static int CONNECTION_TIMEOUT_MS = DEFAULT_CONNECTION_TIMEOUT_MS; // Timeout in milliseconds.
   
   public static class Resource {
     private final int status;

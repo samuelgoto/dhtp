@@ -1,7 +1,6 @@
 package com.kumbaya.www;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.kumbaya.common.testing.Supplier;
 import com.kumbaya.common.testing.WorldWideWebServer;
 import com.kumbaya.common.InetSocketAddresses;
@@ -11,7 +10,7 @@ import com.kumbaya.www.WorldWideWeb.Resource;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-
+import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 public class BasicTest extends TestCase {
@@ -109,6 +108,7 @@ public class BasicTest extends TestCase {
   public void testBreaksInfiniteLoop() throws IOException {
     // We'll send a request to the proxy to fetch content from the proxy itself, leading into
     // an infinite loop.
+    // WorldWideWeb.setTimeout(TimeUnit.MINUTES.toMillis(5));
     Optional<Resource> result = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
         "http://localhost:8080/index.php");
