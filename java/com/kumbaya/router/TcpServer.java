@@ -9,9 +9,7 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.util.Providers;
 import com.kumbaya.common.Server;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -38,17 +36,28 @@ public class TcpServer implements Runnable, Server {
   }
   
   public interface Handler<I> {
-    void handle(I request, Queue queue) throws IOException;
+    void handle(I request, Interface queue) throws IOException;
   }
 
-  public static class Queue {
-    private final OutputStream out;
-    Queue(OutputStream out) {
-      this.out = out;
+  public static class Interface {
+    private final Socket connection;
+
+    Interface(Socket connection) {
+      this.connection = connection;
     }
-    public <T> Queue push(T object) throws IOException {
-      Serializer.serialize(out, object);
+
+    public <T> Interface push(T object) throws IOException {
+      // TODO(goto): do multiple calls to getOutputStream() return the same OutputStream?
+      Serializer.serialize(connection.getOutputStream(), object);
       return this;
+    }
+    
+    public <T> T pull() throws IOException {
+      return Serializer.unserialize(connection.getInputStream());
+    }
+    
+    public void close() throws IOException {
+      connection.close();
     }
   }
   
@@ -86,13 +95,12 @@ public class TcpServer implements Runnable, Server {
   }
  
   static class RequestHandler implements Runnable {
-    private final Socket connection;
+    private final Interface connection;
     private final Map<Class, Provider<Handler>> handlers;
-
     
     @Inject
     RequestHandler(@Assisted Socket connection, Map<Class, Provider<Handler>> handlers) {
-      this.connection = connection;
+      this.connection = new Interface(connection);
       this.handlers = handlers;
     }
     
@@ -110,37 +118,31 @@ public class TcpServer implements Runnable, Server {
     }
 
     @SuppressWarnings({"unchecked", "cast"})
-    private <I> void handle(Handler<I> handler, Object request, OutputStream response) throws IOException {
-      handler.handle((I) request, new Queue(response));
+    private <I> void handle(Handler<I> handler, Object request, Interface response) throws IOException {
+      handler.handle((I) request, response);
     }
 
     @Override
     public void run() {
-
       try {
-        OutputStream stream = connection.getOutputStream();
         logger.info("Starting a connection");
-        DataOutputStream out = new DataOutputStream(stream);
-        Object request = Serializer.unserialize(connection.getInputStream());
+
+        Object request = connection.pull();
+
         Handler<?> handler = handlers.get(request.getClass()).get();
         if (handler == null) {
           // Unknown packet type.
           throw new RuntimeException("Unexpected packet type " + request.getClass());
         }
-        handle(handler, request, out);
-        stream.close();
-        connection.close();
-      } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
-        e.printStackTrace();
-        logger.error("Unexpected Serialization error: ", e);
+        handle(handler, request, connection);
       } catch (ConnectException e) {
         e.printStackTrace();
       } catch (IOException e) {
         e.printStackTrace();
         logger.error("Unexpected IOException: ", e);
       } catch (Exception e) {
-        logger.error("Got an unexpected exception: ", e);   
         e.printStackTrace();        
+        logger.error("Got an unexpected exception: ", e);   
       } finally {
         logger.info("Ended a connection");   
         try {

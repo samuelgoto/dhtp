@@ -12,7 +12,7 @@ import com.kumbaya.router.TcpServer;
 import com.kumbaya.router.Packets;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Handler;
-import com.kumbaya.router.TcpServer.Queue;
+import com.kumbaya.router.TcpServer.Interface;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.WorldWideWeb.Resource;
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class Gateway implements Server {
   
   private static class InterestHandler implements Handler<Interest> {
     @Override
-    public void handle(Interest request, Queue response) throws IOException {
+    public void handle(Interest request, Interface response) throws IOException {
       // Fetches the content of the page.
       logger.info("Got a request to fetch " + request.getName().getName());
       try {

@@ -5,7 +5,7 @@ import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.router.Kumbaya;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Handler;
-import com.kumbaya.router.TcpServer.Queue;
+import com.kumbaya.router.TcpServer.Interface;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IMocksControl;
@@ -17,7 +17,7 @@ import static org.easymock.EasyMock.expectLastCall;
 public class InterestHandlerTest extends TestCase {
   private final IMocksControl control = EasyMock.createControl();
   private final Kumbaya kumbaya = control.createMock(Kumbaya.class);
-  private final Queue queue = control.createMock(Queue.class);
+  private final Interface queue = control.createMock(Interface.class);
   
   @Override
   public void setUp() {

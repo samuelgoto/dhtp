@@ -8,7 +8,7 @@ import com.kumbaya.router.Kumbaya;
 import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Handler;
-import com.kumbaya.router.TcpServer.Queue;
+import com.kumbaya.router.TcpServer.Interface;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,7 +25,7 @@ class InterestHandler implements Handler<Interest> {
   }
   
   @Override
-  public void handle(Interest request, Queue response) throws IOException {
+  public void handle(Interest request, Interface response) throws IOException {
     logger.info("Handling a request: " + request.getName().getName());
     try {
       // Forwards the interest to the next hop.

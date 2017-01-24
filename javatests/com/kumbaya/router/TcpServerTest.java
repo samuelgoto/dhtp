@@ -5,7 +5,7 @@ import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.router.Kumbaya;
 import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
-import com.kumbaya.router.TcpServer.Queue;
+import com.kumbaya.router.TcpServer.Interface;
 import com.kumbaya.router.TcpServer.RequestHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -31,7 +31,7 @@ public class TcpServerTest extends TestCase {
     TcpServer server = new TcpServer(Executors.newFixedThreadPool(10), 
         RequestHandler.of(Interest.class, new TcpServer.Handler<Interest>() {
           @Override
-          public void handle(Interest request, Queue response) throws IOException {
+          public void handle(Interest request, Interface response) throws IOException {
             Data result = new Data();
             result.setName(request.getName());
             result.getMetadata().setFreshnessPeriod(2);
@@ -60,7 +60,7 @@ public class TcpServerTest extends TestCase {
   public void testLargePacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
     RequestHandler.Builder handler = RequestHandler.of(Interest.class, new TcpServer.Handler<Interest>() {
       @Override
-      public void handle(Interest request, Queue response) throws IOException {
+      public void handle(Interest request, Interface response) throws IOException {
         Data result = new Data();
         result.setName(request.getName());
         result.getMetadata().setFreshnessPeriod(2);
