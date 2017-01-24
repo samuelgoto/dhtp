@@ -1,8 +1,10 @@
 package com.kumbaya.www;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.kumbaya.common.testing.Supplier;
 import com.kumbaya.common.testing.WorldWideWebServer;
+import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.testing.LocalNetwork;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.WorldWideWeb.Resource;
@@ -12,36 +14,34 @@ import java.net.UnknownHostException;
 
 import junit.framework.TestCase;
 
-public class IntegrationTest extends TestCase {
-  private Supplier<LocalNetwork> network = LocalNetwork.supplier(
-      WorldWideWebServer.defaultServlets());
-
+public class BasicTest extends TestCase {
+  Supplier<LocalNetwork> network = LocalNetwork.supplier(WorldWideWebServer.defaultServlets());
+  
   @Override
-  public void setUp() throws IOException {
-    network.get().setUp();
+  public void setUp() throws Exception {
+    network.clear().get().setUp();
   }
   
   @Override
-  public void tearDown() throws IOException {
+  public void tearDown() throws Exception {
     network.get().tearDown();
-    network.clear();
   }
   
-  public void test200_direclty() throws IOException {
-    Optional<Resource> result = WorldWideWeb.get("http://localhost:8083/helloworld");
-    assertTrue(result.isPresent());
-    assertEquals("hello world", new String(result.get().content()));
-  }
- 
   public void test404s_directly() throws IOException {
     // Straight to the server
     Optional<Resource> result = WorldWideWeb.get("http://localhost:8083/doesntexist");
     assertFalse(result.isPresent());
   }
 
+  public void test200_direclty() throws IOException {
+    Optional<Resource> result = WorldWideWeb.get("http://localhost:8083/helloworld");
+    assertTrue(result.isPresent());
+    assertEquals("hello world", new String(result.get().content()));
+  }
+ 
   public void test200_throughNetwork() throws IOException {
     Optional<Resource> result = WorldWideWeb.get(
-        new InetSocketAddress("localhost", 8080), 
+        InetSocketAddresses.parse("localhost:8080"),
         "http://localhost:8083/helloworld");
     assertTrue(result.isPresent());
     assertEquals("hello world", new String(result.get().content()));
@@ -51,7 +51,7 @@ public class IntegrationTest extends TestCase {
     // Through the network
     Optional<Resource> proxied = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
-        "http://localhost:6060/doesntexist");
+        "http://localhost:8083/doesntexist");
     assertFalse(proxied.isPresent());
   }
 
@@ -67,7 +67,7 @@ public class IntegrationTest extends TestCase {
     // Through the network
     Optional<Resource> proxied = WorldWideWeb.get(
         new InetSocketAddress("localhost", 8080), 
-        "http://localhost:6060/error");
+        "http://localhost:8083/error");
     assertFalse(proxied.isPresent());
   }
   

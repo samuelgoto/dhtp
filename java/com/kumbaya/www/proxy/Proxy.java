@@ -157,9 +157,6 @@ public class Proxy implements Server {
           logger.info("Got an empty response. Interpreting as a 404.");
           response.sendError(404);
         }
-      } catch (IllegalArgumentException | IllegalAccessException | InstantiationException e) {
-        logger.error(e);
-        response.sendError(500);
       } finally {
         response.getOutputStream().close();
       }

@@ -2,9 +2,9 @@ package com.kumbaya.www;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletException;
@@ -21,6 +21,7 @@ import com.kumbaya.common.testing.Supplier;
 import com.kumbaya.common.testing.LocalNetwork;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.WorldWideWeb.Resource;
+import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 public class MultithreadingTest extends TestCase {
@@ -35,7 +36,7 @@ public class MultithreadingTest extends TestCase {
   }
   
   @Override
-  public void tearDown() throws Exception {
+  public void tearDown() throws IOException {
     network.get().tearDown();
   }
   
@@ -58,6 +59,8 @@ public class MultithreadingTest extends TestCase {
   }
 
   public void testRunnningAll() throws Exception {
+    // WorldWideWeb.setTimeout(TimeUnit.SECONDS.toMillis(60));
+    
     List<Thread> requests = new ArrayList<Thread>();
 
     AtomicInteger errors = new AtomicInteger();
@@ -71,14 +74,12 @@ public class MultithreadingTest extends TestCase {
             
             Optional<Resource> content = WorldWideWeb.get(
                 new InetSocketAddress("localhost", 8080),
-                "http://localhost:6060/please-sleep");
+                "http://localhost:8083/please-sleep");
             
-            assertTrue(content.isPresent());
+            assertTrue("We were expecting that the value was present", content.isPresent());
             assertEquals("hello world", new String(content.get().content()));
             logger.info("Got response");
-          } catch (SocketTimeoutException e) {
-            errors.incrementAndGet();
-          } catch (IOException e) {
+          } catch (AssertionFailedError e) {
             errors.incrementAndGet();
           } catch (Exception e) {
             errors.incrementAndGet();
@@ -86,9 +87,7 @@ public class MultithreadingTest extends TestCase {
         }
       }));
     }
-    
-    assertEquals(0, errors.get());
-    
+        
     long startTime = System.currentTimeMillis();
 
     // Kicks off all requests in parallel.
@@ -103,6 +102,8 @@ public class MultithreadingTest extends TestCase {
       request.join();
     }
 
+    assertEquals(0, errors.get());
+    
     long totalTime = System.currentTimeMillis() - startTime;
     logger.info("Total time = " + totalTime);
   }

@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.conn.HttpHostConnectException;
 
 public class Gateway implements Server {
   private static final Log logger = LogFactory.getLog(Gateway.class);
@@ -80,6 +81,8 @@ public class Gateway implements Server {
     	  // 500s and IOExceptions.
         logger.error("Got an unexpected error: ", e);
         // Ignores 500s, assumes content isn't available. 
+      } finally {
+        response.close();
       }
     }
   }

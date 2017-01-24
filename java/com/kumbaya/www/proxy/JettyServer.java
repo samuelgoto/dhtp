@@ -5,13 +5,10 @@ import com.google.inject.Singleton;
 
 import com.kumbaya.common.Server;
 import com.kumbaya.common.monitor.VarZLogger;
-import com.kumbaya.www.IntegrationTest;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.Map;
 import javax.servlet.Servlet;
-import javax.servlet.http.HttpServlet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,6 +43,9 @@ public class JettyServer implements Server {
 
     try {
       server.start();
+      while (!server.isRunning()) {
+        Thread.sleep(100);
+      }
     } catch (InterruptedException e) {
       throw new IOException(e);
     } catch (Exception e) {

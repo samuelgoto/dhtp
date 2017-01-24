@@ -46,7 +46,7 @@ public class TimeoutTest extends TestCase {
   
   public void testRunnningAll() throws Exception {
     // Builds a client request against the proxy and traverses the network looking for content.
-    WorldWideWeb.setTimeout(TimeUnit.SECONDS.toMillis(2));
+    // WorldWideWeb.setTimeout(TimeUnit.SECONDS.toMillis(2));
     Optional<Resource> content = WorldWideWeb.get(
         InetSocketAddresses.parse("localhost:8080"),
         "http://localhost:8083/deliberately-timeouts");

@@ -19,7 +19,7 @@ public class Kumbaya {
     Packets.register();
   }
   
-  public <T> Optional<T> send(InetSocketAddress host, Object packet) throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
+  public <T> Optional<T> send(InetSocketAddress host, Object packet) throws UnknownHostException, IOException {
     logger.info("Sending a request to the network");
     
     Socket socket = new Socket(host.getHostName(), host.getPort());

@@ -4,6 +4,7 @@ import com.google.common.base.Optional;
 import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.router.Kumbaya;
 import com.kumbaya.router.Packets.Interest;
+import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.TcpServer.Handler;
 import com.kumbaya.router.TcpServer.Interface;
 import junit.framework.TestCase;
@@ -33,10 +34,35 @@ public class InterestHandlerTest extends TestCase {
     kumbaya.send(eq(InetSocketAddresses.parse("localhost:8082")), isA(Interest.class));
     expectLastCall().andReturn(Optional.absent());
     
+    queue.close();
+    
     control.replay();
     
     Handler<Interest> handler = new InterestHandler(kumbaya);
     Interest request = new Interest();
+    request.getName().setName("/foo/bar");
+    handler.handle(request, queue);
+  }
+
+  public void testForwardingInterest_andGettingAResponse() throws Exception {
+    Data data = new Data();
+    data.getName().setName("/hello/world");
+    data.setContent("helloworld".getBytes());
+    
+    kumbaya.send(eq(InetSocketAddresses.parse("localhost:8082")), isA(Interest.class));
+    expectLastCall().andReturn(Optional.of(data));
+    
+    queue.push(isA(Data.class));
+    expectLastCall().andReturn(queue);
+    
+    queue.close();
+    
+    control.replay();
+    
+    Handler<Interest> handler = new InterestHandler(kumbaya);
+    Interest request = new Interest();
+    request.getName().setName("/hello/world");
     handler.handle(request, queue);
   }
 }
+
