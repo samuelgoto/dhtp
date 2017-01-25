@@ -17,13 +17,14 @@ public class CommandLineTest extends TestCase {
     Server www = WorldWideWebServer.server(9080, WorldWideWebServer.defaultServlets());
     www.start();
 
-    // Spins up a gateway.
-    Gateway.main(new String[] {"--host=localhost", "--port=9081"});
-
     // Spins up a router.
     Router.main(new String[] {"--host=localhost", "--port=9082",
         // Points to the gateway.
         "--forwarding=localhost:9081",});
+
+    // Spins up a gateway.
+    Gateway.main(new String[] {"--host=localhost", "--port=9081", "--bootstrap=localhost:9082",
+        "--domains=localhost:9080"});
 
     // Spins up a proxy.
     Proxy.main(new String[] {"--host=localhost", "--port=9083",

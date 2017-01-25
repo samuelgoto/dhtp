@@ -33,9 +33,7 @@ public class Router implements Server {
     protected void configure() {
       ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("Router-%d").build();
       bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(10, factory));
-
       install(new HandlersModule());
-
       install(new DhtModule());
     }
   }
@@ -46,6 +44,7 @@ public class Router implements Server {
     Packets.register();
     server.start();
     dht.start();
+    dht.setBootstrapped(true);
   }
 
   @Override

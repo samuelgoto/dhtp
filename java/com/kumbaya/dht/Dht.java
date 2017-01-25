@@ -74,7 +74,7 @@ public class Dht implements Server {
     put(DHTValueEntity.createFromValue(dht, Keys.of(key), Values.of(value)));
   }
 
-  List<String> get(String key, int timeoutMs)
+  public List<String> get(String key, int timeoutMs)
       throws InterruptedException, ExecutionException, TimeoutException {
     List<DHTValueEntity> result = get(Keys.as(Keys.of(key)), timeoutMs);
     return Lists.transform(result, new Function<DHTValueEntity, String>() {
@@ -85,7 +85,7 @@ public class Dht implements Server {
     });
   }
 
-  private List<DHTValueEntity> get(EntityKey entityKey, int timeoutMs)
+  public List<DHTValueEntity> get(EntityKey entityKey, int timeoutMs)
       throws InterruptedException, ExecutionException, TimeoutException {
     // TODO(goto): decrement the timeout between calls.
     List<DHTValueEntity> all = new ArrayList<DHTValueEntity>();
@@ -145,6 +145,10 @@ public class Dht implements Server {
     dht.start();
 
     return this;
+  }
+
+  public void setBootstrapped(boolean bootstrapped) {
+    dht.setBootstrapped(bootstrapped);
   }
 
   public DHTFuture<BootstrapResult> bootstrap(String hostname, int port) {

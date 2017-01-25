@@ -7,7 +7,10 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.kumbaya.common.Flags;
 import com.kumbaya.common.Flags.Flag;
+import com.kumbaya.common.InetSocketAddresses;
 import com.kumbaya.common.Server;
+import com.kumbaya.dht.Dht;
+import com.kumbaya.dht.DhtModule;
 import com.kumbaya.router.Packets;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer;
@@ -16,7 +19,9 @@ import com.kumbaya.router.TcpServer.Interface;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.WorldWideWeb.Resource;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -26,12 +31,16 @@ import org.apache.commons.logging.LogFactory;
 public class Gateway implements Server {
   private static final Log logger = LogFactory.getLog(Gateway.class);
 
-  private final TcpServer server;
+  private @Inject @Flag("port") int port;
+  private @Inject @Flag("bootstrap") String bootstrap;
+  private @Inject(optional = true) @Flag("domains") String domains =
+      "sgo.to,1500wordmtu.com,johnpanzer.com";
+
 
   @Inject
-  Gateway(TcpServer server) {
-    this.server = server;
-  }
+  private TcpServer server;
+  @Inject
+  private Dht dht;
 
   public static class Module extends AbstractModule {
     @Override
@@ -45,6 +54,8 @@ public class Gateway implements Server {
           addHandler(Interest.class, InterestHandler.class);
         }
       });
+
+      install(new DhtModule());
     }
   }
 
@@ -90,14 +101,29 @@ public class Gateway implements Server {
     logger.info("Binding into " + port);
     Packets.register();
     server.start();
+    dht.start();
+
+    InetSocketAddress router = InetSocketAddresses.parse(bootstrap);
+    try {
+      // Bootstraps.
+      dht.bootstrap(router.getHostName(), router.getPort()).get();
+
+      // Announces that we can serve sgo.to.
+      for (String domain : domains.split(",")) {
+        dht.put(domain, "*");
+      }
+    } catch (InterruptedException | ExecutionException e) {
+      throw new IOException("Failed to bootstrap", e);
+    }
+
   }
 
   @Override
   public void stop() throws IOException {
     server.stop();
+    dht.stop();
   }
 
-  private @Inject @Flag("port") int port;
 
   public static void main(String[] args) throws Exception {
     logger.info("Running the Kumbaya Gateway");

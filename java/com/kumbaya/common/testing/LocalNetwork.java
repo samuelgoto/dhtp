@@ -13,10 +13,18 @@ import java.util.Map;
 import javax.servlet.Servlet;
 
 public class LocalNetwork {
-  private final Map<String, Class<? extends Servlet>> servlets;
+  private Map<String, Class<? extends Servlet>> servlets;
+  private String domains = "--domains=localhost:8083";
 
-  LocalNetwork(Map<String, Class<? extends Servlet>> servlets) {
+
+  public LocalNetwork setServlets(Map<String, Class<? extends Servlet>> servlets) {
     this.servlets = servlets;
+    return this;
+  }
+
+  public LocalNetwork setDomains(String domains) {
+    this.domains = domains;
+    return this;
   }
 
   private final Supplier<Proxy> proxy = new Supplier<Proxy>() {
@@ -42,7 +50,8 @@ public class LocalNetwork {
     @Override
     public Gateway build() {
       return Guice
-          .createInjector(Flags.asModule(new String[] {"--port=8082"}), new Gateway.Module())
+          .createInjector(Flags.asModule(new String[] {"--port=8082", "--host=localhost",
+              "--bootstrap=localhost:8081", domains}), new Gateway.Module())
           .getInstance(Gateway.class);
     }
   };
@@ -74,7 +83,7 @@ public class LocalNetwork {
     return new Supplier<LocalNetwork>() {
       @Override
       public LocalNetwork build() {
-        return new LocalNetwork(servlets);
+        return new LocalNetwork().setServlets(servlets);
       }
     };
   }
