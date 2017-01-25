@@ -5,8 +5,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.multibindings.MapBinder;
 import com.kumbaya.common.Server;
-import com.kumbaya.www.proxy.JettyServer;
-
+import com.kumbaya.www.JettyServer;
 import java.io.IOException;
 import java.util.Map;
 
