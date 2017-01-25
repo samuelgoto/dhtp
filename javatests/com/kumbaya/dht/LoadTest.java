@@ -8,6 +8,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -22,7 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.limewire.mojito.Context;
 import org.limewire.mojito.MojitoFactory;
-import org.limewire.mojito.db.DHTValueEntity;
 
 public class LoadTest {
   private static final Log log = LogFactory.getLog(LoadTest.class);
@@ -83,11 +83,11 @@ public class LoadTest {
           for (int receiverId = 1; receiverId < NETWORK_SIZE; receiverId++) {
             // and for every other node, retrieve that key/value pair ...
             try {
-              List<DHTValueEntity> result =
+              List<String> result =
                   nodes.get(receiverId).get("keys/" + senderId + "/" + msgId, 1000);
               assertEquals(1, result.size());
               // ... and assert that its value is correct.
-              assertEquals(Values.of(result.get(0)), "values/" + senderId + "/" + msgId);
+              assertEquals(result.get(0), "values/" + senderId + "/" + msgId);
             } catch (TimeoutException e) {
               // Timing out is cool, we just want to have as few as
               // possible of these.
@@ -98,7 +98,7 @@ public class LoadTest {
       }
     } finally {
       for (int i = 0; i < NETWORK_SIZE; i++) {
-        nodes.get(i).stop();
+        nodes.get(i).close();
       }
     }
   }
@@ -117,7 +117,7 @@ public class LoadTest {
 
     Dht dht = injector.getInstance(Dht.class);
 
-    dht.start("localhost", port, port);
+    dht.bind(new InetSocketAddress("localhost", port));
 
     return dht;
   }

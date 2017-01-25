@@ -13,9 +13,12 @@
  */
 package com.kumbaya.dht;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.kumbaya.common.Server;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -30,9 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.limewire.io.SimpleNetworkInstanceUtils;
 import org.limewire.mojito.Context;
 import org.limewire.mojito.EntityKey;
-import org.limewire.mojito.KUID;
 import org.limewire.mojito.concurrent.DHTFuture;
-import org.limewire.mojito.db.DHTValue;
 import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.db.DHTValueType;
 import org.limewire.mojito.db.Storable;
@@ -45,7 +46,7 @@ import org.limewire.mojito.util.ContactUtils;
 import org.limewire.mojito.util.DatabaseUtils;
 
 @Singleton
-public class Dht {
+public class Dht implements Server {
   @Inject
   private Context dht;
   @Inject
@@ -55,29 +56,27 @@ public class Dht {
   @Inject(optional = true)
   private LocalDatabase localDb;
 
-  public void setId(String id) {
+  public Dht setId(String id) {
     dht.getLocalNode().setNodeID(Keys.of(id));
+    return this;
   }
 
-  public StoreResult put(String key, String value) throws InterruptedException, ExecutionException {
-    return put(DHTValueEntity.createFromValue(dht, Keys.of(key), Values.of(value)));
+  public void put(String key, String value) throws InterruptedException, ExecutionException {
+    put(DHTValueEntity.createFromValue(dht, Keys.of(key), Values.of(value)));
   }
 
-  public StoreResult put(KUID key, DHTValue value) throws InterruptedException, ExecutionException {
-    return put(DHTValueEntity.createFromValue(dht, key, value));
-  }
-
-  public List<DHTValueEntity> get(String key, int timeoutMs)
+  List<String> get(String key, int timeoutMs)
       throws InterruptedException, ExecutionException, TimeoutException {
-    return get(Keys.as(Keys.of(key)), timeoutMs);
+    List<DHTValueEntity> result = get(Keys.as(Keys.of(key)), timeoutMs);
+    return Lists.transform(result, new Function<DHTValueEntity, String>() {
+      @Override
+      public String apply(DHTValueEntity value) {
+        return Values.of(value);
+      }
+    });
   }
 
-  public List<DHTValueEntity> get(KUID key, DHTValueType keyType, int timeoutMs)
-      throws InterruptedException, ExecutionException, TimeoutException {
-    return get(Keys.as(key, keyType), timeoutMs);
-  }
-
-  public List<DHTValueEntity> get(EntityKey entityKey, int timeoutMs)
+  private List<DHTValueEntity> get(EntityKey entityKey, int timeoutMs)
       throws InterruptedException, ExecutionException, TimeoutException {
     // TODO(goto): decrement the timeout between calls.
     List<DHTValueEntity> all = new ArrayList<DHTValueEntity>();
@@ -97,22 +96,19 @@ public class Dht {
     return all;
   }
 
-  public void remove(KUID key) throws InterruptedException, ExecutionException {
-    dht.remove(key).get();
-  }
-
   private StoreResult put(DHTValueEntity value) throws InterruptedException, ExecutionException {
     model.add(value);
     StoreResult result = dht.put(value.getPrimaryKey(), value.getValue()).get();
     return result;
   }
 
-  public Dht start(String hostname, int port) throws IOException, NumberFormatException {
+  private Dht start(String hostname, int port) throws IOException, NumberFormatException {
     // Starts the dht when the public port is equal to the internal port.
     return start(hostname, port, port);
   }
 
-  public Dht start(String hostname, int port, int proxy) throws IOException, NumberFormatException {
+  private Dht start(String hostname, int port, int proxy)
+      throws IOException, NumberFormatException {
     // The following lines allows the DHT to connect to local ip addresses
     // which is sometimes useful for debugging purposes. Production binaries
     // should probably not set these flags though. Leaving them as comments
@@ -156,11 +152,6 @@ public class Dht {
     return dht.isBound();
   }
 
-  public Dht stop() {
-    dht.close();
-    return this;
-  }
-
   @Singleton
   static class Model implements StorableModel {
     private static final Log log = LogFactory.getLog(Model.class);
@@ -193,5 +184,15 @@ public class Dht {
 
     @Override
     public void handleContactChange() {}
+  }
+
+  @Override
+  public void bind(InetSocketAddress address) throws IOException {
+    start(address.getHostName(), address.getPort());
+  }
+
+  @Override
+  public void close() throws IOException {
+    dht.close();
   }
 }

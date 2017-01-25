@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.kumbaya.common.Flags;
 import com.kumbaya.common.Flags.Flag;
 import com.kumbaya.common.Server;
+import com.kumbaya.dht.Dht;
 import com.kumbaya.router.handlers.HandlersModule;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -19,19 +20,20 @@ import org.apache.commons.logging.LogFactory;
 public class Router implements Server {
   private static final Log logger = LogFactory.getLog(Router.class);
   private final TcpServer server;
+  private final Dht dht;
 
   @Inject
-  Router(TcpServer server) {
+  Router(TcpServer server, Dht dht) {
     this.server = server;
+    this.dht = dht;
   }
 
   public static class Module extends AbstractModule {
     @Override
     protected void configure() {
-      ThreadFactory factory = new ThreadFactoryBuilder()
-        .setNameFormat("Router-%d").build();
+      ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("Router-%d").build();
       bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(10, factory));
-      
+
       install(new HandlersModule());
     }
   }
@@ -41,6 +43,7 @@ public class Router implements Server {
     logger.info("Binding into " + host + ":" + port);
     Packets.register();
     server.bind(address);
+
   }
 
   @Override
@@ -48,14 +51,14 @@ public class Router implements Server {
     server.close();
   }
 
-  private @Inject(optional=true) @Flag("host") String host = "localhost";
-  private @Inject(optional=true) @Flag("port") int port = 8082;
-  
+  private @Inject(optional = true) @Flag("host") String host = "localhost";
+  private @Inject(optional = true) @Flag("port") int port = 8082;
+
   public static void main(String[] args) throws Exception {
     logger.info("Running the Kumbaya Router");
 
-    Router router = Guice.createInjector(new Module(), Flags.asModule(args))
-        .getInstance(Router.class);
+    Router router =
+        Guice.createInjector(new Module(), Flags.asModule(args)).getInstance(Router.class);
     router.bind(new InetSocketAddress(router.host, router.port));
   }
 }
