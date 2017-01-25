@@ -1,5 +1,6 @@
 package com.kumbaya.router;
 
+import com.kumbaya.router.Packets.Data;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -8,15 +9,12 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-
-import com.kumbaya.router.Packets.Data;
-
 import junit.framework.TestCase;
 
 public class TcpSocketTest extends TestCase {
 
 
-  public void testBrokenPipe_writes10MBs() throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
+  public void testBrokenPipe_writes10MBs() throws UnknownHostException, IOException {
     final ServerSocket welcomeSocket = new ServerSocket(8080);
 
     Thread server = new Thread(new Runnable() {
@@ -24,11 +22,11 @@ public class TcpSocketTest extends TestCase {
       public void run() {
         try {
 
-          while (true) { 
+          while (true) {
             Socket connectionSocket = welcomeSocket.accept();
 
-            BufferedReader inFromClient = new BufferedReader(
-                new InputStreamReader(connectionSocket.getInputStream()));
+            BufferedReader inFromClient =
+                new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
             int bytes = Integer.parseInt(inFromClient.readLine());
 
             DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
@@ -55,11 +53,11 @@ public class TcpSocketTest extends TestCase {
       int length = send(numBytes).getContent().length;
       assertEquals(numBytes, length);
     }
-    
+
     welcomeSocket.close();
   }
 
-  private Data send(int numBytes) throws UnknownHostException, IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
+  private Data send(int numBytes) throws UnknownHostException, IOException {
     Socket clientSocket = new Socket("localhost", 8080);
     DataOutputStream outToServer = new DataOutputStream(clientSocket.getOutputStream());
 
@@ -68,7 +66,7 @@ public class TcpSocketTest extends TestCase {
     InputStream stream = clientSocket.getInputStream();
 
     Data foo = Serializer.unserialize(stream);
-    
+
     clientSocket.close();
 
     return foo;

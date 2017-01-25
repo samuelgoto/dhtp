@@ -3,19 +3,15 @@ package com.kumbaya.dht;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentNavigableMap;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
-import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 public class MapDbTest {
 

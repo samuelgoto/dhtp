@@ -2,7 +2,6 @@ package com.kumbaya.router;
 
 import com.google.common.base.Optional;
 import com.kumbaya.common.InetSocketAddresses;
-import com.kumbaya.router.Kumbaya;
 import com.kumbaya.router.Packets.Data;
 import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Interface;
@@ -12,23 +11,23 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.Executors;
-
 import junit.framework.TestCase;
 
 public class TcpServerTest extends TestCase {
   public void testStartingStopping() throws Exception {
-    TcpServer server = new TcpServer(Executors.newFixedThreadPool(10), new RequestHandler.Builder() {
-      @Override
-      public RequestHandler build(Socket connection) {
-        throw new UnsupportedOperationException("no handlers registered");
-      }
-    });
+    TcpServer server =
+        new TcpServer(Executors.newFixedThreadPool(10), new RequestHandler.Builder() {
+          @Override
+          public RequestHandler build(Socket connection) {
+            throw new UnsupportedOperationException("no handlers registered");
+          }
+        });
     server.bind(new InetSocketAddress("localhost", 8080));
     server.close();
   }
 
-  public void testPacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
-    TcpServer server = new TcpServer(Executors.newFixedThreadPool(10), 
+  public void testPacket() throws IOException {
+    TcpServer server = new TcpServer(Executors.newFixedThreadPool(10),
         RequestHandler.of(Interest.class, new TcpServer.Handler<Interest>() {
           @Override
           public void handle(Interest request, Interface response) throws IOException {
@@ -57,23 +56,24 @@ public class TcpServerTest extends TestCase {
     server.close();
   }
 
-  public void testLargePacket() throws IOException, IllegalArgumentException, IllegalAccessException, InstantiationException {
-    RequestHandler.Builder handler = RequestHandler.of(Interest.class, new TcpServer.Handler<Interest>() {
-      @Override
-      public void handle(Interest request, Interface response) throws IOException {
-        Data result = new Data();
-        result.setName(request.getName());
-        result.getMetadata().setFreshnessPeriod(2);
-        result.getMetadata().setContentType("text/html");
-        byte[] content = new byte[10 * 1000 * 1000];
-        result.setContent(content);
-        try {
-          response.push(result);
-        } catch (SocketException e) {
-          e.printStackTrace();
-        }
-      }
-    });
+  public void testLargePacket() throws IOException, IllegalArgumentException {
+    RequestHandler.Builder handler =
+        RequestHandler.of(Interest.class, new TcpServer.Handler<Interest>() {
+          @Override
+          public void handle(Interest request, Interface response) throws IOException {
+            Data result = new Data();
+            result.setName(request.getName());
+            result.getMetadata().setFreshnessPeriod(2);
+            result.getMetadata().setContentType("text/html");
+            byte[] content = new byte[10 * 1000 * 1000];
+            result.setContent(content);
+            try {
+              response.push(result);
+            } catch (SocketException e) {
+              e.printStackTrace();
+            }
+          }
+        });
     TcpServer server = new TcpServer(Executors.newFixedThreadPool(10), handler);
     server.bind(new InetSocketAddress("localhost", 8080));
 
@@ -86,7 +86,7 @@ public class TcpServerTest extends TestCase {
     assertTrue(result.isPresent());
     assertEquals("foo", result.get().getName().getName());
     assertEquals(2, result.get().getMetadata().getFreshnessPeriod());
-    assertEquals(10  * 1000 * 1000, result.get().getContent().length);
+    assertEquals(10 * 1000 * 1000, result.get().getContent().length);
 
     server.close();
   }

@@ -23,8 +23,6 @@ import org.limewire.mojito.db.DHTValueEntity;
 import org.limewire.mojito.db.DHTValueType;
 import org.limewire.mojito.db.Database;
 import org.limewire.mojito.db.impl.DHTValueImpl;
-import org.limewire.mojito.io.MessageDispatcherFactory;
-import org.limewire.mojito.io.Tag;
 import org.limewire.mojito.result.FindValueResult;
 import org.limewire.mojito.routing.Version;
 import org.limewire.mojito.settings.NetworkSettings;

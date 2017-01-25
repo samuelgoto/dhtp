@@ -1,30 +1,15 @@
 package com.kumbaya.dht;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Collections;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 import org.easymock.IMocksControl;
-import org.eclipse.jetty.client.Address;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.HttpExchange;
-import org.eclipse.jetty.io.ByteArrayBuffer;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.limewire.io.SimpleNetworkInstanceUtils;
@@ -33,19 +18,14 @@ import org.limewire.mojito.EntityKey;
 import org.limewire.mojito.KUID;
 import org.limewire.mojito.MojitoDHT;
 import org.limewire.mojito.MojitoFactory;
-import org.limewire.mojito.StatusCode;
 import org.limewire.mojito.concurrent.DHTFuture;
-import org.limewire.mojito.db.DHTValue;
 import org.limewire.mojito.db.DHTValueType;
 import org.limewire.mojito.db.impl.DHTValueImpl;
-import org.limewire.mojito.io.MessageDispatcher;
 import org.limewire.mojito.io.MessageDispatcherFactory;
-import org.limewire.mojito.io.MessageInputStream;
 import org.limewire.mojito.io.Tag;
 import org.limewire.mojito.messages.DHTMessage;
 import org.limewire.mojito.messages.FindNodeRequest;
 import org.limewire.mojito.messages.FindNodeResponse;
-import org.limewire.mojito.messages.MessageFormatException;
 import org.limewire.mojito.messages.PingRequest;
 import org.limewire.mojito.messages.PingResponse;
 import org.limewire.mojito.messages.StoreRequest;
@@ -64,15 +44,10 @@ import org.limewire.mojito.routing.Version;
 import org.limewire.mojito.routing.impl.RemoteContact;
 import org.limewire.mojito.settings.NetworkSettings;
 import org.limewire.mojito.util.ContactUtils;
-import org.limewire.security.SecureMessage;
-import org.limewire.security.SecureMessageCallback;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Provider;
-import com.google.inject.util.Providers;
 import com.kumbaya.www.JettyServer;
 
 import static org.easymock.EasyMock.capture;
