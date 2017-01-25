@@ -16,7 +16,6 @@ import org.limewire.mojito.db.DHTValueEntity;
 
 public class DhtTest {
 
-
   @Test
   public void testBasic() throws Exception {
     Dht bootstrap = createDht(8080);
@@ -40,6 +39,7 @@ public class DhtTest {
     assertEquals("bar", Values.of(result.get(0)));
 
     node1.stop();
+    node2.stop();
     bootstrap.stop();
   }
 
