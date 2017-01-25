@@ -8,10 +8,10 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.util.Providers;
+import com.kumbaya.common.Flags.Flag;
 import com.kumbaya.common.Server;
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -30,11 +30,16 @@ public class TcpServer implements Runnable, Server {
   private final RequestHandler.Builder handler;
 
   @Inject
+  @Flag("port")
+  private int port = 8080;
+
+
+  @Inject
   TcpServer(ExecutorService executor, RequestHandler.Builder handler) {
     this.executor = executor;
     this.handler = handler;
   }
-  
+
   public interface Handler<I> {
     void handle(I request, Interface queue) throws IOException;
   }
@@ -51,33 +56,32 @@ public class TcpServer implements Runnable, Server {
       Serializer.serialize(connection.getOutputStream(), object);
       return this;
     }
-    
+
     public <T> T pull() throws IOException {
       return Serializer.unserialize(connection.getInputStream());
     }
-    
+
     public void close() throws IOException {
       connection.close();
     }
   }
-  
+
   public static abstract class HandlerModule extends AbstractModule {
-    
+
     @Override
     public void configure() {
-      install(new FactoryModuleBuilder()
-          .build(RequestHandler.Builder.class));
+      install(new FactoryModuleBuilder().build(RequestHandler.Builder.class));
       register();
     }
-    
+
     protected abstract void register();
-    
+
     protected <I> void addHandler(Class<I> clazz, Class<? extends Handler<I>> handler) {
-      MapBinder<Class, Handler> binder = MapBinder.newMapBinder(
-          binder(), Class.class, Handler.class);
+      MapBinder<Class, Handler> binder =
+          MapBinder.newMapBinder(binder(), Class.class, Handler.class);
       binder.addBinding(clazz).to(handler);
     }
-  }  
+  }
 
   @Override
   public void run() {
@@ -93,21 +97,21 @@ public class TcpServer implements Runnable, Server {
       }
     }
   }
- 
+
   static class RequestHandler implements Runnable {
     private final Interface connection;
     private final Map<Class, Provider<Handler>> handlers;
-    
+
     @Inject
     RequestHandler(@Assisted Socket connection, Map<Class, Provider<Handler>> handlers) {
       this.connection = new Interface(connection);
       this.handlers = handlers;
     }
-    
+
     interface Builder {
       RequestHandler build(Socket connection);
     }
-    
+
     static <I> Builder of(Class<I> clazz, Handler<I> handler) {
       return new Builder() {
         @Override
@@ -118,7 +122,8 @@ public class TcpServer implements Runnable, Server {
     }
 
     @SuppressWarnings({"unchecked", "cast"})
-    private <I> void handle(Handler<I> handler, Object request, Interface response) throws IOException {
+    private <I> void handle(Handler<I> handler, Object request, Interface response)
+        throws IOException {
       handler.handle((I) request, response);
     }
 
@@ -141,10 +146,10 @@ public class TcpServer implements Runnable, Server {
         e.printStackTrace();
         logger.error("Unexpected IOException: ", e);
       } catch (Exception e) {
-        e.printStackTrace();        
-        logger.error("Got an unexpected exception: ", e);   
+        e.printStackTrace();
+        logger.error("Got an unexpected exception: ", e);
       } finally {
-        logger.info("Ended a connection");   
+        logger.info("Ended a connection");
         try {
           connection.close();
         } catch (IOException e) {
@@ -157,14 +162,14 @@ public class TcpServer implements Runnable, Server {
 
 
   @Override
-  public void bind(InetSocketAddress address) throws IOException {
+  public void start() throws IOException {
     running.set(true);
-    socket = new ServerSocket(address.getPort());
+    socket = new ServerSocket(port);
     executor.execute(this);
   }
 
   @Override
-  public void close() throws IOException {
+  public void stop() throws IOException {
     running.set(false);
     socket.close();
     executor.shutdown();

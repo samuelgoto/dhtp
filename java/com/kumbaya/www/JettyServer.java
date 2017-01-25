@@ -2,14 +2,12 @@ package com.kumbaya.www;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
+import com.kumbaya.common.Flags.Flag;
 import com.kumbaya.common.Server;
 import com.kumbaya.common.monitor.VarZLogger;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.Map;
 import javax.servlet.Servlet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -22,15 +20,17 @@ public class JettyServer implements Server {
   private final Map<String, Servlet> servlets;
 
   @Inject
-  JettyServer(
-      Map<String, Servlet> servlets,
-      VarZLogger varZ) {
+  @Flag("port")
+  private int port;
+
+  @Inject
+  JettyServer(Map<String, Servlet> servlets, VarZLogger varZ) {
     this.servlets = servlets;
   }
 
   @Override
-  public void bind(InetSocketAddress address) throws IOException {
-    server = new org.eclipse.jetty.server.Server(address.getPort());
+  public void start() throws IOException {
+    server = new org.eclipse.jetty.server.Server(port);
 
     ServletContextHandler servlet = new ServletContextHandler(ServletContextHandler.SESSIONS);
     servlet.setContextPath("/");
@@ -38,7 +38,7 @@ public class JettyServer implements Server {
     for (Map.Entry<String, Servlet> entry : servlets.entrySet()) {
       servlet.addServlet(new ServletHolder(entry.getValue()), entry.getKey());
     }
-    
+
     server.setHandler(servlet);
 
     try {
@@ -54,7 +54,7 @@ public class JettyServer implements Server {
   }
 
   @Override
-  public void close() {
+  public void stop() {
     try {
       server.stop();
       server.destroy();

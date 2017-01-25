@@ -2,13 +2,11 @@ package com.kumbaya.dht;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.kumbaya.common.Server;
+import com.kumbaya.www.JettyServer;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.limewire.mojito.Context;
@@ -20,102 +18,97 @@ import org.limewire.security.SecureMessageCallback;
 
 @Singleton
 public class AsyncMessageDispatcher extends MessageDispatcher {
-    private static final Log logger = LogFactory.getLog(AsyncMessageDispatcher.class);
+  private static final Log logger = LogFactory.getLog(AsyncMessageDispatcher.class);
 
-	private boolean isBound = false;
-	private boolean started = false;
-	private final Server dispatcher;
-	private final HttpMessageDispatcher sender;
-	private final Thread thread;
-	private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
+  private boolean isBound = false;
+  private boolean started = false;
+  private final JettyServer dispatcher;
+  private final HttpMessageDispatcher sender;
+  private final Thread thread;
+  private final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
 
-	@Inject
-	public AsyncMessageDispatcher(
-			Context context,
-			Server dispatcher,
-			HttpMessageDispatcher sender) {
-		super(context);
-		this.dispatcher = dispatcher;
-		this.sender = sender;
-		thread = context.getDHTExecutorService().getThreadFactory().newThread(
-				new Runnable() {
-					@Override
-					public void run() {
-						do {
-							try {
-								Runnable task = queue.take();
-								task.run();
-							} catch (InterruptedException e) {
-								logger.error(e);
-							}
-						} while (true);
-					}
-				});
-		thread.setName(context.getName() + "-MessageDispatcherThread");
-		thread.setDaemon(Boolean.getBoolean("com.limegroup.mojito.io.MessageDispatcherIsDaemon"));
-	}
+  @Inject
+  public AsyncMessageDispatcher(Context context, JettyServer dispatcher,
+      HttpMessageDispatcher sender) {
+    super(context);
+    this.dispatcher = dispatcher;
+    this.sender = sender;
+    thread = context.getDHTExecutorService().getThreadFactory().newThread(new Runnable() {
+      @Override
+      public void run() {
+        do {
+          try {
+            Runnable task = queue.take();
+            task.run();
+          } catch (InterruptedException e) {
+            logger.error(e);
+          }
+        } while (true);
+      }
+    });
+    thread.setName(context.getName() + "-MessageDispatcherThread");
+    thread.setDaemon(Boolean.getBoolean("com.limegroup.mojito.io.MessageDispatcherIsDaemon"));
+  }
 
-	@Override
-	public void handleMessage(final DHTMessage message) {
-		super.handleMessage(message);
-	}
+  @Override
+  public void handleMessage(final DHTMessage message) {
+    super.handleMessage(message);
+  }
 
-	@Override
-	public void bind(SocketAddress address) throws IOException {
-		dispatcher.bind((InetSocketAddress) address);
-		isBound = true;
-	}
+  @Override
+  public void bind(SocketAddress address) throws IOException {
+    // NOTE(goto): the address is ignored here because the port is passed through @Flags.
+    // We should probably assert that they are equal here, but that would involve exposing that
+    // here.
+    // Leaving as is until we refactor how mojito passes configuration around.
+    dispatcher.start();
+    isBound = true;
+  }
 
-	@Override
-	public boolean isBound() {
-		return isBound;
-	}
+  @Override
+  public boolean isBound() {
+    return isBound;
+  }
 
-	@Override
-	public boolean isRunning() {
-		return started;
-	}
+  @Override
+  public boolean isRunning() {
+    return started;
+  }
 
-	@Override
-	protected boolean submit(final Tag tag) {
-		queue.add(new Runnable() {
-			@Override
-			public void run() {
-				boolean result = sender.send(tag);
-				if (result) {
-					register(tag);
-				}
-			}
-		});
-		return true;
-	}
-
-	@Override
-	public void start() {
-		super.start();
-		thread.start();
-		started = true;
-	}
-
-	@Override
-	protected void process(Runnable runnable) {
-		queue.add(runnable);
-	}
-
-	@Override
-	protected void verify(SecureMessage secureMessage,
-			SecureMessageCallback smc) {
-		throw new UnsupportedOperationException(
-				"Dispatcher doesn't support verifying secure messages");
-	}
-
-    @Override
-    public void close() {
-        super.close();
-        try {
-          dispatcher.close();
-        } catch (IOException e) {
-          e.printStackTrace();
+  @Override
+  protected boolean submit(final Tag tag) {
+    queue.add(new Runnable() {
+      @Override
+      public void run() {
+        boolean result = sender.send(tag);
+        if (result) {
+          register(tag);
         }
-    }
+      }
+    });
+    return true;
+  }
+
+  @Override
+  public void start() {
+    super.start();
+    thread.start();
+    started = true;
+  }
+
+  @Override
+  protected void process(Runnable runnable) {
+    queue.add(runnable);
+  }
+
+  @Override
+  protected void verify(SecureMessage secureMessage, SecureMessageCallback smc) {
+    throw new UnsupportedOperationException("Dispatcher doesn't support verifying secure messages");
+  }
+
+  @Override
+  public void close() {
+    super.close();
+    dispatcher.stop();
+  }
 }

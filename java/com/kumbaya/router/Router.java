@@ -8,9 +8,9 @@ import com.kumbaya.common.Flags;
 import com.kumbaya.common.Flags.Flag;
 import com.kumbaya.common.Server;
 import com.kumbaya.dht.Dht;
+import com.kumbaya.dht.DhtModule;
 import com.kumbaya.router.handlers.HandlersModule;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -35,30 +35,32 @@ public class Router implements Server {
       bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(10, factory));
 
       install(new HandlersModule());
+
+      install(new DhtModule());
     }
   }
 
   @Override
-  public void bind(InetSocketAddress address) throws IOException {
-    logger.info("Binding into " + host + ":" + port);
+  public void start() throws IOException {
+    logger.info("Binding into port " + port);
     Packets.register();
-    server.bind(address);
-
+    server.start();
+    dht.start();
   }
 
   @Override
-  public void close() throws IOException {
-    server.close();
+  public void stop() throws IOException {
+    server.stop();
+    dht.stop();
   }
 
-  private @Inject(optional = true) @Flag("host") String host = "localhost";
-  private @Inject(optional = true) @Flag("port") int port = 8082;
+  private @Inject @Flag("port") int port = 8082;
 
   public static void main(String[] args) throws Exception {
     logger.info("Running the Kumbaya Router");
 
     Router router =
         Guice.createInjector(new Module(), Flags.asModule(args)).getInstance(Router.class);
-    router.bind(new InetSocketAddress(router.host, router.port));
+    router.start();
   }
 }

@@ -7,7 +7,6 @@ import com.kumbaya.router.Packets.Interest;
 import com.kumbaya.router.TcpServer.Interface;
 import com.kumbaya.router.TcpServer.RequestHandler;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.Executors;
@@ -22,8 +21,8 @@ public class TcpServerTest extends TestCase {
             throw new UnsupportedOperationException("no handlers registered");
           }
         });
-    server.bind(new InetSocketAddress("localhost", 8080));
-    server.close();
+    server.start();
+    server.stop();
   }
 
   public void testPacket() throws IOException {
@@ -40,20 +39,20 @@ public class TcpServerTest extends TestCase {
           }
         }));
 
-    server.bind(new InetSocketAddress("localhost", 8081));
+    server.start();
 
     Kumbaya client = new Kumbaya();
 
     Interest interest = new Interest();
     interest.getName().setName("foo");
-    Optional<Data> result = client.send(InetSocketAddresses.parse("localhost:8081"), interest);
+    Optional<Data> result = client.send(InetSocketAddresses.parse("localhost:8080"), interest);
 
     assertTrue(result.isPresent());
     assertEquals("foo", result.get().getName().getName());
     assertEquals(2, result.get().getMetadata().getFreshnessPeriod());
     assertEquals("hello world", new String(result.get().getContent()));
 
-    server.close();
+    server.stop();
   }
 
   public void testLargePacket() throws IOException, IllegalArgumentException {
@@ -75,7 +74,7 @@ public class TcpServerTest extends TestCase {
           }
         });
     TcpServer server = new TcpServer(Executors.newFixedThreadPool(10), handler);
-    server.bind(new InetSocketAddress("localhost", 8080));
+    server.start();
 
     Kumbaya client = new Kumbaya();
 
@@ -88,7 +87,7 @@ public class TcpServerTest extends TestCase {
     assertEquals(2, result.get().getMetadata().getFreshnessPeriod());
     assertEquals(10 * 1000 * 1000, result.get().getContent().length);
 
-    server.close();
+    server.stop();
   }
 }
 

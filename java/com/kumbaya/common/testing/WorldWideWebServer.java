@@ -4,11 +4,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.multibindings.MapBinder;
+import com.kumbaya.common.Flags;
 import com.kumbaya.common.Server;
 import com.kumbaya.www.JettyServer;
 import java.io.IOException;
 import java.util.Map;
-
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -32,31 +32,31 @@ public class WorldWideWebServer {
     }
   }
 
-  public static Server server(Map<String, Class<? extends Servlet>> servlets) {
+  public static Server server(int port, Map<String, Class<? extends Servlet>> servlets) {
     return Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
-        MapBinder<String, Servlet> mapbinder
-        = MapBinder.newMapBinder(binder(), String.class, Servlet.class);
+        MapBinder<String, Servlet> mapbinder =
+            MapBinder.newMapBinder(binder(), String.class, Servlet.class);
 
         for (Map.Entry<String, Class<? extends Servlet>> servlet : servlets.entrySet()) {
           mapbinder.addBinding(servlet.getKey()).to(servlet.getValue());
         }
 
+        install(Flags.asModule(new String[] {"--port=" + port}));
+
       }
     }).getInstance(JettyServer.class);
   }
 
-  public static Server server(String path, Class<? extends Servlet> servlet) {
-    return server(ImmutableMap.<String, Class<? extends Servlet>>builder()
-        .put(path, servlet)
-        .build()); 
+  public static Server server(int port, String path, Class<? extends Servlet> servlet) {
+    return server(port,
+        ImmutableMap.<String, Class<? extends Servlet>>builder().put(path, servlet).build());
   }
-  
+
   public static Map<String, Class<? extends Servlet>> defaultServlets() {
     return ImmutableMap.<String, Class<? extends Servlet>>builder()
-        .put("/helloworld", HelloWorldServlet.class)
-        .put("/error", ServerErrorServlet.class)
+        .put("/helloworld", HelloWorldServlet.class).put("/error", ServerErrorServlet.class)
         .build();
   }
 }

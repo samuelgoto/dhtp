@@ -4,8 +4,8 @@ import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.kumbaya.common.Flags;
 import java.io.File;
-import java.net.InetSocketAddress;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.Options;
@@ -61,6 +61,7 @@ public class Standalone {
       @Override
       protected void configure() {
         bind(Context.class).toInstance((Context) MojitoFactory.createDHT(hostname));
+        install(Flags.asModule(args));
         if (localDb.isPresent()) {
           DB db = DBMaker.newFileDB(new File(localDb.get())).closeOnJvmShutdown().make();
 
@@ -71,7 +72,7 @@ public class Standalone {
 
     Dht dht = injector.getInstance(Dht.class);
 
-    dht.bind(new InetSocketAddress(hostname, port));
+    dht.start();
 
     if (line.hasOption("bootstrap")) {
       String[] ip = line.getOptionValue("bootstrap").split(":");

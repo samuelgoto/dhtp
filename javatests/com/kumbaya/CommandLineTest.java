@@ -14,34 +14,24 @@ import junit.framework.TestCase;
 public class CommandLineTest extends TestCase {
   public void testRunnningAll() throws Exception {
     // Spins up a web server.
-    Server www = WorldWideWebServer.server(WorldWideWebServer.defaultServlets());
-    www.bind(InetSocketAddresses.parse("localhost:9080"));
-    
+    Server www = WorldWideWebServer.server(9080, WorldWideWebServer.defaultServlets());
+    www.start();
+
     // Spins up a gateway.
-    Gateway.main(new String[] {
-        "--host=localhost",
-        "--port=9081"
-        });
-    
+    Gateway.main(new String[] {"--host=localhost", "--port=9081"});
+
     // Spins up a router.
-    Router.main(new String[] {
-        "--host=localhost",
-        "--port=9082",
+    Router.main(new String[] {"--host=localhost", "--port=9082",
         // Points to the gateway.
-        "--forwarding=localhost:9081",
-        });
-    
+        "--forwarding=localhost:9081",});
+
     // Spins up a proxy.
-    Proxy.main(new String[] {
-        "--host=localhost",
-        "--port=9083",
+    Proxy.main(new String[] {"--host=localhost", "--port=9083",
         // Points to the router.
-        "--entrypoint=localhost:9082",
-        });
-    
+        "--entrypoint=localhost:9082",});
+
     // Builds a client request against the proxy and traverses the network looking for content.
-    Optional<Resource> content = WorldWideWeb.get(
-        InetSocketAddresses.parse("localhost:9083"),
+    Optional<Resource> content = WorldWideWeb.get(InetSocketAddresses.parse("localhost:9083"),
         "http://localhost:9080/helloworld");
     assertTrue(content.isPresent());
     assertEquals("hello world", new String(content.get().content()));

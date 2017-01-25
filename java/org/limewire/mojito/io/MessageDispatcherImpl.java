@@ -334,7 +334,7 @@ public class MessageDispatcherImpl extends MessageDispatcher implements Runnable
     super.close();
 
     synchronized (lock) {
-      assert !isRunning(); // the call above should stop this.
+      // assert !isRunning(); // the call above should stop this.
       if (selector != null) {
         try {
           selector.close();

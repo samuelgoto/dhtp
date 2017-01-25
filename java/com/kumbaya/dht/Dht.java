@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.kumbaya.common.Flags.Flag;
 import com.kumbaya.common.Server;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -55,6 +56,14 @@ public class Dht implements Server {
   private MessageDispatcherFactoryImpl dispatcher;
   @Inject(optional = true)
   private LocalDatabase localDb;
+
+  @Inject
+  @Flag("host")
+  private String host;
+
+  @Inject
+  @Flag("port")
+  private int port;
 
   public Dht setId(String id) {
     dht.getLocalNode().setNodeID(Keys.of(id));
@@ -187,12 +196,12 @@ public class Dht implements Server {
   }
 
   @Override
-  public void bind(InetSocketAddress address) throws IOException {
-    start(address.getHostName(), address.getPort());
+  public void start() throws IOException {
+    start(host, port);
   }
 
   @Override
-  public void close() throws IOException {
+  public void stop() throws IOException {
     dht.close();
   }
 }

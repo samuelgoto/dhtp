@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.kumbaya.common.Flags;
 import com.kumbaya.www.JettyServer;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -81,7 +82,7 @@ public class MessageDispatcherTest {
 
     AsyncMessageDispatcher httpMessageDispatcher = messageFactory(node);
 
-    messageDispatcher.bind(isA(InetSocketAddress.class));
+    messageDispatcher.start();
 
     // While bootstraping, the node pings and sends a find node request
     // to the bootstrap node.
@@ -184,8 +185,8 @@ public class MessageDispatcherTest {
         new AsyncMessageDispatcher(node, messageDispatcher2, sender2);
     expect(messageFactory2.create(isA(Context.class))).andReturn(httpMessageDispatcher2);
 
-    messageDispatcher.bind(isA(InetSocketAddress.class));
-    messageDispatcher2.bind(isA(InetSocketAddress.class));
+    messageDispatcher.start();
+    messageDispatcher2.start();
 
     // All messages that gets submitted to the first dispatcher
     // get directly pushed to the second dispatcher, and vice versa.
@@ -236,8 +237,8 @@ public class MessageDispatcherTest {
       }
     }).anyTimes();
 
-    messageDispatcher.close();
-    messageDispatcher2.close();
+    messageDispatcher.stop();
+    messageDispatcher2.stop();
 
     control.replay();
 
@@ -275,21 +276,23 @@ public class MessageDispatcherTest {
     control.replay();
     final Context dht = (Context) MojitoFactory.createDHT("bootstrap");
     final Context node = (Context) MojitoFactory.createDHT("node");
-    dht.setMessageDispatcher(Guice.createInjector(new DhtModule(true), new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(Context.class).toInstance(dht);
-      }
-    }).getInstance(MessageDispatcherFactoryImpl.class));
+    dht.setMessageDispatcher(Guice.createInjector(new DhtModule(true, false),
+        Flags.asModule(new String[] {"--port=8080", "--host=localhost"}), new AbstractModule() {
+          @Override
+          protected void configure() {
+            bind(Context.class).toInstance(dht);
+          }
+        }).getInstance(MessageDispatcherFactoryImpl.class));
     dht.bind(new InetSocketAddress("localhost", 8080));
     dht.start();
 
-    node.setMessageDispatcher(Guice.createInjector(new DhtModule(true), new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(Context.class).toInstance(node);
-      }
-    }).getInstance(MessageDispatcherFactoryImpl.class));
+    node.setMessageDispatcher(Guice.createInjector(new DhtModule(true, false),
+        Flags.asModule(new String[] {"--port=8081", "--host=localhost"}), new AbstractModule() {
+          @Override
+          protected void configure() {
+            bind(Context.class).toInstance(node);
+          }
+        }).getInstance(MessageDispatcherFactoryImpl.class));
     node.bind(new InetSocketAddress("localhost", 8081));
     node.start();
     node.bootstrap(new InetSocketAddress("localhost", 8080)).get();

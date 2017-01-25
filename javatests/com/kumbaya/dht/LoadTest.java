@@ -7,8 +7,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.kumbaya.common.Flags;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -98,7 +98,7 @@ public class LoadTest {
       }
     } finally {
       for (int i = 0; i < NETWORK_SIZE; i++) {
-        nodes.get(i).close();
+        nodes.get(i).stop();
       }
     }
   }
@@ -108,16 +108,16 @@ public class LoadTest {
     // Makes sure each instance of the Dht has its own set of classes,
     // rather than sharing instances of @Singletons for example.
     Injector injector =
-        Guice.createInjector(new DhtModule(withHttpDispatcher), new AbstractModule() {
+        Guice.createInjector(new DhtModule(withHttpDispatcher, false), new AbstractModule() {
           @Override
           protected void configure() {
             bind(Context.class).toInstance((Context) MojitoFactory.createDHT("localhost"));
           }
-        });
+        }, Flags.asModule(new String[] {"--port=" + port, "--host=localhost"}));
 
     Dht dht = injector.getInstance(Dht.class);
 
-    dht.bind(new InetSocketAddress("localhost", port));
+    dht.start();
 
     return dht;
   }

@@ -6,40 +6,37 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.kumbaya.common.Flags;
-import com.kumbaya.common.Server;
 import com.kumbaya.common.Flags.Flag;
-import com.kumbaya.router.TcpServer;
+import com.kumbaya.common.Server;
 import com.kumbaya.router.Packets;
 import com.kumbaya.router.Packets.Interest;
+import com.kumbaya.router.TcpServer;
 import com.kumbaya.router.TcpServer.Handler;
 import com.kumbaya.router.TcpServer.Interface;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.WorldWideWeb.Resource;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.conn.HttpHostConnectException;
 
 public class Gateway implements Server {
   private static final Log logger = LogFactory.getLog(Gateway.class);
 
   private final TcpServer server;
-  
+
   @Inject
   Gateway(TcpServer server) {
     this.server = server;
   }
-  
+
   public static class Module extends AbstractModule {
     @Override
     protected void configure() {
-      ThreadFactory factory = new ThreadFactoryBuilder()
-        .setNameFormat("Gateway-%d").build();
+      ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("Gateway-%d").build();
       bind(ExecutorService.class).toInstance(Executors.newFixedThreadPool(10, factory));
 
       install(new TcpServer.HandlerModule() {
@@ -50,7 +47,7 @@ public class Gateway implements Server {
       });
     }
   }
-  
+
   private static class InterestHandler implements Handler<Interest> {
     @Override
     public void handle(Interest request, Interface response) throws IOException {
@@ -72,43 +69,41 @@ public class Gateway implements Server {
           logger.info("Finished writing the data");
         }
       } catch (SocketException e) {
-    	  // Socket error, re-throwing.
+        // Socket error, re-throwing.
         logger.error("Unexpected SocketException", e);
-        throw new RuntimeException("Programming error: application protocol busted (client closed the stream before the server was done writing)");
+        throw new RuntimeException(
+            "Programming error: application protocol busted (client closed the stream before the server was done writing)");
         // throw e;
       } catch (IOException e) {
-    	  // TODO(goto): we really have to be able to make a distinction between
-    	  // 500s and IOExceptions.
+        // TODO(goto): we really have to be able to make a distinction between
+        // 500s and IOExceptions.
         logger.error("Got an unexpected error: ", e);
-        // Ignores 500s, assumes content isn't available. 
+        // Ignores 500s, assumes content isn't available.
       } finally {
         response.close();
       }
     }
   }
-  
+
   @Override
-  public void bind(InetSocketAddress address) throws IOException {
-    logger.info("Binding into " + host + ":" + port);
+  public void start() throws IOException {
+    logger.info("Binding into " + port);
     Packets.register();
-    server.bind(address);
+    server.start();
   }
 
   @Override
-  public void close() throws IOException {
-    server.close();
+  public void stop() throws IOException {
+    server.stop();
   }
-  
-  private @Inject(optional=true) @Flag("host") String host = "localhost";
-  private @Inject(optional=true) @Flag("port") int port = 8081;
-  
+
+  private @Inject @Flag("port") int port;
+
   public static void main(String[] args) throws Exception {
     logger.info("Running the Kumbaya Gateway");
-    
-    Gateway gateway = Guice.createInjector(
-        new Module(),
-        Flags.asModule(args))
-        .getInstance(Gateway.class);
-    gateway.bind(new InetSocketAddress(gateway.host, gateway.port));
+
+    Gateway gateway =
+        Guice.createInjector(new Module(), Flags.asModule(args)).getInstance(Gateway.class);
+    gateway.start();
   }
 }
