@@ -19,8 +19,10 @@ import com.kumbaya.router.TcpServer.Interface;
 import com.kumbaya.www.WorldWideWeb;
 import com.kumbaya.www.WorldWideWeb.Resource;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,8 +36,7 @@ public class Gateway implements Server {
   private @Inject @Flag("port") int port;
   private @Inject @Flag("bootstrap") String bootstrap;
   private @Inject(optional = true) @Flag("domains") String domains =
-      "sgo.to,1500wordmtu.com,johnpanzer.com";
-
+      "sgo.to@192.30.252.153,1500wordmtu.com,johnpanzer.com";
 
   @Inject
   private TcpServer server;
@@ -59,13 +60,32 @@ public class Gateway implements Server {
     }
   }
 
+
   private static class InterestHandler implements Handler<Interest> {
+    private @Inject(optional = true) @Flag("domains") String domains;
+
     @Override
     public void handle(Interest request, Interface response) throws IOException {
       // Fetches the content of the page.
       logger.info("Got a request to fetch " + request.getName().getName());
       try {
-        Optional<Resource> content = WorldWideWeb.get(request.getName().getName());
+
+        String url = request.getName().getName();
+        String domain = new URL(url).getAuthority();
+
+        Optional<InetAddress> host = Optional.absent();
+        for (String config : domains.split(",")) {
+          String[] keyValue = config.split("@");
+          String key = keyValue[0];
+          if (domain.equals(key) && keyValue.length == 2) {
+            host = Optional.of(InetAddress.getByName(keyValue[1]));
+            break;
+          }
+        }
+
+        Optional<Resource> content =
+            host.isPresent() ? WorldWideWeb.get(host.get(), url) : WorldWideWeb.get(url);
+
         // If the content is available, return it.
         if (content.isPresent()) {
           logger.info("Got data back from the web, returning");
@@ -109,7 +129,9 @@ public class Gateway implements Server {
       dht.bootstrap(router.getHostName(), router.getPort()).get();
 
       // Announces that we can serve sgo.to.
-      for (String domain : domains.split(",")) {
+      for (String config : domains.split(",")) {
+        String[] keyValue = config.split("@");
+        String domain = keyValue[0];
         dht.put(domain, "*");
       }
     } catch (InterruptedException | ExecutionException e) {

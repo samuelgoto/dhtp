@@ -17,7 +17,8 @@ public class PublicNetworkTest extends TestCase {
   @Override
   public void setUp() throws Exception {
     network.clear().get()
-        .setDomains("--domains=sgo.to,1500wordmtu.com,johnpanzer.com,cnn.com,cloud.google.com")
+        .setDomains(
+            "--domains=sgo.to@192.30.252.153,1500wordmtu.com,johnpanzer.com,cnn.com,cloud.google.com")
         .setUp();
   }
 
