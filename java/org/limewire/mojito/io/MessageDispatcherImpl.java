@@ -48,9 +48,9 @@ public class MessageDispatcherImpl extends MessageDispatcher implements Runnable
   private static final Log LOG = LogFactory.getLog(MessageDispatcherImpl.class);
 
   /**
-   * The maximum time to wait on 'lock'
+   * The maximum time to wait on 'lock' Originally, 5s, moved into 100ms.
    */
-  private static final long WAIT_ON_LOCK = 5000L;
+  private static final long WAIT_ON_LOCK = 100L;
 
   /**
    * The receive buffer size for the Socket.
@@ -194,7 +194,6 @@ public class MessageDispatcherImpl extends MessageDispatcher implements Runnable
       }
       return null;
     }
-
   }
 
   @Override
