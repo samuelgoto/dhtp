@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.base.Optional;
 import com.kumbaya.www.WorldWideWeb.Resource;
 import java.net.InetAddress;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class WorldWideWebTest {
@@ -23,6 +24,7 @@ public class WorldWideWebTest {
     assertTrue(result.isPresent());
   }
 
+  @Ignore("depends on an external resource")
   @Test
   public void testTimingOut() throws Exception {
     Optional<Resource> result = WorldWideWeb.get("http://104.199.183.97/index.php");
